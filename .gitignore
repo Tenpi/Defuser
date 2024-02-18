@@ -41,3 +41,6 @@ outputs/text nsfw
 !models/controlnet/lineart anime/readme.txt
 !models/controlnet/scribble/readme.txt
 !models/controlnet/softedge/readme.txt
+!models/interrogator/blip/readme.txt
+!models/interrogator/deepbooru/readme.txt
+!models/interrogator/wdtagger/readme.txt
