@@ -1,0 +1,1 @@
+Place diffusion models here in .ckpt or .safetensors formats.

@@ -1,0 +1,27 @@
+@import "../../index.less";
+
+.viewbar {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: max-content;
+    flex-direction: row;
+    flex-wrap: wrap;
+}
+
+.view-image {
+    width: auto;
+    height: auto;
+    max-width: 300px;
+    max-height: 200px;
+    margin-left: 10px;
+    margin-right: 10px;
+    margin-bottom: 10px;
+    &:hover {
+        cursor: pointer;
+        filter: brightness(120%);
+    }
+}
+

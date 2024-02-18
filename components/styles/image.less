@@ -1,0 +1,71 @@
+@import "../../index.less";
+
+.image-buttons-show {
+    opacity: 1 !important;
+    transition: all 0.3s;
+}
+
+.image-img-container {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    margin-right: 10px;
+    margin-bottom: 10px;
+}
+
+.image-img-button-container {
+    opacity: 0;
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    z-index: 6000;
+    transition: all 0.3s;
+}
+
+.image-img-button {
+    width: auto;
+    height: 25px;
+    margin-left: 7px;
+    &:hover {
+        cursor: pointer;
+    }
+}
+
+.image-img {
+    width: auto;
+    height: auto;
+    max-width: 580px;
+    max-height: 465px;
+}
+
+.image-img-container-small {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 10px;
+}
+
+.image-img-button-container-small {
+    opacity: 0;
+    position: absolute;
+    top: 0px;
+    right: 2px;
+    z-index: 6000;
+    transition: all 0.3s;
+}
+
+.image-img-button-small {
+    width: auto;
+    height: 17px;
+    margin-left: 5px;
+    &:hover {
+        cursor: pointer;
+    }
+}
+
+.image-img-small {
+    width: auto;
+    height: auto;
+    max-width: 130px;
+    max-height: 140px;
+}

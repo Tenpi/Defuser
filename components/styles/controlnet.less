@@ -1,0 +1,210 @@
+@import "../../index.less";
+
+.controlnet {
+    position: relative;
+    display: flex;
+    width: 100%;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.controlnet-container {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: flex-start;
+    padding: 10px;
+    padding-top: 0px;
+    padding-left: 5px;
+    padding-right: 5px;
+    margin-bottom: 20px;
+    background-color: var(--controlnetBG);
+}
+
+.controlnet-buttons-container {
+    display: flex;
+    width: 100%;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--controlnetBG);
+}
+
+.controlnet-title {
+    font-family: "Subway Circle", sans-serif;
+    color: var(--controlnetText);
+    font-size: 30px;
+    margin-left: 10px;
+    cursor: text;
+    .stroke-black-thin();
+}
+
+.controlnet-button-container {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--controlnetButton);
+    margin-left: 7px;
+    margin-right: 7px;
+    padding-left: 5px;
+    padding-right: 5px;
+    border: 1px solid black;
+    cursor: text;
+    &:hover {
+        cursor: pointer;
+        filter: brightness(130%);
+        border: 1px solid var(--text);
+    }
+}
+
+.controlnet-button {
+    font-family: "Subway Circle", sans-serif;
+    background-color: var(--controlnetButton);
+    color: var(--text);
+    font-size: 25px;
+    .stroke-black-thin();
+    outline: none;
+    border: none;
+}
+
+.controlnet-radio-button {
+    width: auto;
+    height: 25px;
+    margin-right: 5px;
+}
+
+.control-image-drawer {
+    display: flex;
+    width: 100%;
+    justify-content: center;
+    align-items: center;
+    margin-top: 10px;
+}
+
+.control-image-drawer-container {
+    display: flex;
+    width: max-content;
+    justify-content: center;
+    align-items: center;
+}
+
+.control-image-container {
+    position: relative;
+    display: flex;
+    width: 100%;
+    justify-content: center;
+    align-items: center;
+}
+
+.control-image {
+    width: auto;
+    height: auto;
+    max-width: 500px;
+    max-height: 350px;
+}
+
+.show-control-image-buttons {
+    opacity: 1 !important;
+    transition: all 0.3s;
+}
+
+.control-image-button-container {
+    opacity: 0;
+    position: absolute;
+    top: 3px;
+    right: 3px;
+    display: flex;
+    align-items: center;
+    transition: all 0.3s;
+    z-index: 5000;
+}
+
+.control-image-button {
+    width: auto;
+    height: 20px;
+    &:hover {
+        cursor: pointer;
+        filter: brightness(130%);
+    }
+}
+
+.control-image-options-container {
+    display: flex;
+    width: 100%;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: center;
+    margin-left: 20px;
+}
+
+.control-option-row {
+    display: flex;
+    justify-content: flex-start;
+    margin-top: 10px;
+    align-items: center;
+    width: 100%;
+}
+
+.control-checkbox {
+    margin-left: 15px;
+    width: 20px;
+    height: 20px;
+    &:hover {
+        cursor: pointer;
+        filter: brightness(130%);
+    }
+}
+
+.control-option-text {
+    font-family: "Subway Circle", sans-serif;
+    color: var(--text);
+    font-size: 30px;
+    cursor: text;
+    width: max-content;
+    .stroke-black-thin();
+}
+
+.control-option-text-value {
+    width: 40px;
+    font-family: "Subway Circle", sans-serif;
+    color: var(--text);
+    font-size: 30px;
+    cursor: text;
+    .stroke-black-thin();
+}
+
+.control-slider {
+    display: flex;
+    width: 250px;
+    height: 100%;
+    margin-left: 10px;
+    margin-right: 10px;
+    align-items: center;
+}
+
+.control-slider-track {
+    display: flex;
+    height: 8px;
+    background-color: var(--sliderBG);
+}
+
+.control-slider-track.control-slider-track-1 {
+    background-color: var(--sliderBG);
+}
+
+.control-slider-thumb {
+    opacity: 1;
+    display: flex;
+    margin-top: -1px;
+    height: 15px;
+    width: 15px;
+    background-color: var(--sliderButton);
+    &:active {
+        outline: none;
+    }
+    &:focus {
+        outline: none;
+    }
+}

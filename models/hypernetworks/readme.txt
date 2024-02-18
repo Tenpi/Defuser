@@ -1,0 +1,1 @@
+Place hypernetworks in .pt format. They can be in subfolders.

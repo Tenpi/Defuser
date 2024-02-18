@@ -1,0 +1,36 @@
+node_modules
+dist
+.DS_Store
+routes/__pycache__
+models/interrogator/deepbooru/*
+models/interrogator/wdtagger/*
+vendor/__pycache__
+vendor/ldm/__pycache__
+models/clip
+models/diffusion/*
+models/hypernetworks/*
+models/lora/*
+models/textual inversion/*
+models/animatediff/*
+models/controlnet/annotator/*
+models/controlnet/canny/*
+models/controlnet/depth/*
+models/controlnet/lineart/*
+models/controlnet/lineart anime/*
+models/controlnet/scribble/*
+models/controlnet/softedge/*
+models/segmentator/*
+models/vae/*
+models/upscaler/*
+outputs/image/*
+outputs/text/*
+outputs/image nsfw
+outputs/text nsfw
+
+!models/diffusion/readme.txt
+!models/lora/readme.txt
+!models/hypernetworks/readme.txt
+!models/textual inversion/readme.txt
+!models/vae/readme.txt
+!models/segmentator/readme.txt
+!models/upscaler/readme.txt

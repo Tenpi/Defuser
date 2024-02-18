@@ -1,0 +1,60 @@
+@import "../../index.less";
+
+.settings-bar {
+    position: relative;
+    display: flex;
+    width: 100%;
+    flex-direction: column;
+    padding: 10px;
+}
+
+.settings-bar-textarea {
+    background-color: var(--inputBG);
+    min-height: 150px;
+    outline: none;
+    width: 100%;
+    border: none;
+    font-family: Arial, Helvetica, sans-serif;
+    color: var(--inputText);
+    font-size: 18px;
+    text-decoration: none;
+    cursor: text;
+    resize: none;
+    border: 2px solid black;
+    padding-left: 5px;
+    padding-right: 5px;
+    margin-bottom: 7px;
+}
+
+.settings-bar-row {
+    display: flex;
+    flex-direction: column;
+    width: 60%;
+    margin-bottom: 10px;
+}
+
+.settings-bar-text {
+    font-family: Arial, Helvetica, sans-serif;
+    color: var(--text);
+    font-size: 25px;
+    .stroke-black-thin();
+    margin-bottom: 5px;
+}
+
+.settings-bar-button {
+    background-color: var(--buttonBG);
+    outline: none;
+    font-family: Arial, sans-serif;
+    color: black;
+    font-size: 20px;
+    padding: 5px;
+    padding-top: 1px;
+    padding-bottom: 1px;
+    border: 2px solid black;
+    cursor: pointer;
+    font-weight: bold;
+    width: max-content;
+    &:hover {
+        color: white;
+    }
+}

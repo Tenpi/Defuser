@@ -1,0 +1,88 @@
+@import "../../index.less";
+
+.checkpoint-bar {
+    position: relative;
+    z-index: 1000;
+    display: flex;
+    width: 100%;
+    flex-direction: row;
+    padding: 10px;
+}
+
+.checkpoint-bar-icon {
+    width: auto;
+    height: 26px;
+    margin-right: 10px;
+    cursor: pointer;
+    &:hover {
+        filter: saturate(0.7) brightness(150%);
+    }
+}
+
+.btn {
+    color: var(--text);
+    font-size: 18px;
+    font-family: Arial, Helvetica, sans-serif;
+    padding-left: 5px;
+    padding-right: 5px;
+    background-color: var(--inputBG);
+    border-color: transparent;
+    text-align: center;
+    border-radius: 0px;
+    padding-top: 0px;
+    z-index: 3000;
+    padding-bottom: 0px;
+    .stroke-black-thin();
+    &:hover {
+        border-color: transparent;
+        background-color: var(--inputBG);
+    }
+    &:focus {
+        color: var(--text) !important;
+        border-color: transparent !important;
+        background-color: var(--inputBG) !important;
+        box-shadow: none !important;
+    }
+}
+
+.dropdown-toggle {
+    color: var(--text) !important;
+    border-color: transparent !important;
+    background-color: var(--inputBG) !important;
+    z-index: 3000;
+    &:hover {
+        color: white !important;
+    }
+    &::after {
+        content: none !important; 
+    }
+}
+
+.dropdown-menu {
+    background-color: var(--inputBG);
+    min-width: 0;
+    width: max-content;
+    padding: 0;
+    border: none;
+    z-index: 3000;
+}
+
+.dropdown-item {
+    color: var(--inputText);
+    background-color: var(--inputBG);
+    font-size: 15px;
+    font-family: Arial, Helvetica, sans-serif;
+    padding-left: 5px;
+    padding-right: 5px;
+    z-index: 3000;
+    &:hover {
+        color: white;
+        filter: brightness(110%);
+        background-color: var(--inputBG);
+    }
+}
+
+.dropdown-item.active, .dropdown-item:active {
+    background-color: var(--inputBG);
+    z-index: 3000;
+}

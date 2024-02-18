@@ -1,0 +1,1 @@
+Place anime segmentation model here in .ckpt format.

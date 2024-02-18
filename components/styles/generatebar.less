@@ -1,0 +1,122 @@
+@import "../../index.less";
+
+.generate-bar {
+    position: relative;
+    display: flex;
+    width: 100%;
+    flex-direction: row;
+    padding: 10px;
+}
+
+.generate-bar-textarea {
+    background-color: var(--inputBG);
+    min-height: 150px;
+    outline: none;
+    width: 60%;
+    border: none;
+    font-family: Arial, Helvetica, sans-serif;
+    color: var(--inputText);
+    font-size: 18px;
+    text-decoration: none;
+    cursor: text;
+    resize: none;
+    border: 2px solid black;
+    padding-left: 5px;
+    padding-right: 5px;
+}
+
+.generate-bar-textarea::-webkit-scrollbar-track {
+    background: var(--inputBG);
+}
+
+.generate-bar-button-container {
+    display: flex;
+    flex-direction: column;
+}
+
+.generate-bar-button {
+    background-color: var(--buttonBG);
+    outline: none;
+    font-family: Arial, sans-serif;
+    color: black;
+    font-size: 40px;
+    padding: 10px;
+    border: 2px solid black;
+    cursor: pointer;
+    margin-left: 10px;
+    font-weight: bold;
+    &:hover {
+        color: white;
+    }
+}
+
+.generate-bar-interrogate-container {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-around;
+    margin-top: 10px;
+}
+
+.generate-bar-button-2 {
+    background-color: var(--buttonBG2);
+    outline: none;
+    font-family: Arial, sans-serif;
+    color: black;
+    font-size: 25px;
+    padding: 10px;
+    border: 2px solid black;
+    cursor: pointer;
+    margin-left: 10px;
+    font-weight: bold;
+    &:hover {
+        color: white;
+    }
+}
+
+.generate-bar-loop-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    margin-left: 10px;
+    &:hover {
+        filter: brightness(130%);
+    }
+}
+
+.generate-bar-checkbox {
+    width: auto;
+    height: 18px;
+    margin-right: 5px;
+}
+
+.generate-bar-icon {
+    width: auto;
+    height: 30px;
+}
+
+.generate-bar-create-container {
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
+    align-items: center;
+}
+
+.generate-bar-x {
+    font-family: Arial, sans-serif;
+    color: var(--text);
+    font-size: 35px;
+    .stroke-black-thin();
+    margin-left: 5px;
+}
+
+.generate-bar-times {
+    background-color: transparent;
+    outline: none;
+    border: none;
+    font-family: Arial, sans-serif;
+    color: var(--text);
+    font-size: 35px;
+    .stroke-black-thin();
+    width: 45px;
+}
