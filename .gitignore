@@ -33,3 +33,4 @@ outputs/text nsfw
 !models/textual inversion/readme.txt
 !models/vae/readme.txt
 !models/segmentator/readme.txt
+!models/animatediff/readme.txt
