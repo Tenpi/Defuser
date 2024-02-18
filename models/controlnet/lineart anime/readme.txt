@@ -1,0 +1,1 @@
+Place the controlnet lineart anime model here.

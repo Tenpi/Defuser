@@ -34,3 +34,10 @@ outputs/text nsfw
 !models/vae/readme.txt
 !models/segmentator/readme.txt
 !models/animatediff/readme.txt
+!models/controlnet/annotator/readme.txt
+!models/controlnet/canny/readme.txt
+!models/controlnet/depth/readme.txt
+!models/controlnet/lineart/readme.txt
+!models/controlnet/lineart anime/readme.txt
+!models/controlnet/scribble/readme.txt
+!models/controlnet/softedge/readme.txt

@@ -1,0 +1,1 @@
+Place the controlnet scribble model here.
