@@ -44,3 +44,4 @@ outputs/text nsfw
 !models/interrogator/blip/readme.txt
 !models/interrogator/deepbooru/readme.txt
 !models/interrogator/wdtagger/readme.txt
+!outputs/readme.txt
