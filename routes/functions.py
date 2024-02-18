@@ -30,6 +30,15 @@ def is_image(filename):
         return True
     else:
         return False
+    
+def is_unwanted(filename):
+    if filename == ".DS_Store": return True
+    ext = pathlib.Path(filename).suffix.lower().replace(".", "")
+    image_exts = ["txt"]
+    if ext in image_exts:
+        return True
+    else:
+        return False
 
 def is_dir(base, filename):
     path = os.path.normpath(os.path.join(dirname, base, filename))

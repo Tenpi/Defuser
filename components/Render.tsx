@@ -6,7 +6,7 @@ import {ProgressBar} from "react-bootstrap"
 import {EnableDragContext, MobileContext, SiteHueContext, SiteSaturationContext, SiteLightnessContext, RenderImageContext, StartedContext,
 SocketContext, UpdateImagesContext, PreviewImageContext, ImageBrightnessContext, ImageContrastContext, SidebarTypeContext, AIWatermarkBrightnessContext, 
 AIWatermarkHueContext, AIWatermarkInvertContext, AIWatermarkMarginXContext, AIWatermarkMarginYContext, AIWatermarkOpacityContext, AIWatermarkPositionContext, 
-AIWatermarkSaturationContext, AIWatermarkScaleContext, AIWatermarkTypeContext, WatermarkContext} from "../Context"
+AIWatermarkSaturationContext, AIWatermarkScaleContext, AIWatermarkTypeContext, WatermarkContext, InvisibleWatermarkContext} from "../Context"
 import xIcon from "../assets/icons/x.png"
 import xIconHover from "../assets/icons/x-hover.png"
 import functions from "../structures/Functions"
@@ -50,6 +50,7 @@ const Render: React.FunctionComponent = (props) => {
     const {aiWatermarkMarginY, setAIWatermarkMarginY} = useContext(AIWatermarkMarginYContext)
     const {aiWatermarkScale, setAIWatermarkScale} = useContext(AIWatermarkScaleContext)
     const {watermark, setWatermark} = useContext(WatermarkContext)
+    const {invisibleWatermark, setInvisibleWatermark} = useContext(InvisibleWatermarkContext)
     const progressBarRef = useRef(null) as React.RefObject<HTMLDivElement>
     const ref = useRef<HTMLCanvasElement>(null)
     const history = useHistory()
@@ -105,6 +106,7 @@ const Render: React.FunctionComponent = (props) => {
                 const file = new File([blob], "image.png", {type: "image/png"})
                 form.append("image", file)
                 form.append("path", data.image)
+                form.append("invisible_watermark", invisibleWatermark)
                 await axios.post("/save-watermark", form)
             }
             setCompleted(true)

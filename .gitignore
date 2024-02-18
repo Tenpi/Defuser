@@ -4,6 +4,7 @@ dist
 routes/__pycache__
 models/interrogator/deepbooru/*
 models/interrogator/wdtagger/*
+models/interrogator/blip/*
 vendor/__pycache__
 vendor/ldm/__pycache__
 models/clip
@@ -21,7 +22,6 @@ models/controlnet/scribble/*
 models/controlnet/softedge/*
 models/segmentator/*
 models/vae/*
-models/upscaler/*
 outputs/image/*
 outputs/text/*
 outputs/image nsfw
@@ -33,4 +33,3 @@ outputs/text nsfw
 !models/textual inversion/readme.txt
 !models/vae/readme.txt
 !models/segmentator/readme.txt
-!models/upscaler/readme.txt

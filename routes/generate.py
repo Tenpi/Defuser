@@ -30,6 +30,7 @@ from itertools import chain
 import inspect
 import ctypes
 import threading
+import platform
 import gc
 
 dirname = os.path.dirname(__file__)
@@ -68,17 +69,29 @@ def append_info(image: str, info: dict):
 
 def upscale(image: str, upscaler: str, video: bool = False):
     if upscaler == "waifu2x":
-        program = os.path.join(dirname, "../models/upscaler/waifu2x-ncnn-vulkan.app")
+        program = os.path.join(dirname, "../models/upscaler/waifu2x-ncnn-vulkan")
+        if platform.system() == "Windows":
+            program = os.path.join(dirname, "../models/upscaler/waifu2x-ncnn-vulkan.exe")
+        if platform.system() == "Darwin":
+            program = os.path.join(dirname, "../models/upscaler/waifu2x-ncnn-vulkan.app")
         format = pathlib.Path(image).suffix.replace(".", "")
         subprocess.call([program, "-i", image, "-o", image, "-s", "4", "-f", format])
     elif upscaler == "real-esrgan":
-        program = os.path.join(dirname, "../models/upscaler/realesrgan-ncnn-vulkan.app")
+        program = os.path.join(dirname, "../models/upscaler/realesrgan-ncnn-vulkan")
+        if platform.system() == "Windows":
+            program = os.path.join(dirname, "../models/upscaler/realesrgan-ncnn-vulkan.exe")
+        if platform.system() == "Darwin":
+            program = os.path.join(dirname, "../models/upscaler/realesrgan-ncnn-vulkan.app")
         models = os.path.join(dirname, "../models/upscaler/models")
         network = "realesr-animevideov3" if video else "realesrgan-x4plus-anime"
         format = pathlib.Path(image).suffix.replace(".", "")
         subprocess.call([program, "-i", image, "-o", image, "-s", "4", "-f", format, "-m", models, "-n", network])
     elif upscaler == "real-cugan":
-        program = os.path.join(dirname, "../models/upscaler/realcugan-ncnn-vulkan.app")
+        program = os.path.join(dirname, "../models/upscaler/realcugan-ncnn-vulkan")
+        if platform.system() == "Windows":
+            program = os.path.join(dirname, "../models/upscaler/realcugan-ncnn-vulkan.exe")
+        if platform.system() == "Darwin":
+            program = os.path.join(dirname, "../models/upscaler/realcugan-ncnn-vulkan.app")
         format = pathlib.Path(image).suffix.replace(".", "")
         subprocess.call([program, "-i", image, "-o", image, "-s", "4", "-f", format])
 
@@ -308,7 +321,7 @@ def get_generator(model_name: str = "", vae: str = "", mode: str = "text", clip_
 @socketio.on("load diffusion model")
 def load_diffusion_model(model_name, vae_name, clip_skip, processing):
     global generator
-    generator = get_generator(model_name, vae_name, "text", int(clip_skip), processing == "cpu")
+    #generator = get_generator(model_name, vae_name, "text", int(clip_skip), processing == "cpu")
     return "done"
 
 @app.route("/update-infinite", methods=["POST"])
@@ -369,6 +382,7 @@ def generate(request_data, request_files):
     guess_mode = data["guess_mode"] if "guess_mode" in data else False
     upscaler = data["upscaler"] if "upscaler" in data else ""
     watermark = data["watermark"] if "watermark" in data else False
+    invisible_watermark = data["invisible_watermark"] if "invisible_watermark" in data else True
     nsfw_enabled = data["nsfwTab"] if "nsfwTab" in data else False
 
     xl = True if "xl" in model_name.lower() else False
@@ -564,6 +578,7 @@ def generate(request_data, request_files):
                 upscale(out_path, upscaler)
             compressed = Image.open(out_path)
             compressed.save(out_path, quality=90, optimize=True)
+            if invisible_watermark: encode_watermark(out_path, out_path, "SDV2")
             info = {"Prompt": prompt, "Negative Prompt": negative_prompt, "Size": f"{width}x{height}", "Model": model_name, 
                      "VAE": vae_name, "Steps": steps, "CFG": cfg, "Sampler": sampler, "Clip Skip": clip_skip, "Seed": seed}
             append_info(out_path, info)
@@ -616,6 +631,7 @@ def generate(request_data, request_files):
                 upscale(out_path, upscaler)
             compressed = Image.open(out_path)
             compressed.save(out_path, quality=90, optimize=True)
+            if invisible_watermark: encode_watermark(out_path, out_path, "SDV2")
             info = {"Prompt": prompt, "Negative Prompt": negative_prompt, "Size": f"{width}x{height}", "Denoise": denoise,
                     "Model": model_name, "VAE": vae_name, "Steps": steps, "CFG": cfg, "Sampler": sampler, "Clip Skip": clip_skip, 
                     "Seed": seed}
@@ -676,6 +692,7 @@ def generate(request_data, request_files):
                 upscale(out_path, upscaler)
             compressed = Image.open(out_path)
             compressed.save(out_path, quality=90, optimize=True)
+            if invisible_watermark: encode_watermark(out_path, out_path, "SDV2")
             info = {"Prompt": prompt, "Negative Prompt": negative_prompt, "Size": f"{width}x{height}", "Denoise": denoise,
                     "Model": model_name, "VAE": vae_name, "Steps": steps, "CFG": cfg, "Sampler": sampler, "Clip Skip": clip_skip, 
                     "Seed": seed}
@@ -735,6 +752,7 @@ def generate(request_data, request_files):
                 upscale(out_path, upscaler)
             compressed = Image.open(out_path)
             compressed.save(out_path, quality=90, optimize=True)
+            if invisible_watermark: encode_watermark(out_path, out_path, "SDV2")
             info = {"Prompt": prompt, "Negative Prompt": negative_prompt, "Size": f"{width}x{height}", "Denoise": denoise,
                     "Model": model_name, "VAE": vae_name, "Steps": steps, "CFG": cfg, "Sampler": sampler, "Clip Skip": clip_skip, 
                     "Seed": seed}
@@ -799,6 +817,7 @@ def generate(request_data, request_files):
                 upscale(out_path, upscaler)
             compressed = Image.open(out_path)
             compressed.save(out_path, quality=90, optimize=True)
+            if invisible_watermark: encode_watermark(out_path, out_path, "SDV2")
             info = {"Prompt": prompt, "Negative Prompt": negative_prompt, "Size": f"{width}x{height}", "Denoise": denoise,
                     "Model": model_name, "VAE": vae_name, "Steps": steps, "CFG": cfg, "Sampler": sampler, "Clip Skip": clip_skip, 
                     "Seed": seed}
@@ -866,6 +885,7 @@ def generate(request_data, request_files):
                 upscale(out_path, upscaler)
             compressed = Image.open(out_path)
             compressed.save(out_path, quality=90, optimize=True)
+            if invisible_watermark: encode_watermark(out_path, out_path, "SDV2")
             info = {"Prompt": prompt, "Negative Prompt": negative_prompt, "Size": f"{width}x{height}", "Denoise": denoise,
                     "Model": model_name, "VAE": vae_name, "Steps": steps, "CFG": cfg, "Sampler": sampler, "Clip Skip": clip_skip, 
                     "Seed": seed}
@@ -925,6 +945,7 @@ def generate(request_data, request_files):
                 upscale(out_path, upscaler)
             compressed = Image.open(out_path)
             compressed.save(out_path, quality=90, optimize=True)
+            if invisible_watermark: encode_watermark(out_path, out_path, "SDV2")
             info = {"Prompt": prompt, "Negative Prompt": negative_prompt, "Size": f"{width}x{height}", "Denoise": denoise,
                     "Model": model_name, "VAE": vae_name, "Steps": steps, "CFG": cfg, "Sampler": sampler, "Clip Skip": clip_skip, 
                     "Seed": seed}

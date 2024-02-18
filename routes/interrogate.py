@@ -3,6 +3,7 @@ from __main__ import app, socketio
 import tensorflow as tf
 from tensorflow.keras.models import load_model
 import models.interrogator.deepbooru.deepbooru as deepbooru_module
+from transformers import AutoProcessor, BlipForConditionalGeneration
 import pandas as pd
 import torch
 import os
@@ -14,6 +15,8 @@ device = "mps" if torch.backends.mps.is_available() else "cuda" if torch.cuda.is
 
 deepbooru_model = None
 wdtagger_model = None
+blip_model = None
+blip_processor = None
 
 @socketio.on("load interrogate model")
 def load_interrogate_model(model_name):
@@ -68,6 +71,17 @@ def predict_wdtagger(image, thresh = 0.3228):
     found_tags = label_names[label_names["probs"] > thresh]
     return ", ".join(found_tags["name"])
 
+def predict_blip(image):
+    global blip_model
+    global blip_processor
+    if not blip_model or not blip_processor:
+        blip_model = BlipForConditionalGeneration.from_pretrained(os.path.join(dirname, "../models/interrogator/blip"), local_files_only=True)
+        blip_processor = AutoProcessor.from_pretrained(os.path.join(dirname, "../models/interrogator/blip"), local_files_only=True)
+    inputs = blip_processor(images=image, text="", return_tensors="pt")
+    outputs = blip_model.generate(**inputs)
+    result = blip_processor.decode(outputs[0], skip_special_tokens=True)
+    return result
+
 @app.route("/interrogate", methods=["POST"])
 def interrogate():
     file = flask.request.files["image"]
@@ -84,5 +98,7 @@ def interrogate():
     elif model_name == "deepbooru":
         image = process_deepbooru_image(image)
         result = predict_deepbooru(image)
+    elif model_name == "blip":
+        result = predict_blip(image)
     return result
 

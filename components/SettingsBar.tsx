@@ -3,7 +3,8 @@ import {useHistory} from "react-router-dom"
 import {HashLink as Link} from "react-router-hash-link"
 import favicon from "../assets/icons/favicon.png"
 import {EnableDragContext, MobileContext, SiteHueContext, SiteSaturationContext, SiteLightnessContext, NegativePromptContext, ProcessingContext,
-InterrogatorNameContext, DeletionContext, FormatContext, PrecisionContext, LoopModeContext, WatermarkContext, UpscalerContext, NSFWTabContext} from "../Context"
+InterrogatorNameContext, DeletionContext, FormatContext, PrecisionContext, LoopModeContext, WatermarkContext, UpscalerContext, NSFWTabContext,
+InvisibleWatermarkContext} from "../Context"
 import functions from "../structures/Functions"
 import {Dropdown, DropdownButton} from "react-bootstrap"
 import checkbox from "../assets/icons/checkbox2.png"
@@ -27,6 +28,7 @@ const SettingsBar: React.FunctionComponent = (props) => {
     const {loopMode, setLoopMode} = useContext(LoopModeContext)
     const {watermark, setWatermark} = useContext(WatermarkContext)
     const {nsfwTab, setNSFWTab} = useContext(NSFWTabContext)
+    const {invisibleWatermark, setInvisibleWatermark} = useContext(InvisibleWatermarkContext)
     const [convertPrompt, setConvertPrompt] = useState("")
     const ref = useRef<HTMLCanvasElement>(null)
     const history = useHistory()
@@ -56,6 +58,8 @@ const SettingsBar: React.FunctionComponent = (props) => {
         if (savedUpscaler) setUpscaler(savedUpscaler)
         const savedNSFWTab = localStorage.getItem("nsfwTab")
         if (savedNSFWTab) setNSFWTab(savedNSFWTab === "true")
+        const savedInvisibleWatermark = localStorage.getItem("invisibleWatermark")
+        if (savedInvisibleWatermark) setInvisibleWatermark(savedInvisibleWatermark === "true")
     }, [])
 
     useEffect(() => {
@@ -69,15 +73,17 @@ const SettingsBar: React.FunctionComponent = (props) => {
         localStorage.setItem("watermark", String(watermark))
         localStorage.setItem("upscaler", String(upscaler))
         localStorage.setItem("nsfwTab", String(nsfwTab))
-    }, [negativePrompt, interrogatorName, processing, format, deletion, precision, loopMode, upscaler, nsfwTab, watermark])
+        localStorage.setItem("invisibleWatermark", String(invisibleWatermark))
+    }, [negativePrompt, interrogatorName, processing, format, deletion, precision, loopMode, upscaler, nsfwTab, invisibleWatermark, watermark])
 
     const resetNegativePrompt = () => {
-        setNegativePrompt("lowres, bad anatomy, bad hands, text, error, missing fingers, extra digit, fewer digits, cropped, worst quality, low quality, normal quality, jpeg artifacts, signature, watermark, username, blurry, artist name")
+        setNegativePrompt("")
     }
 
     const getInterrogatorName = () => {
         if (interrogatorName === "wdtagger") return "WDTagger"
         if (interrogatorName === "deepbooru") return "DeepBooru"
+        if (interrogatorName === "blip") return "BLIP"
     }
 
     const getUpscalerName = () => {
@@ -107,6 +113,7 @@ const SettingsBar: React.FunctionComponent = (props) => {
                 <DropdownButton title={getInterrogatorName()} drop="down" className="checkpoint-selector">
                     <Dropdown.Item active={interrogatorName === "wdtagger"} onClick={() => setInterrogatorName("wdtagger")}>WDTagger</Dropdown.Item>
                     <Dropdown.Item active={interrogatorName === "deepbooru"} onClick={() => setInterrogatorName("deepbooru")}>DeepBooru</Dropdown.Item>
+                    <Dropdown.Item active={interrogatorName === "blip"} onClick={() => setInterrogatorName("blip")}>BLIP</Dropdown.Item>
                 </DropdownButton>
             </div>
             <div className="settings-bar-row">
@@ -142,6 +149,13 @@ const SettingsBar: React.FunctionComponent = (props) => {
                 </DropdownButton>
             </div>
             <div className="settings-bar-row">
+                <span className="settings-bar-text">Invisible Watermark:</span>
+                <DropdownButton title={invisibleWatermark ? "Yes" : "No"} drop="down" className="checkpoint-selector">
+                    <Dropdown.Item active={invisibleWatermark === true} onClick={() => setInvisibleWatermark(true)}>Yes</Dropdown.Item>
+                    <Dropdown.Item active={invisibleWatermark === false} onClick={() => setInvisibleWatermark(false)}>No</Dropdown.Item>
+                </DropdownButton>
+            </div>
+            <div className="settings-bar-row">
                 <span className="settings-bar-text">R18:</span>
                 <DropdownButton title={nsfwTab ? "Yes" : "No"} drop="down" className="checkpoint-selector">
                     <Dropdown.Item active={nsfwTab === true} onClick={() => setNSFWTab(true)}>Yes</Dropdown.Item>
@@ -151,7 +165,6 @@ const SettingsBar: React.FunctionComponent = (props) => {
             <div className="settings-bar-row">
                 <span className="settings-bar-text">Negative Prompt:</span>
                 <textarea className="settings-bar-textarea" spellCheck={false} value={negativePrompt} onChange={(event) => setNegativePrompt(event.target.value)}></textarea>
-                <button className="settings-bar-button" onClick={resetNegativePrompt}>Reset</button>
             </div>
             <div className="settings-bar-row">
                 <span className="settings-bar-text">Convert Prompt:</span>

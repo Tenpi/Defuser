@@ -8,7 +8,8 @@ ClipSkipContext, ModelNameContext, RenderImageContext, VAENameContext, Interroga
 FormatContext, DeletionContext, TextualInversionsContext, HypernetworksContext, LorasContext, MaskImageContext, PrecisionContext,
 ControlImageContext, ControlProcessorContext, ControlScaleContext, ControlGuessModeContext, ControlStartContext, ControlEndContext,
 ControlInvertContext, StyleFidelityContext, ControlReferenceImageContext, HorizontalExpandContext, VerticalExpandContext, UpscalerContext,
-ExpandImageContext, ExpandMaskContext, StartedContext, SocketContext, LoopModeContext, SavedPromptsContext, WatermarkContext, NSFWTabContext} from "../Context"
+ExpandImageContext, ExpandMaskContext, StartedContext, SocketContext, LoopModeContext, SavedPromptsContext, WatermarkContext, NSFWTabContext,
+InvisibleWatermarkContext} from "../Context"
 import functions from "../structures/Functions"
 import checkbox from "../assets/icons/checkbox2.png"
 import checkboxChecked from "../assets/icons/checkbox2-checked.png"
@@ -72,6 +73,7 @@ const GenerateBar: React.FunctionComponent = (props) => {
     const {loopMode, setLoopMode} = useContext(LoopModeContext)
     const {savedPrompts, setSavedPrompts} = useContext(SavedPromptsContext)
     const {watermark, setWatermark} = useContext(WatermarkContext)
+    const {invisibleWatermark, setInvisibleWatermark} = useContext(InvisibleWatermarkContext)
     const {nsfwTab, setNSFWTab} = useContext(NSFWTabContext)
     const ref = useRef<HTMLCanvasElement>(null)
     const history = useHistory()
@@ -105,6 +107,10 @@ const GenerateBar: React.FunctionComponent = (props) => {
         if (savedPrompts) setSavedPrompts(JSON.parse(savedPrompts))
         const savedWatermark = localStorage.getItem("watermark")
         if (savedWatermark) setWatermark(savedWatermark === "true")
+        const savedNSFWTab = localStorage.getItem("nsfwTab")
+        if (savedNSFWTab) setNSFWTab(savedNSFWTab === "true")
+        const savedInvisibleWatermark = localStorage.getItem("invisibleWatermark")
+        if (savedInvisibleWatermark) setInvisibleWatermark(savedInvisibleWatermark === "true")
     }, [])
 
     useEffect(() => {
@@ -251,9 +257,10 @@ const GenerateBar: React.FunctionComponent = (props) => {
         const guess_mode = controlGuessMode
         const control_reference_image = controlReferenceImage
         const style_fidelity = styleFidelity
+        const invisible_watermark = invisibleWatermark
         const json = {prompt, negative_prompt, steps, cfg, width, height, denoise, seed, sampler, amount, model_name, vae_name, 
         clip_skip, processing, format, textual_inversions, hypernetworks, loras, control_processor, control_scale, guess_mode,
-        control_start, control_end, style_fidelity, control_reference_image, upscaler, nsfwTab, watermark}
+        control_start, control_end, style_fidelity, control_reference_image, upscaler, nsfwTab, watermark, invisible_watermark}
         if (expandImage) json.denoise = 1.0
         const form = new FormData()
         form.append("data", JSON.stringify(json))

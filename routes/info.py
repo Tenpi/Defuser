@@ -1,6 +1,6 @@
 import flask
 from __main__ import app
-from .functions import get_number_from_filename, is_image, is_dir, is_file
+from .functions import get_number_from_filename, is_image, is_unwanted, is_dir, is_file
 from .invisiblewatermark import decode_watermark, encode_watermark
 import os
 import platform
@@ -18,12 +18,12 @@ dirname = os.path.dirname(__file__)
 @app.route("/diffusion-models")
 def get_diffusion_models():
     files = os.listdir(os.path.join(dirname, "../models/diffusion"))
-    return list(filter(lambda file: file != ".DS_Store" and not is_image(file), files))
+    return list(filter(lambda file: not is_unwanted(file) and not is_image(file), files))
 
 @app.route("/vae-models")
 def get_vae_models():
     files = os.listdir(os.path.join(dirname, "../models/vae"))
-    return list(filter(lambda file: file != ".DS_Store" and not is_image(file), files))
+    return list(filter(lambda file: not is_unwanted(file) and not is_image(file), files))
 
 @app.route("/clip-model")
 def get_clip_model():
@@ -32,13 +32,13 @@ def get_clip_model():
 def crawl_model_folder(model_type: str, folder: str):
     files = os.listdir(os.path.join(dirname, f"../models/{model_type}", folder))
     model_map = []
-    dirs = list(filter(lambda file: file != ".DS_Store" and is_dir(f"../models/{model_type}", file), files))
+    dirs = list(filter(lambda file: not is_unwanted(file) and is_dir(f"../models/{model_type}", file), files))
     for dir in dirs:
         stem = pathlib.Path(dir).stem
         dir_files = crawl_model_folder(model_type, os.path.join(folder, dir))
         model_map.append({"name": stem, "files": dir_files, "directory": True})
-    models = list(filter(lambda file: file != ".DS_Store" and is_file(f"../models/{model_type}", file) and not is_image(file), files))
-    images = list(filter(lambda file: file != ".DS_Store" and is_file(f"../models/{model_type}", file) and is_image(file), files))
+    models = list(filter(lambda file: not is_unwanted(file) and is_file(f"../models/{model_type}", file) and not is_image(file), files))
+    images = list(filter(lambda file: not is_unwanted(file) and is_file(f"../models/{model_type}", file) and is_image(file), files))
     for i in range(len(models)):
         stem = pathlib.Path(models[i]).stem
         model = os.path.join(f"models/{model_type}", folder, models[i])
@@ -56,13 +56,13 @@ def crawl_model_folder(model_type: str, folder: str):
 def get_model_files(model_type: str):
     files = os.listdir(os.path.join(dirname, f"../models/{model_type}"))
     model_map = []
-    dirs = list(filter(lambda file: file != ".DS_Store" and is_dir(f"../models/{model_type}", file), files))
+    dirs = list(filter(lambda file: not is_unwanted(file) and is_dir(f"../models/{model_type}", file), files))
     for dir in dirs:
         stem = pathlib.Path(dir).stem
         dir_files = crawl_model_folder(model_type, dir)
         model_map.append({"name": stem, "files": dir_files, "directory": True})
-    models = list(filter(lambda file: file != ".DS_Store" and is_file(f"../models/{model_type}", file) and not is_image(file), files))
-    images = list(filter(lambda file: file != ".DS_Store" and is_file(f"../models/{model_type}", file) and is_image(file), files))
+    models = list(filter(lambda file: not is_unwanted(file) and is_file(f"../models/{model_type}", file) and not is_image(file), files))
+    images = list(filter(lambda file: not is_unwanted(file) and is_file(f"../models/{model_type}", file) and is_image(file), files))
     for i in range(len(models)):
         stem = pathlib.Path(models[i]).stem
         model = os.path.join(f"models/{model_type}", models[i])
@@ -91,7 +91,7 @@ def get_lora_models():
 
 def get_outputs(folder: str):
     files = os.listdir(os.path.join(dirname, f"../outputs/{folder}"))
-    files = list(filter(lambda file: file != ".DS_Store", files))
+    files = list(filter(lambda file: not is_unwanted(file), files))
     files = sorted(files, key=lambda x: get_number_from_filename(x), reverse=True)
     return list(map(lambda file: f"outputs/{folder}/{file}", files))
 
@@ -195,6 +195,7 @@ def similar_images():
 def save_watermark():
     file = flask.request.files["image"]
     path = flask.request.form.get("path")
+    invisible_watermark = flask.request.form.get("invisible_watermark")
     image = Image.open(file)
     image.load()
     ext = pathlib.Path(path).suffix.replace(".", "")
@@ -219,4 +220,5 @@ def save_watermark():
             "Exif": {piexif.ExifIFD.UserComment: piexif.helper.UserComment.dump(user_comment, encoding="unicode")}
         })
         piexif.insert(exif, path)
+    if invisible_watermark: encode_watermark(path, path, "SDV2")
     return "done"

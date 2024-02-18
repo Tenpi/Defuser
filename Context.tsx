@@ -80,6 +80,7 @@ export const AIWatermarkOpacityContext = React.createContext<any>(null)
 export const AIWatermarkMarginXContext = React.createContext<any>(null)
 export const AIWatermarkMarginYContext = React.createContext<any>(null)
 export const AIWatermarkScaleContext = React.createContext<any>(null)
+export const InvisibleWatermarkContext = React.createContext<any>(null)
 
 const Context: React.FunctionComponent = (props: any) => {
     const [theme, setTheme] = useState("light")
@@ -138,7 +139,7 @@ const Context: React.FunctionComponent = (props: any) => {
     const [imageName, setImageName] = useState("")
     const [upscaler, setUpscaler] = useState("real-esrgan")
     const [nsfwTab, setNSFWTab] = useState(false)
-    const [watermark, setWatermark] = useState(true)
+    const [watermark, setWatermark] = useState(false)
     const [aiWatermarkPosition, setAIWatermarkPosition] = useState("top left")
     const [aiWatermarkType, setAIWatermarkType] = useState("fan")
     const [aiWatermarkHue, setAIWatermarkHue] = useState(0)
@@ -149,9 +150,11 @@ const Context: React.FunctionComponent = (props: any) => {
     const [aiWatermarkMarginX, setAIWatermarkMarginX] = useState(10)
     const [aiWatermarkMarginY, setAIWatermarkMarginY] = useState(10)
     const [aiWatermarkScale, setAIWatermarkScale] = useState(0.7)
+    const [invisibleWatermark, setInvisibleWatermark] = useState(true)
 
     return (
         <>  
+            <InvisibleWatermarkContext.Provider value={{invisibleWatermark, setInvisibleWatermark}}>
             <NSFWTabContext.Provider value={{nsfwTab, setNSFWTab}}>
             <UpscalerContext.Provider value={{upscaler, setUpscaler}}>
             <AIWatermarkScaleContext.Provider value={{aiWatermarkScale, setAIWatermarkScale}}>
@@ -287,6 +290,7 @@ const Context: React.FunctionComponent = (props: any) => {
             </AIWatermarkScaleContext.Provider>
             </UpscalerContext.Provider>
             </NSFWTabContext.Provider>
+            </InvisibleWatermarkContext.Provider>
         </>
     )
 }
