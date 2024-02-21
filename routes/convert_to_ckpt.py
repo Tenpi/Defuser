@@ -249,7 +249,7 @@ def convert_text_enc_state_dict_v20(text_enc_dict):
 def convert_text_enc_state_dict(text_enc_dict):
     return text_enc_dict
 
-def convert_to_ckpt(model_path, checkpoint_path, half=True, safetensors=False):
+def convert_to_ckpt(model_path, checkpoint_path, half=True, safetensors=False, metadata={}):
     unet_path = osp.join(model_path, "unet", "diffusion_pytorch_model.safetensors")
     vae_path = osp.join(model_path, "vae", "diffusion_pytorch_model.safetensors")
     text_enc_path = osp.join(model_path, "text_encoder", "model.safetensors")
@@ -298,7 +298,9 @@ def convert_to_ckpt(model_path, checkpoint_path, half=True, safetensors=False):
         state_dict = {k: v.half() for k, v in state_dict.items()}
 
     if safetensors:
-        save_file(state_dict, checkpoint_path)
+        save_file(state_dict, checkpoint_path, metadata=metadata)
     else:
         state_dict = {"state_dict": state_dict}
+        for k, v in metadata.items():
+            state_dict[k] = v
         torch.save(state_dict, checkpoint_path)

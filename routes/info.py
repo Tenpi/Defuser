@@ -120,12 +120,30 @@ def show_in_folder(path, absolute):
         subprocess.Popen(["xdg-open", absolute])
     return "done"
 
+def open_folder(path, absolute):
+    if not absolute:
+        absolute = os.path.join(dirname, f"../{path}")
+    if platform.system() == "Windows":
+        subprocess.Popen(f'explorer "{absolute}"')
+    elif platform.system() == "Darwin":
+        subprocess.call(["open", absolute])
+    else:
+        subprocess.Popen(["xdg-open", absolute])
+    return "done"
+
 @app.route("/show-in-folder", methods=["POST"])
 def show_in_folder_route():
     data = flask.request.json
     path = data["path"] if "path" in data else ""
     absolute = data["absolute"] if "absolute" in data else ""
-    return show_in_folder(path, absolute)
+    return show_in_folder(path, absolute.strip())
+
+@app.route("/open-folder", methods=["POST"])
+def open_folder_route():
+    data = flask.request.json
+    path = data["path"] if "path" in data else ""
+    absolute = data["absolute"] if "absolute" in data else ""
+    return open_folder(path, absolute.strip())
 
 @app.route("/delete-file", methods=["POST"])
 def delete_file():

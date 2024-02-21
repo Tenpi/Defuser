@@ -18,7 +18,7 @@ import axios from "axios"
 let timer = null as any
 let clicking = false
 
-const TrainDreamBooth: React.FunctionComponent = (props) => {
+const TrainCheckpoint: React.FunctionComponent = (props) => {
     const {enableDrag, setEnableDrag} = useContext(EnableDragContext)
     const {mobile, setMobile} = useContext(MobileContext)
     const {siteHue, setSiteHue} = useContext(SiteHueContext)
@@ -193,7 +193,7 @@ const TrainDreamBooth: React.FunctionComponent = (props) => {
         json.validation_epochs = Number(previewEpochs)
         json.validation_prompt = previewPrompt
         json.learning_function = learningFunction
-        await axios.post("/train-dreambooth", json)
+        await axios.post("/train-checkpoint", json)
     }
 
     const openImageLocation = async () => {
@@ -201,7 +201,7 @@ const TrainDreamBooth: React.FunctionComponent = (props) => {
     }
 
     const openFolder = async () => {
-        await axios.post("/open-folder", {path: `outputs/dreambooth/${trainName}`})
+        await axios.post("/open-folder", {path: `outputs/checkpoint/${trainName}`})
     }
 
     const interruptTrain = async () => {
@@ -244,10 +244,10 @@ const TrainDreamBooth: React.FunctionComponent = (props) => {
                         <span className="train-tag-settings-title">Learning Rate:</span>
                         <input className="train-tag-settings-input" type="text" spellCheck={false} value={learningRate} onChange={(event) => setLearningRate(event.target.value)}/>
                     </div>
-                    <div className="train-tag-settings-box">
+                    {/* <div className="train-tag-settings-box">
                         <span className="train-tag-settings-title">Text Learning Rate:</span>
                         <input className="train-tag-settings-input" type="text" spellCheck={false} value={learningRateTE} onChange={(event) => setLearningRateTE(event.target.value)}/>
-                    </div>
+                    </div> */}
                     <div className="train-tag-settings-box">
                         <span className="train-tag-settings-title">Gradient Accumulation Steps:</span>
                         <input className="train-tag-settings-input" type="text" spellCheck={false} value={gradientAccumulationSteps} onChange={(event) => setGradientAccumulationSteps(event.target.value)}/>
@@ -303,4 +303,4 @@ const TrainDreamBooth: React.FunctionComponent = (props) => {
     )
 }
 
-export default TrainDreamBooth
+export default TrainCheckpoint

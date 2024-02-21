@@ -200,6 +200,14 @@ const TrainLora: React.FunctionComponent = (props) => {
         axios.post("/interrupt-train")
     }
 
+    const openImageLocation = async () => {
+        await axios.post("/open-folder", {absolute: folderLocation})
+    }
+
+    const openFolder = async () => {
+        await axios.post("/open-folder", {path: `outputs/lora/${trainName}`})
+    }
+
     const reset = () => {
         setTrainName("")
         setEpochs("20")
@@ -217,8 +225,9 @@ const TrainLora: React.FunctionComponent = (props) => {
         <div className="train-tag" onMouseEnter={() => setEnableDrag(false)}>
             <div className="train-tag-folder-container">
                 <img className="train-tag-folder" src={folder} style={{filter: getFilter()}} onClick={updateLocation}/>
-                <div className="train-tag-location">{folderLocation ? folderLocation : "None"}</div>
+                <div className="train-tag-location" onDoubleClick={openImageLocation}>{folderLocation ? folderLocation : "None"}</div>
                 <button className="train-tag-button" onClick={() => trainStarted ? interruptTrain() : train()} style={{backgroundColor: trainStarted ? "var(--buttonBGStop)" : "var(--buttonBG)"}}>{trainStarted ? "Stop" : "Train"}</button>
+                <button className="train-tag-button" onClick={() => openFolder()}>Open</button>
                 <button className="train-tag-button" onClick={() => reset()}>Reset</button>
             </div>
             <div className="train-tag-settings-container">

@@ -12,6 +12,7 @@ import TrainTag from "./TrainTag"
 import TrainTextualInversion from "./TrainTextualInversion"
 import TrainLora from "./TrainLora"
 import TrainDreamBooth from "./TrainDreamBooth"
+import TrainCheckpoint from "./TrainCheckpoint"
 import "./styles/generate.less"
 
 const Train: React.FunctionComponent = (props) => {
@@ -122,6 +123,8 @@ const Train: React.FunctionComponent = (props) => {
             return <TrainLora/>
         } else if (trainTab === "dreambooth") {
             return <TrainDreamBooth/>
+        } else if (trainTab === "checkpoint") {
+            return <TrainCheckpoint/>
         }
     }
 

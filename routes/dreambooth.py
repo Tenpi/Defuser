@@ -896,7 +896,7 @@ def main(args):
 
         unet.train()
         for step, batch in enumerate(train_dataloader):
-            socketio.emit("train progress", {"step": global_step, "total_step": args.max_train_steps, "epoch": epoch + 1, "total_epoch": args.num_train_epochs})
+            socketio.emit("train progress", {"step": global_step + 1, "total_step": args.max_train_steps, "epoch": epoch + 1, "total_epoch": args.num_train_epochs})
             with accelerator.accumulate(unet):
                 prompts = batch["prompts"]
                 # encode batch prompts when custom prompts are provided for each image -
@@ -1074,7 +1074,18 @@ def main(args):
 
                         temp = f"{args.output_dir}/temp"
                         pipeline.save_pretrained(temp)
-                        convert_to_ckpt(temp, f"{args.output_dir}/{name}-{epoch + 1}.ckpt")
+                        metadata = {
+                            "name": name,
+                            "steps": str(global_step),
+                            "epochs": str(epoch),
+                            "checkpoint": os.path.basename(args.pretrained_model_name_or_path),
+                            "images": str(len(train_dataloader)),
+                            "learning_rate": str(args.learning_rate),
+                            "text_learning_rate": str(args.text_encoder_lr),
+                            "gradient_accumulation_steps": str(args.gradient_accumulation_steps),
+                            "learning_functions": learning_function
+                        }
+                        convert_to_ckpt(temp, f"{args.output_dir}/{name}-{epoch + 1}.ckpt", metadata=metadata)
                         shutil.rmtree(temp)
 
             logs = {"loss": loss.detach().item(), "lr": lr_scheduler.get_last_lr()[0]}
@@ -1168,7 +1179,18 @@ def main(args):
 
         temp = f"{args.output_dir}/temp"
         pipeline.save_pretrained(temp)
-        convert_to_ckpt(temp, f"{args.output_dir}/{name}.ckpt")
+        metadata = {
+            "name": name,
+            "steps": str(global_step),
+            "epochs": str(epoch),
+            "checkpoint": os.path.basename(args.pretrained_model_name_or_path),
+            "images": str(len(train_dataloader)),
+            "learning_rate": str(args.learning_rate),
+            "text_learning_rate": str(args.text_encoder_lr),
+            "gradient_accumulation_steps": str(args.gradient_accumulation_steps),
+            "learning_functions": learning_function
+        }
+        convert_to_ckpt(temp, f"{args.output_dir}/{name}.ckpt", metadata=metadata)
         shutil.rmtree(temp)
 
     accelerator.end_training()

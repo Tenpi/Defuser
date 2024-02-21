@@ -103,6 +103,10 @@ const TrainTag: React.FunctionComponent = (props) => {
         return 0
     }
 
+    const openImageLocation = async () => {
+        await axios.post("/open-folder", {absolute: folderLocation})
+    }
+
     const tag = async () => {
         await axios.post("/tag", {images: trainImages.map((i: string) => i.replace("/retrieve?path=", "")), model: interrogatorName})
     }
@@ -119,7 +123,7 @@ const TrainTag: React.FunctionComponent = (props) => {
         <div className="train-tag" onMouseEnter={() => setEnableDrag(false)}>
             <div className="train-tag-folder-container">
                 <img className="train-tag-folder" src={folder} style={{filter: getFilter()}} onClick={updateLocation}/>
-                <div className="train-tag-location">{folderLocation ? folderLocation : "None"}</div>
+                <div className="train-tag-location" onDoubleClick={openImageLocation}>{folderLocation ? folderLocation : "None"}</div>
                 <button className="train-tag-button" onClick={() => trainStarted ? interruptTag() : tag()} style={{backgroundColor: trainStarted ? "var(--buttonBGStop)" : "var(--buttonBG)"}}>{trainStarted ? "Stop" : "Tag"}</button>
                 <button className="train-tag-button" onClick={() => deleteTags()}>Delete Tags</button>
             </div>

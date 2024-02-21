@@ -4,6 +4,7 @@ from .interrogate import interrogate
 from .textual_inversion import train_textual_inversion
 from .lora import train_lora
 from .dreambooth import train_dreambooth
+from .checkpoint import train_checkpoint
 from .info import show_in_folder
 import os
 import subprocess
@@ -177,7 +178,7 @@ def dreambooth(images, model_name, train_data, instance_prompt, output, num_trai
     train_dreambooth(images, model_name, train_data, instance_prompt, output, num_train_epochs, learning_rate, text_encoder_lr, resolution, save_epochs, 
     gradient_accumulation_steps, validation_prompt, validation_epochs, lr_scheduler)
     socketio.emit("train complete")
-    show_in_folder("", f"{output}/{instance_prompt}.safetensors")
+    show_in_folder("", f"{output}/{instance_prompt}.ckpt")
     return "done"
 
 @app.route("/train-dreambooth", methods=["POST"])
@@ -203,6 +204,45 @@ def start_dreambooth():
 
     thread = threading.Thread(target=dreambooth, args=(images, model_name, train_data, instance_prompt, output, num_train_epochs, learning_rate, text_encoder_lr, resolution, save_epochs, 
     gradient_accumulation_steps, validation_prompt, validation_epochs, lr_scheduler))
+    thread.start()
+    thread.join()
+    gen_thread = None
+    return "done"
+
+def checkpoint(name, model_name, train_data, output, num_train_epochs, learning_rate, resolution,
+    gradient_accumulation_steps, save_epochs, validation_prompt, validation_epochs, lr_scheduler):
+    global gen_thread 
+    gen_thread = threading.get_ident()
+    socketio.emit("train starting")
+    train_checkpoint(name, model_name, train_data, output, num_train_epochs, learning_rate, resolution,
+    gradient_accumulation_steps, save_epochs, validation_prompt, validation_epochs, lr_scheduler)
+    socketio.emit("train complete")
+    show_in_folder("", f"{output}/{name}.ckpt")
+    return "done"
+
+@app.route("/train-checkpoint", methods=["POST"])
+def start_checkpoint():
+    global gen_thread
+    data = flask.request.json
+    images = data["images"]
+    model_name = data["model_name"]
+    train_data = data["train_data"].strip()
+    name = data["instance_prompt"]
+    num_train_epochs = data["num_train_epochs"]
+    learning_rate = data["learning_rate"]
+    text_encoder_lr = data["text_encoder_lr"]
+    resolution = data["resolution"]
+    save_epochs = data["save_epochs"] 
+    gradient_accumulation_steps = data["gradient_accumulation_steps"]
+    validation_prompt = data["validation_prompt"]
+    validation_epochs = data["validation_epochs"]
+    lr_scheduler = data["learning_function"]
+    output = os.path.join(dirname, f"../outputs/checkpoint/{name}")
+    pathlib.Path(output).mkdir(parents=True, exist_ok=True)
+    model_name = os.path.join(dirname, f"../models/diffusion/{model_name}")
+
+    thread = threading.Thread(target=checkpoint, args=(name, model_name, train_data, output, num_train_epochs, learning_rate, resolution,
+    gradient_accumulation_steps, save_epochs, validation_prompt, validation_epochs, lr_scheduler))
     thread.start()
     thread.join()
     gen_thread = None
