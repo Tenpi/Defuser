@@ -1,0 +1,39 @@
+@import "../../index.less";
+
+.train-image-buttons-show {
+    opacity: 1 !important;
+    transition: all 0.3s;
+}
+
+.train-image-img-container {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    margin-right: 10px;
+    margin-bottom: 10px;
+}
+
+.train-image-img-button-container {
+    opacity: 0;
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    z-index: 6000;
+    transition: all 0.3s;
+}
+
+.train-image-img-button {
+    width: auto;
+    height: 25px;
+    margin-left: 7px;
+    &:hover {
+        cursor: pointer;
+    }
+}
+
+.train-image-img {
+    width: auto;
+    height: auto;
+    max-width: 287px;
+    max-height: 287px;
+}

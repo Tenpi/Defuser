@@ -11,7 +11,6 @@ import pathlib
 import string
 import piexif.helper
 import piexif
-import re
 
 dirname = os.path.dirname(__file__)
 
@@ -110,18 +109,23 @@ def get_all_image_outputs():
     all_outputs = image_outputs + image_nsfw_outputs
     return sorted(all_outputs, key=lambda x: os.path.getmtime(x), reverse=True)
 
-@app.route("/show-in-folder", methods=["POST"])
-def show_in_folder():
-    data = flask.request.json
-    path = data["path"]
-    absolute = os.path.join(dirname, f"../{path}")
+def show_in_folder(path, absolute):
+    if not absolute:
+        absolute = os.path.join(dirname, f"../{path}")
     if platform.system() == "Windows":
         subprocess.Popen(f'explorer /select, "{absolute}"')
     elif platform.system() == "Darwin":
         subprocess.call(["open", "-R", absolute])
     else:
-        subprocess.Popen(["xdg-open", path])
+        subprocess.Popen(["xdg-open", absolute])
     return "done"
+
+@app.route("/show-in-folder", methods=["POST"])
+def show_in_folder_route():
+    data = flask.request.json
+    path = data["path"] if "path" in data else ""
+    absolute = data["absolute"] if "absolute" in data else ""
+    return show_in_folder(path, absolute)
 
 @app.route("/delete-file", methods=["POST"])
 def delete_file():
@@ -222,3 +226,24 @@ def save_watermark():
         piexif.insert(exif, path)
     if invisible_watermark: encode_watermark(path, path, "SDV2")
     return "done"
+
+@app.route("/update-location", methods=["POST"])
+def update_location():
+    program = os.path.join(dirname, "../dialog/dialog.AppImage")
+    if platform.system() == "Windows":
+        program = os.path.join(dirname, "../dialog/dialog.exe")
+    if platform.system() == "Darwin":
+        program = os.path.join(dirname, "../dialog/dialog")
+    process = subprocess.Popen([program, "-d"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    folder_selected, err = process.communicate()
+    return folder_selected
+
+@app.route("/list-files", methods=["POST"])
+def list_files():
+    data = flask.request.json
+    folder = data["folder"]
+    folder = folder.strip()
+    files = os.listdir(folder)
+    files = list(filter(lambda file: not is_unwanted(file) and is_image(file), files))
+    files = sorted(files, key=lambda x: get_number_from_filename(x), reverse=False)
+    return list(map(lambda file: f"{folder}/{file}", files))

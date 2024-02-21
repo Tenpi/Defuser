@@ -305,13 +305,13 @@ const WatermarkBar: React.FunctionComponent = (props) => {
 
     const reset = () => {
         setAIWatermarkPosition("top left")
-        setAIWatermarkType("fan")
+        setAIWatermarkType("none")
         setAIWatermarkHue(0)
         setAIWatermarkSaturation(0)
         setAIWatermarkBrightness(0)
         setAIWatermarkInvert(false)
         setAIWatermarkOpacity(100)
-        setAIWatermarkMarginX(10)
+        setAIWatermarkMarginX(-26)
         setAIWatermarkMarginY(10)
         setAIWatermarkScale(0.7)
     }

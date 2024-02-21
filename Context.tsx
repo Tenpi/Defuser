@@ -81,6 +81,24 @@ export const AIWatermarkMarginXContext = React.createContext<any>(null)
 export const AIWatermarkMarginYContext = React.createContext<any>(null)
 export const AIWatermarkScaleContext = React.createContext<any>(null)
 export const InvisibleWatermarkContext = React.createContext<any>(null)
+export const FolderLocationContext = React.createContext<any>(null)
+export const TrainTabContext = React.createContext<any>(null)
+export const TrainImagesContext = React.createContext<any>(null)
+export const TrainStartedContext = React.createContext<any>(null)
+export const TrainProgressContext = React.createContext<any>(null)
+export const TrainProgressTextContext = React.createContext<any>(null)
+export const TrainCompletedContext = React.createContext<any>(null)
+export const EpochsContext = React.createContext<any>(null)
+export const SaveEpochsContext = React.createContext<any>(null)
+export const PreviewEpochsContext = React.createContext<any>(null)
+export const PreviewPromptContext = React.createContext<any>(null)
+export const LearningRateContext = React.createContext<any>(null)
+export const LearningRateTEContext = React.createContext<any>(null)
+export const GradientAccumulationStepsContext = React.createContext<any>(null)
+export const LearningFunctionContext = React.createContext<any>(null)
+export const ResolutionContext = React.createContext<any>(null)
+export const TrainRenderImageContext = React.createContext<any>(null)
+export const TrainNameContext = React.createContext<any>(null)
 
 const Context: React.FunctionComponent = (props: any) => {
     const [theme, setTheme] = useState("light")
@@ -141,19 +159,55 @@ const Context: React.FunctionComponent = (props: any) => {
     const [nsfwTab, setNSFWTab] = useState(false)
     const [watermark, setWatermark] = useState(false)
     const [aiWatermarkPosition, setAIWatermarkPosition] = useState("top left")
-    const [aiWatermarkType, setAIWatermarkType] = useState("fan")
+    const [aiWatermarkType, setAIWatermarkType] = useState("none")
     const [aiWatermarkHue, setAIWatermarkHue] = useState(0)
     const [aiWatermarkSaturation, setAIWatermarkSaturation] = useState(0)
     const [aiWatermarkBrightness, setAIWatermarkBrightness] = useState(0)
     const [aiWatermarkInvert, setAIWatermarkInvert] = useState(false)
     const [aiWatermarkOpacity, setAIWatermarkOpacity] = useState(100)
-    const [aiWatermarkMarginX, setAIWatermarkMarginX] = useState(10)
+    const [aiWatermarkMarginX, setAIWatermarkMarginX] = useState(-26)
     const [aiWatermarkMarginY, setAIWatermarkMarginY] = useState(10)
     const [aiWatermarkScale, setAIWatermarkScale] = useState(0.7)
     const [invisibleWatermark, setInvisibleWatermark] = useState(true)
+    const [trainTab, setTrainTab] = useState("tag")
+    const [trainStarted, setTrainStarted] = useState(false)
+    const [folderLocation, setFolderLocation] = useState("")
+    const [trainImages, setTrainImages] = useState([])
+    const [trainProgress, setTrainProgress] = useState(100)
+    const [trainProgressText, setTrainProgressText] = useState("")
+    const [trainCompleted, setTrainCompleted] = useState(false)
+    const [epochs, setEpochs] = useState("20")
+    const [saveEpochs, setSaveEpochs] = useState("5")
+    const [previewEpochs, setPreviewEpochs] = useState("5")
+    const [previewPrompt, setPreviewPrompt] = useState("")
+    const [learningRate, setLearningRate] = useState("1e-4")
+    const [learningRateTE, setLearningRateTE] = useState("5e-6")
+    const [gradientAccumulationSteps, setGradientAccumulationSteps] = useState("1")
+    const [resolution, setResolution] = useState("256")
+    const [learningFunction, setLearningFunction] = useState("constant")
+    const [trainRenderImage, setTrainRenderImage] = useState("")
+    const [trainName, setTrainName] = useState("")
 
     return (
         <>  
+            <TrainNameContext.Provider value={{trainName, setTrainName}}>
+            <LearningRateTEContext.Provider value={{learningRateTE, setLearningRateTE}}>
+            <TrainRenderImageContext.Provider value={{trainRenderImage, setTrainRenderImage}}>
+            <LearningFunctionContext.Provider value={{learningFunction, setLearningFunction}}>
+            <ResolutionContext.Provider value={{resolution, setResolution}}>
+            <GradientAccumulationStepsContext.Provider value={{gradientAccumulationSteps, setGradientAccumulationSteps}}>
+            <LearningRateContext.Provider value={{learningRate, setLearningRate}}>
+            <PreviewPromptContext.Provider value={{previewPrompt, setPreviewPrompt}}>
+            <PreviewEpochsContext.Provider value={{previewEpochs, setPreviewEpochs}}>
+            <SaveEpochsContext.Provider value={{saveEpochs, setSaveEpochs}}>
+            <EpochsContext.Provider value={{epochs, setEpochs}}>
+            <TrainCompletedContext.Provider value={{trainCompleted, setTrainCompleted}}>
+            <TrainProgressTextContext.Provider value={{trainProgressText, setTrainProgressText}}>
+            <TrainProgressContext.Provider value={{trainProgress, setTrainProgress}}>
+            <TrainImagesContext.Provider value={{trainImages, setTrainImages}}>
+            <TrainStartedContext.Provider value={{trainStarted, setTrainStarted}}>
+            <FolderLocationContext.Provider value={{folderLocation, setFolderLocation}}>
+            <TrainTabContext.Provider value={{trainTab, setTrainTab}}>
             <InvisibleWatermarkContext.Provider value={{invisibleWatermark, setInvisibleWatermark}}>
             <NSFWTabContext.Provider value={{nsfwTab, setNSFWTab}}>
             <UpscalerContext.Provider value={{upscaler, setUpscaler}}>
@@ -291,6 +345,24 @@ const Context: React.FunctionComponent = (props: any) => {
             </UpscalerContext.Provider>
             </NSFWTabContext.Provider>
             </InvisibleWatermarkContext.Provider>
+            </TrainTabContext.Provider>
+            </FolderLocationContext.Provider>
+            </TrainStartedContext.Provider>
+            </TrainImagesContext.Provider>
+            </TrainProgressContext.Provider>
+            </TrainProgressTextContext.Provider>
+            </TrainCompletedContext.Provider>
+            </EpochsContext.Provider>
+            </SaveEpochsContext.Provider>
+            </PreviewEpochsContext.Provider>
+            </PreviewPromptContext.Provider>
+            </LearningRateContext.Provider>
+            </GradientAccumulationStepsContext.Provider>
+            </ResolutionContext.Provider>
+            </LearningFunctionContext.Provider>
+            </TrainRenderImageContext.Provider>
+            </LearningRateTEContext.Provider>
+            </TrainNameContext.Provider>
         </>
     )
 }

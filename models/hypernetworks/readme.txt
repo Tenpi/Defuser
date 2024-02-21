@@ -1,1 +1,1 @@
-Place hypernetworks in .pt format. They can be in subfolders.
+Place hypernetworks in pt or safetensors format. They can be in subfolders.

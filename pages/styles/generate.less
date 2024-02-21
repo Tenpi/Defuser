@@ -1,0 +1,43 @@
+@import "../../index.less";
+
+.generate {
+    position: relative;
+    display: flex;
+    width: 100%;
+    height: max-content;
+    background-color: var(--background);
+    flex-direction: column;
+    overflow: hidden;
+    overflow-y: overlay;
+}
+
+.train-tab-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: var(--inputBG);
+    border-top-left-radius: 7px;
+    border-top-right-radius: 7px;
+    width: max-content;
+    padding: 5px;
+    padding-left: 10px;
+    padding-right: 10px;
+    margin-left: 10px;
+}
+
+.train-tab-text {
+    font-family: "Subway Circle", sans-serif;
+    font-size: 28px;
+    color: var(--progressBG);
+}
+
+.train-tab-text-selected {
+    font-family: "Subway Circle", sans-serif;
+    font-size: 28px;
+    color: var(--inputText);
+}
+
+.train-tab-row {
+    display: flex;
+    flex-direction: row;
+}

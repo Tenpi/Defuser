@@ -39,7 +39,7 @@ const SettingsBar: React.FunctionComponent = (props) => {
 
     useEffect(() => {
         const savedNegativePrompt = localStorage.getItem("negativePrompt")
-        if (savedNegativePrompt) setNegativePrompt(savedNegativePrompt)
+        if (savedNegativePrompt?.trim()) setNegativePrompt(savedNegativePrompt)
         const savedInterrogatorName = localStorage.getItem("interrogatorName")
         if (savedInterrogatorName) setInterrogatorName(savedInterrogatorName)
         const savedProcessing = localStorage.getItem("processing")
@@ -63,7 +63,7 @@ const SettingsBar: React.FunctionComponent = (props) => {
     }, [])
 
     useEffect(() => {
-        localStorage.setItem("negativePrompt", String(negativePrompt))
+        if (negativePrompt) localStorage.setItem("negativePrompt", String(negativePrompt))
         localStorage.setItem("interrogatorName", String(interrogatorName))
         localStorage.setItem("processing", String(processing))
         localStorage.setItem("format", String(format))

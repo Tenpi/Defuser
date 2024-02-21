@@ -82,10 +82,7 @@ def predict_blip(image):
     result = blip_processor.decode(outputs[0], skip_special_tokens=True)
     return result
 
-@app.route("/interrogate", methods=["POST"])
-def interrogate():
-    file = flask.request.files["image"]
-    model_name = flask.request.form.get("model_name")
+def interrogate(file, model_name):
     if not model_name:
         model_name = "wdtagger"
 
@@ -101,4 +98,10 @@ def interrogate():
     elif model_name == "blip":
         result = predict_blip(image)
     return result
+
+@app.route("/interrogate", methods=["POST"])
+def interrogate_route():
+    file = flask.request.files["image"]
+    model_name = flask.request.form.get("model_name")
+    return interrogate(file, model_name)
 

@@ -4,6 +4,8 @@ import pathlib
 from PIL import Image
 import math
 import base64
+import struct
+import json
 
 dirname = os.path.dirname(__file__)
 
@@ -23,7 +25,18 @@ def next_index(dirname):
     highest = get_number_from_filename(files[0])
     return highest + 1
 
+def is_text(filename):
+    if filename == ".DS_Store": return False
+    if ".source.txt" in filename: return False
+    ext = pathlib.Path(filename).suffix.lower().replace(".", "")
+    text_exts = ["txt", "md"]
+    if ext in text_exts:
+        return True
+    else:
+        return False
+
 def is_image(filename):
+    if filename == ".DS_Store": return False
     ext = pathlib.Path(filename).suffix.lower().replace(".", "")
     image_exts = ["jpg", "jpeg", "png", "webp", "gif", "apng", "avif", "bmp"]
     if ext in image_exts:
@@ -72,3 +85,11 @@ def get_normalized_dimensions(img):
         while height % 8 != 0:
             height -= 1
     return {"width": width, "height": height}
+
+def get_safetensors_metadata(filename):
+    with open(filename, "rb") as f:
+        safe_bytes = f.read()
+    metadata_size = struct.unpack("<Q", safe_bytes[0:8])[0]
+    metadata_as_bytes = safe_bytes[8:8+metadata_size]
+    metadata_as_dict = json.loads(metadata_as_bytes.decode(errors="ignore"))
+    return metadata_as_dict.get("__metadata__", {})

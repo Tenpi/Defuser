@@ -1,1 +1,1 @@
-Place textual inversions in .pt or .safetensors format. They can be in subfolders.
+Place textual inversions in pt or safetensors format. They can be in subfolders.

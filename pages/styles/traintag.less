@@ -1,0 +1,120 @@
+@import "../../index.less";
+
+.train-tag {
+    position: relative;
+    display: flex;
+    width: 100%;
+    height: max-content;
+    background-color: var(--background);
+    flex-direction: column;
+    align-items: flex-start;
+    margin-top: 10px;
+    margin-left: 10px;
+}
+
+.train-tag-folder {
+    width: auto;
+    height: 26px;
+    margin-right: 10px;
+    z-index: 3000;
+    &:hover {
+        cursor: pointer;
+        filter: saturate(0.7) brightness(150%);
+    }
+}
+
+.train-tag-location {
+    color: var(--text);
+    font-size: 21px;
+    font-family: Arial, Helvetica, sans-serif;
+    padding-left: 5px;
+    padding-right: 5px;
+    background-color: var(--inputBG);
+    border-color: transparent;
+    text-align: center;
+    border-radius: 0px;
+    padding-top: 0px;
+    padding-bottom: 0px;
+    z-index: 3000;
+}
+
+.train-tag-button {
+    background-color: var(--buttonBG);
+    outline: none;
+    font-family: Arial, sans-serif;
+    color: black;
+    font-size: 24px;
+    padding: 5px;
+    padding-top: 0px;
+    padding-bottom: 0px;
+    border: 2px solid black;
+    cursor: pointer;
+    margin-left: 10px;
+    font-weight: bold;
+    &:hover {
+        color: white;
+    }
+}
+.train-tag-folder-container {
+    display: flex;
+    flex-direction: row;  
+    align-items: center;
+}
+
+.train-tag-images-container {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    margin-top: 10px;
+}
+
+.train-tag-progress {
+    display: flex;
+    width: 100%;
+    justify-content: center;
+    align-items: center;
+    margin-top: 10px;
+}
+
+.train-tag-settings-container {
+    display: flex;
+    width: 100%;
+    height: max-content;
+    flex-direction: row;
+    align-items: flex-start;
+    margin-top: 10px;
+}
+
+.train-tag-settings-column {
+    display: flex;
+    flex-direction: column;
+}
+
+.train-tag-settings-box {
+    display: flex;
+    flex-direction: row;
+    width: 100%;
+    justify-content: flex-start;
+    align-items: center;
+}
+
+.train-tag-settings-title {
+    color: var(--text);
+    font-size: 21px;
+    font-family: Arial, Helvetica, sans-serif;
+    margin-right: 10px;
+}
+
+.train-tag-settings-input {
+    color: var(--text);
+    font-size: 21px;
+    font-family: Arial, Helvetica, sans-serif;
+    outline: none;
+    padding-left: 5px;
+    padding-right: 5px;
+    background-color: transparent;
+    border-color: transparent;
+    border-radius: 0px;
+    padding-top: 0px;
+    padding-bottom: 0px;
+}

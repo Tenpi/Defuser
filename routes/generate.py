@@ -164,7 +164,10 @@ def get_generator(model_name: str = "", vae: str = "", mode: str = "text", clip_
         if mode == "text":
             if "xl" in model.lower():
                 if update_model:
-                    generator = StableDiffusionXLPipeline.from_single_file(model)
+                    if os.path.isdir(model):
+                        generator = StableDiffusionXLPipeline.from_pretrained(model, local_files_only=True)  
+                    else:
+                        generator = StableDiffusionXLPipeline.from_single_file(model)
                 else:
                     generator = StableDiffusionXLPipeline(vae=generator.vae, text_encoder=generator.text_encoder, 
                                                         tokenizer=generator.tokenizer, unet=generator.unet, 
@@ -172,7 +175,10 @@ def get_generator(model_name: str = "", vae: str = "", mode: str = "text", clip_
                                                         text_encoder_2=generator.text_encoder_2, tokenizer_2=generator.tokenizer_2)
             else:
                 if update_model:
-                    generator = StableDiffusionPipeline.from_single_file(model)
+                    if os.path.isdir(model):
+                        generator = StableDiffusionPipeline.from_pretrained(model, local_files_only=True) 
+                    else:
+                        generator = StableDiffusionPipeline.from_single_file(model)
                 else:
                     generator = StableDiffusionPipeline(vae=generator.vae, text_encoder=generator.text_encoder, 
                                                         tokenizer=generator.tokenizer, unet=generator.unet, 
@@ -181,7 +187,10 @@ def get_generator(model_name: str = "", vae: str = "", mode: str = "text", clip_
         elif mode == "image":
             if "xl" in model.lower():
                 if update_model:
-                    generator = StableDiffusionXLImg2ImgPipeline.from_single_file(model)
+                    if os.path.isdir(model):
+                        generator = StableDiffusionXLImg2ImgPipeline.from_pretrained(model, local_files_only=True)
+                    else:
+                        generator = StableDiffusionXLImg2ImgPipeline.from_single_file(model)
                 else:
                     generator = StableDiffusionXLImg2ImgPipeline(vae=generator.vae, text_encoder=generator.text_encoder, 
                                                         tokenizer=generator.tokenizer, unet=generator.unet, 
@@ -189,7 +198,10 @@ def get_generator(model_name: str = "", vae: str = "", mode: str = "text", clip_
                                                         text_encoder_2=generator.text_encoder_2, tokenizer_2=generator.tokenizer_2)
             else:
                 if update_model:
-                    generator = StableDiffusionImg2ImgPipeline.from_single_file(model)
+                    if os.path.isdir(model):
+                        generator = StableDiffusionImg2ImgPipeline.from_pretrained(model, local_files_only=True)
+                    else:
+                        generator = StableDiffusionImg2ImgPipeline.from_single_file(model)
                 else:
                     generator = StableDiffusionImg2ImgPipeline(vae=generator.vae, text_encoder=generator.text_encoder, 
                                                         tokenizer=generator.tokenizer, unet=generator.unet, 
@@ -198,7 +210,10 @@ def get_generator(model_name: str = "", vae: str = "", mode: str = "text", clip_
         elif mode == "inpaint":
             if "xl" in model.lower():
                 if update_model:
-                    generator = StableDiffusionXLInpaintPipeline.from_single_file(model)
+                    if os.path.isdir(model):
+                        generator = StableDiffusionXLInpaintPipeline.from_pretrained(model, num_in_channels=4, local_files_only=True)
+                    else:
+                        generator = StableDiffusionXLInpaintPipeline.from_single_file(model, num_in_channels=4)
                 else:
                     generator = StableDiffusionXLInpaintPipeline(vae=generator.vae, text_encoder=generator.text_encoder, 
                                                         tokenizer=generator.tokenizer, unet=generator.unet, 
@@ -206,11 +221,10 @@ def get_generator(model_name: str = "", vae: str = "", mode: str = "text", clip_
                                                         text_encoder_2=generator.text_encoder_2, tokenizer_2=generator.tokenizer_2)
             else:
                 if update_model:
-                    generator = StableDiffusionPipeline.from_single_file(model)
-                    generator = StableDiffusionInpaintPipeline(vae=generator.vae, text_encoder=generator.text_encoder, 
-                                                        tokenizer=generator.tokenizer, unet=generator.unet, 
-                                                        scheduler=generator.scheduler, safety_checker=generator.safety_checker, 
-                                                        feature_extractor=generator.feature_extractor)
+                    if os.path.isdir(model):
+                        generator = StableDiffusionInpaintPipeline.from_pretrained(model, num_in_channels=4, local_files_only=True)
+                    else:
+                        generator = StableDiffusionInpaintPipeline.from_single_file(model, num_in_channels=4)
                 else:
                     generator = StableDiffusionInpaintPipeline(vae=generator.vae, text_encoder=generator.text_encoder, 
                                                         tokenizer=generator.tokenizer, unet=generator.unet, 
@@ -220,7 +234,10 @@ def get_generator(model_name: str = "", vae: str = "", mode: str = "text", clip_
             controlnet = get_controlnet(control_processor).to(device=processor, dtype=dtype)
             if "xl" in model.lower():
                 if update_model:
-                    generator = StableDiffusionXLControlNetPipeline.from_single_file(model)
+                    if os.path.isdir(model):
+                        generator = StableDiffusionXLControlNetPipeline.from_pretrained(model, controlnet=controlnet, local_files_only=True)
+                    else:
+                        generator = StableDiffusionXLControlNetPipeline.from_single_file(model, controlnet=controlnet)
                 else:
                     generator = StableDiffusionXLControlNetPipeline(controlnet=controlnet, vae=generator.vae, text_encoder=generator.text_encoder, 
                                                         tokenizer=generator.tokenizer, unet=generator.unet, 
@@ -228,7 +245,10 @@ def get_generator(model_name: str = "", vae: str = "", mode: str = "text", clip_
                                                         text_encoder_2=generator.text_encoder_2, tokenizer_2=generator.tokenizer_2)
             else:
                 if update_model:
-                    generator = StableDiffusionControlNetPipeline.from_single_file(model, controlnet=controlnet)
+                    if os.path.isdir(model):
+                        generator = StableDiffusionControlNetPipeline.from_pretrained(model, controlnet=controlnet, local_files_only=True)
+                    else:
+                        generator = StableDiffusionControlNetPipeline.from_single_file(model, controlnet=controlnet)
                 else:
                     generator = StableDiffusionControlNetPipeline(controlnet=controlnet, vae=generator.vae, text_encoder=generator.text_encoder, 
                                                         tokenizer=generator.tokenizer, unet=generator.unet, 
@@ -238,7 +258,10 @@ def get_generator(model_name: str = "", vae: str = "", mode: str = "text", clip_
             controlnet = get_controlnet(control_processor).to(device=processor, dtype=dtype)
             if "xl" in model.lower():
                 if update_model:
-                    generator = StableDiffusionXLControlNetImg2ImgPipeline.from_single_file(model)
+                    if os.path.isdir(model):
+                        generator = StableDiffusionXLControlNetImg2ImgPipeline.from_pretrained(model, controlnet=controlnet, local_files_only=True)
+                    else:
+                        generator = StableDiffusionXLControlNetImg2ImgPipeline.from_single_file(model, controlnet=controlnet)
                 else:
                     generator = StableDiffusionXLControlNetImg2ImgPipeline(controlnet=controlnet, vae=generator.vae, text_encoder=generator.text_encoder, 
                                                         tokenizer=generator.tokenizer, unet=generator.unet, 
@@ -246,7 +269,10 @@ def get_generator(model_name: str = "", vae: str = "", mode: str = "text", clip_
                                                         text_encoder_2=generator.text_encoder_2, tokenizer_2=generator.tokenizer_2)
             else:
                 if update_model:
-                    generator = StableDiffusionControlNetImg2ImgPipeline.from_single_file(model, controlnet=controlnet)
+                    if os.path.isdir(model):
+                        generator = StableDiffusionControlNetImg2ImgPipeline.from_pretrained(model, controlnet=controlnet, local_files_only=True)
+                    else:
+                        generator = StableDiffusionControlNetImg2ImgPipeline.from_single_file(model, controlnet=controlnet)
                 else:
                     generator = StableDiffusionControlNetImg2ImgPipeline(controlnet=controlnet, vae=generator.vae, text_encoder=generator.text_encoder, 
                                                         tokenizer=generator.tokenizer, unet=generator.unet, 
@@ -256,7 +282,10 @@ def get_generator(model_name: str = "", vae: str = "", mode: str = "text", clip_
             controlnet = get_controlnet(control_processor).to(device=processor, dtype=dtype)
             if "xl" in model.lower():
                 if update_model:
-                    generator = StableDiffusionXLControlNetInpaintPipeline.from_single_file(model)
+                    if os.path.isdir(model):
+                        generator = StableDiffusionXLControlNetInpaintPipeline.from_pretrained(model, controlnet=controlnet, num_in_channels=4, local_files_only=True)
+                    else:
+                        generator = StableDiffusionXLControlNetInpaintPipeline.from_single_file(model, num_in_channels=4, controlnet=controlnet)
                 else:
                     generator = StableDiffusionXLControlNetInpaintPipeline(controlnet=controlnet, vae=generator.vae, text_encoder=generator.text_encoder, 
                                                         tokenizer=generator.tokenizer, unet=generator.unet, 
@@ -264,11 +293,10 @@ def get_generator(model_name: str = "", vae: str = "", mode: str = "text", clip_
                                                         text_encoder_2=generator.text_encoder_2, tokenizer_2=generator.tokenizer_2)
             else:
                 if update_model:
-                    generator = StableDiffusionControlNetPipeline.from_single_file(model, controlnet=controlnet)
-                    generator = StableDiffusionControlNetInpaintPipeline(controlnet=controlnet, vae=generator.vae, text_encoder=generator.text_encoder, 
-                                                        tokenizer=generator.tokenizer, unet=generator.unet, 
-                                                        scheduler=generator.scheduler, safety_checker=generator.safety_checker, 
-                                                        feature_extractor=generator.feature_extractor)
+                    if os.path.isdir(model):
+                        generator = StableDiffusionControlNetInpaintPipeline.from_pretrained(model, num_in_channels=4, controlnet=controlnet, local_files_only=True)
+                    else:
+                        generator = StableDiffusionControlNetInpaintPipeline.from_single_file(model, num_in_channels=4, controlnet=controlnet)
                 else:
                     generator = StableDiffusionControlNetInpaintPipeline(controlnet=controlnet, vae=generator.vae, text_encoder=generator.text_encoder, 
                                                         tokenizer=generator.tokenizer, unet=generator.unet, 
@@ -278,7 +306,10 @@ def get_generator(model_name: str = "", vae: str = "", mode: str = "text", clip_
             controlnet = get_controlnet(control_processor).to(device=processor, dtype=dtype)
             if "xl" in model.lower():
                 if update_model:
-                    generator = StableDiffusionXLReferencePipeline.from_single_file(model)
+                    if os.path.isdir(model):
+                        generator = StableDiffusionXLReferencePipeline.from_pretrained(model, local_files_only=True)
+                    else:
+                        generator = StableDiffusionXLReferencePipeline.from_single_file(model)
                 else:
                     generator = StableDiffusionXLReferencePipeline(vae=generator.vae, text_encoder=generator.text_encoder, 
                                                         tokenizer=generator.tokenizer, unet=generator.unet, 
@@ -286,7 +317,10 @@ def get_generator(model_name: str = "", vae: str = "", mode: str = "text", clip_
                                                         text_encoder_2=generator.text_encoder_2, tokenizer_2=generator.tokenizer_2)
             else:
                 if update_model:
-                    generator = StableDiffusionControlNetReferencePipeline.from_single_file(model, controlnet=controlnet)
+                    if os.path.isdir(model):
+                        generator = StableDiffusionControlNetReferencePipeline.from_pretrained(model, controlnet=controlnet, local_files_only=True)
+                    else:
+                        generator = StableDiffusionControlNetReferencePipeline.from_single_file(model, controlnet=controlnet)
                 else:
                     generator = StableDiffusionControlNetReferencePipeline(controlnet=controlnet, vae=generator.vae, text_encoder=generator.text_encoder, 
                                                         tokenizer=generator.tokenizer, unet=generator.unet, 
@@ -295,7 +329,10 @@ def get_generator(model_name: str = "", vae: str = "", mode: str = "text", clip_
         elif mode == "animatediff":
             motion_adapter = get_motion_adapter().to(device=processor, dtype=dtype)
             if update_model:
-                generator = StableDiffusionPipeline.from_single_file(model)
+                if os.path.isdir(model):
+                    generator = StableDiffusionPipeline.from_pretrained(model, local_files_only=True)
+                else:
+                    generator = StableDiffusionPipeline.from_single_file(model)
                 generator = AnimateDiffPipeline(motion_adapter=motion_adapter, vae=generator.vae, 
                                                 text_encoder=generator.text_encoder, tokenizer=generator.tokenizer, 
                                                 unet=generator.unet, scheduler=generator.scheduler)
@@ -309,7 +346,11 @@ def get_generator(model_name: str = "", vae: str = "", mode: str = "text", clip_
         if not vae:
             vae = get_vae_models()[0]
         vae_model = os.path.join(dirname, "../models/vae", vae)
-        generator.vae = AutoencoderKL.from_pretrained(vae_model, local_files_only=True).to(device=processor, dtype=dtype)
+        if os.path.isdir(vae_model):
+            generator.vae = AutoencoderKL.from_pretrained(vae_model, local_files_only=True)
+        else:
+            generator.vae = AutoencoderKL.from_single_file(vae_model)
+        generator.vae = generator.vae.to(device=processor, dtype=dtype)
         generator.vae.enable_slicing()
         generator.vae.enable_tiling()
         vae_name = vae

@@ -11,6 +11,7 @@ import routes.segmentate
 import routes.controlnet
 import routes.promptgen
 import routes.info
+import routes.train
 
 @app.route("/assets/<path:filename>")
 def assets(filename):
@@ -24,6 +25,14 @@ def outputs(filename):
 def models(filename):
     print(filename)
     return flask.send_from_directory("models", filename)
+
+@app.route("/retrieve")
+def retrieve():
+    file_path = flask.request.args.get("path")
+    if file_path:
+        return flask.send_file(file_path)
+    else:
+        return "Path not provided", 400
 
 @app.route("/")
 def index():

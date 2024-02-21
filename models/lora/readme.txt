@@ -1,1 +1,1 @@
-Place lora models in .safetensors format. They can be in subfolders.
+Place lora models in pt or safetensors format. They can be in subfolders.

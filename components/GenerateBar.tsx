@@ -114,8 +114,8 @@ const GenerateBar: React.FunctionComponent = (props) => {
     }, [])
 
     useEffect(() => {
-        localStorage.setItem("prompt", String(prompt))
-        localStorage.setItem("negativePrompt", String(negativePrompt))
+        if (prompt) localStorage.setItem("prompt", String(prompt))
+        if (negativePrompt) localStorage.setItem("negativePrompt", String(negativePrompt))
         localStorage.setItem("infinite", String(infinite))
         localStorage.setItem("upscaling", String(upscaling))
     }, [prompt, negativePrompt, infinite, upscaling])

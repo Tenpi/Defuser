@@ -1,3 +1,4 @@
+from __main__ import app, socketio
 import argparse
 import logging
 import math
@@ -37,8 +38,10 @@ from diffusers import (
 from diffusers.optimization import get_scheduler
 import functools
 import pathlib
+from itertools import chain
 
 logger = get_logger(__name__)
+pipeline = None
 
 def autocast_decorator(autocast_instance, func):
   @functools.wraps(func)
@@ -62,8 +65,29 @@ class totally_legit_autocast:
     if torch._jit_internal.is_scripting():
       return func
     return autocast_decorator(self, func)
+  
+def step_progress(self, step: int, timestep: int, call_dict: dict):
+        global pipeline
+        latent = None
+        if type(call_dict) is torch.Tensor:
+            latent = call_dict
+        else:
+            latent = call_dict.get("latents")
+        with torch.no_grad():
+            latent = 1 / 0.18215 * latent
+            image = pipeline.vae.decode(latent).sample
+            image = (image / 2 + 0.5).clamp(0, 1)
+            image = image.cpu().permute(0, 2, 3, 1).float().numpy()
+            image = pipeline.numpy_to_pil(image)[0]
+            w, h = image.size
+            pixels = list(image.convert("RGBA").getdata())
+            pixels = list(chain(*pixels))
+            total_steps = 10
+            socketio.emit("train image progress", {"step": step, "total_step": total_steps, "width": w, "height": h, "image": pixels})
+        return call_dict
 
 def log_validation(text_encoder, tokenizer, unet, vae, options, accelerator, weight_dtype, epoch):
+    global pipeline
     logger.info(
         f"Running validation... \n Generating {options.num_validation_images} images with prompt:"
         f" {options.validation_prompt}."
@@ -73,30 +97,41 @@ def log_validation(text_encoder, tokenizer, unet, vae, options, accelerator, wei
     pipeline.text_encoder = accelerator.unwrap_model(text_encoder)
     pipeline.unet = unet
     pipeline.vae = vae
+    pipeline.vae.enable_slicing()
+    pipeline.vae.enable_tiling()
+    pipeline = pipeline.to(device=accelerator.device)
+    pipeline.enable_attention_slicing()
     pipeline.safety_checker = None
     pipeline.scheduler = DPMSolverMultistepScheduler.from_config(pipeline.scheduler.config)
-    pipeline = pipeline.to(accelerator.device)
     #pipeline.set_progress_bar_config(disable=True)
     generator = None if options.seed is None else torch.Generator(device=accelerator.device).manual_seed(options.seed)
     images = []
     for i in range(options.num_validation_images):
-        with torch.autocast("cuda"):
-            image = pipeline(options.validation_prompt, num_inference_steps=25, generator=generator).images[0]
+        image = pipeline(options.validation_prompt, num_inference_steps=10, generator=generator, callback_on_step_end=step_progress).images[0]
         images.append(image)
     del pipeline
     torch.mps.empty_cache()
     torch.cuda.empty_cache()
     return images
 
-
-def save_progress(text_encoder, placeholder_token_ids, accelerator, options, save_path):
+def save_progress(text_encoder, placeholder_token_ids, accelerator, options, save_path, save_data):
     logger.info("Saving embeddings")
     learned_embeds = (
         accelerator.unwrap_model(text_encoder)
         .get_input_embeddings()
         .weight[min(placeholder_token_ids) : max(placeholder_token_ids) + 1]
     )
-    learned_embeds_dict = {options.placeholder_token: learned_embeds.detach().cpu()}
+    learned_embeds_dict = {
+        options.placeholder_token: learned_embeds.detach().cpu(),
+        "name": save_data.name,
+        "vectors": save_data.vectors,
+        "steps": save_data.steps,
+        "epochs": save_data.epochs,
+        "checkpoint": save_data.checkpoint,
+        "images": save_data.images,
+        "learning_rate": save_data.learning_rate,
+        "gradient_accumulation_steps": save_data.gradient_accumulation_steps
+    }
     torch.save(learned_embeds_dict, save_path)
 
 def is_image(filename):
@@ -184,6 +219,7 @@ class TextualInversionDataset(Dataset):
 
 
 def main(options):
+    global pipeline
     name = options.initializer_token
     accelerator_project_config = ProjectConfiguration(project_dir=options.output_dir)
     accelerator = Accelerator(
@@ -294,12 +330,25 @@ def main(options):
         options.max_train_steps = options.num_train_epochs * num_update_steps_per_epoch
         overrode_max_train_steps = True
 
+    learning_function = options.lr_scheduler
+    power = 1.0
+    if options.lr_scheduler == "quadratic":
+        options.lr_scheduler = "polynomial"
+        power = 2.0
+    elif options.lr_scheduler == "cubic":
+        options.lr_scheduler = "polynomial"
+        power = 3.0
+    elif options.lr_scheduler == "quartic":
+        options.lr_scheduler = "polynomial"
+        power = 4.0
+
     lr_scheduler = get_scheduler(
         options.lr_scheduler,
         optimizer=optimizer,
         num_warmup_steps=options.lr_warmup_steps * options.gradient_accumulation_steps,
         num_training_steps=options.max_train_steps * options.gradient_accumulation_steps,
         num_cycles=options.lr_num_cycles * options.gradient_accumulation_steps,
+        power=power
     )
 
     text_encoder, optimizer, train_dataloader, lr_scheduler = accelerator.prepare(
@@ -338,7 +387,7 @@ def main(options):
             path = os.path.basename(options.resume_from_checkpoint)
         else:
             dirs = os.listdir(options.output_dir)
-            dirs = [d for d in dirs if d.startswith("checkpoint")]
+            dirs = list(filter(lambda d: os.path.isdir(os.path.join(options.output_dir, d)), dirs))
             dirs = sorted(dirs, key=lambda x: int(x.split("-")[1]))
             path = dirs[-1] if len(dirs) > 0 else None
 
@@ -411,8 +460,22 @@ def main(options):
                 progress_bar.update(1)
                 global_step += 1
                 if global_step % options.save_steps == 0:
-                    save_path = os.path.join(options.output_dir, f"{name}-{global_step}.bin")
-                    save_progress(text_encoder, placeholder_token_ids, accelerator, options, save_path)
+                    save_path = os.path.join(options.output_dir, f"{name}-{epoch + 1}.bin")
+                    save_data = {
+                        "name": name,
+                        "vectors": options.num_vectors,
+                        "steps": global_step,
+                        "epochs": epoch,
+                        "checkpoint": os.path.basename(options.model),
+                        "images": len(train_dataloader),
+                        "learning_rate": options.learning_rate,
+                        "gradient_accumulation_steps": options.gradient_accumulation_steps,
+                        "learning_functions": learning_function
+                    }
+                    options.name = name
+                    options.steps = global_step
+                    options.epochs = epoch
+                    save_progress(text_encoder, placeholder_token_ids, accelerator, options, save_path, DotDict(save_data))
 
                 if accelerator.is_main_process:
                     if global_step % options.checkpointing_steps == 0:
@@ -434,7 +497,7 @@ def main(options):
                                     removing_checkpoint = os.path.join(options.output_dir, removing_checkpoint)
                                     shutil.rmtree(removing_checkpoint)
 
-                        save_path = os.path.join(options.output_dir, f"{name}-{global_step}")
+                        save_path = os.path.join(options.output_dir, f"{name}-{epoch + 1}")
                         accelerator.save_state(save_path)
                         logger.info(f"Saved state to {save_path}")
 
@@ -444,15 +507,18 @@ def main(options):
                         )
                         if len(images) > 1:
                             for i in range(len(images)):
-                                save_path = os.path.join(options.output_dir, f"{name}-{global_step}-{i}.png")
+                                save_path = os.path.join(options.output_dir, f"{name}-{epoch + 1}-{i}.png")
                                 images[i].save(save_path)
                         else:
-                            save_path = os.path.join(options.output_dir, f"{name}-{global_step}.png")
+                            save_path = os.path.join(options.output_dir, f"{name}-{epoch + 1}.png")
                             images[0].save(save_path)
+                            socketio.emit("train image complete", {"image": save_path})
 
             logs = {"loss": loss.detach().item(), "lr": lr_scheduler.get_last_lr()[0]}
             progress_bar.set_postfix(**logs)
             accelerator.log(logs, step=global_step)
+
+            socketio.emit("train progress", {"step": global_step, "total_step": options.max_train_steps, "epoch": epoch + 1, "total_epoch": options.num_train_epochs})
 
             if global_step >= options.max_train_steps:
                 break
@@ -471,11 +537,22 @@ def main(options):
             pipeline.tokenizer = tokenizer
             pipeline.save_pretrained(options.output_dir)
         save_path = os.path.join(options.output_dir, f"{name}.bin")
-        save_progress(text_encoder, placeholder_token_ids, accelerator, options, save_path)
+        save_data = {
+            "name": name,
+            "vectors": options.num_vectors,
+            "steps": global_step,
+            "epochs": epoch,
+            "checkpoint": os.path.basename(options.model),
+            "images": len(train_dataloader),
+            "learning_rate": options.learning_rate,
+            "gradient_accumulation_steps": options.gradient_accumulation_steps,
+            "learning_functions": learning_function
+        }
+        save_progress(text_encoder, placeholder_token_ids, accelerator, options, save_path, DotDict(save_data))
     accelerator.end_training()
 
-def get_options(model_name, train_data, initializer_token, output_dir, num_train_epochs, learning_rate, resolution,
-    save_steps, num_vectors, gradient_accumulation_steps, validation_prompt, validation_steps, resume_from_checkpoint):
+def get_options(model_name, train_data, initializer_token, output_dir, max_train_steps, learning_rate, resolution,
+    save_steps, num_vectors, gradient_accumulation_steps, validation_prompt, validation_steps, lr_scheduler):
     options = {}
     options["save_steps"] = save_steps
     options["save_as_full_pipeline"] = False
@@ -488,15 +565,15 @@ def get_options(model_name, train_data, initializer_token, output_dir, num_train
     options["output_dir"] = output_dir
     options["seed"] = None
     options["resolution"] = resolution
-    options["center_crop"] = True 
+    options["center_crop"] = True
     options["train_batch_size"] = 1
-    options["num_train_epochs"] = num_train_epochs
-    options["max_train_steps"] = None
+    options["num_train_epochs"] = None
+    options["max_train_steps"] = max_train_steps
     options["gradient_accumulation_steps"] = gradient_accumulation_steps
     options["gradient_checkpointing"] = True
     options["learning_rate"] = learning_rate
     options["scale_lr"] =  False
-    options["lr_scheduler"] = "constant"
+    options["lr_scheduler"] = lr_scheduler
     options["lr_warmup_steps"] = 0
     options["lr_num_cycles"] = 1
     options["dataloader_num_workers"] = 0
@@ -510,7 +587,7 @@ def get_options(model_name, train_data, initializer_token, output_dir, num_train
     options["local_rank"] = -1
     options["checkpointing_steps"] = save_steps
     options["checkpoints_total_limit"] = None
-    options["resume_from_checkpoint"] = resume_from_checkpoint
+    options["resume_from_checkpoint"] = "latest"
     env_local_rank = int(os.environ.get("LOCAL_RANK", -1))
     if env_local_rank != -1 and env_local_rank != options["local_rank"]:
         options["local_rank"] = env_local_rank
@@ -521,20 +598,29 @@ class DotDict(dict):
     __setattr__ = dict.__setitem__
     __delattr__ = dict.__delitem__
 
-if __name__ == "__main__":
-    model_name = "/Users/chris/Documents/GitClone/diffusers/anything-v3.safetensors"
-    train_data = "/Users/chris/Documents/GitClone/diffusers/klee"
-    token = "klee"
-    output = "textual-inversion-klee"
-    num_train_epochs = 20
-    learning_rate = 1e-4
-    resolution = 256
-    validation_prompt = "klee (genshin impact)"
-    validation_steps = 500
-    resume_from_checkpoint = "latest"
-    save_steps = 500
-    num_vectors = 1
-    gradient_accumulation_steps = 1
-    options = get_options(model_name, train_data, token, output, num_train_epochs, learning_rate, resolution, save_steps, num_vectors, 
-    gradient_accumulation_steps, validation_prompt, validation_steps, resume_from_checkpoint)
+def train_textual_inversion(images, model_name, train_data, token, output, num_train_epochs, learning_rate, resolution, save_epochs, num_vectors, 
+    gradient_accumulation_steps, validation_prompt, validation_epochs, lr_scheduler):
+
+    if not model_name: model_name = ""
+    if not train_data: train_data = ""
+    if not token: token = ""
+    if not output: output = ""
+    if not num_train_epochs: num_train_epochs = 20
+    if not validation_epochs: validation_epochs = 5
+    if not save_epochs: save_epochs = 5
+    if not learning_rate: learning_rate = 1e-4
+    if not resolution: resolution = 256
+    if not validation_prompt: validation_prompt = ""
+    if not lr_scheduler: lr_scheduler = "constant"
+    if not num_vectors: num_vectors = 1
+    if not gradient_accumulation_steps: gradient_accumulation_steps = 1
+
+    steps_per_epoch = math.ceil(len(images) / gradient_accumulation_steps)
+    max_train_steps = num_train_epochs * steps_per_epoch
+    save_steps = save_epochs * steps_per_epoch
+    validation_steps = validation_epochs * steps_per_epoch
+
+    options = get_options(model_name, train_data, token, output, max_train_steps, learning_rate, resolution, save_steps, num_vectors, 
+    gradient_accumulation_steps, validation_prompt, validation_steps, lr_scheduler)
+
     main(DotDict(options))

@@ -147,7 +147,7 @@ const Render: React.FunctionComponent = (props) => {
     const getText = () => {
         if (completed) return "Completed"
         if (upscaling) return "Upscaling"
-        if (progress >= 0) return `${progress}%`
+        if (progress >= 0) return `${String(progress).includes(".") ? progress.toFixed(2) : progress}%`
         return "Starting"
     }
 
