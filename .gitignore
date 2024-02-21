@@ -26,6 +26,12 @@ outputs/image/*
 outputs/text/*
 outputs/image nsfw
 outputs/text nsfw
+outputs/lora
+outputs/dreambooth
+outputs/textual inversion
+outputs/hypernetwork
+outputs/checkpoint
+outputs/merged
 
 !models/diffusion/readme.txt
 !models/lora/readme.txt

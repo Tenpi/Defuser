@@ -521,8 +521,8 @@ def main(args):
     # text_encoder_cls_one = import_model_class_from_model_name_or_path(pipeline)
 
     # Load scheduler and models
-    noise_scheduler = DDPMScheduler.from_config(pipeline.scheduler.config)
-    text_encoder_one = CLIPTextModel(pipeline.text_encoder.config)
+    noise_scheduler = pipeline.scheduler #DDPMScheduler.from_config(pipeline.scheduler.config)
+    text_encoder_one = pipeline.text_encoder(pipeline.scheduler.config) #CLIPTextModel(pipeline.text_encoder.config)
 
     vae = pipeline.vae
     vae_scaling_factor = vae.config.scaling_factor
