@@ -62,10 +62,6 @@ def get_captions(folder, default="", repeats=1):
     files = os.listdir(folder)
     text_files = list(filter(lambda file: is_text(file), files))
     text_files = sorted(text_files, key=lambda x: get_number_from_filename(x), reverse=False)
-    if len(text_files) == 0:
-        image_files = list(filter(lambda file: is_image(file), files))
-        for i in image_files:
-            text_files.append(default)
     texts = []
     for text in text_files:
         texts.extend(itertools.repeat(text, repeats))
@@ -75,6 +71,11 @@ def get_captions(folder, default="", repeats=1):
         f = open(os.path.join(folder, text))
         captions.append(f.read())
         f.close()
+    if len(captions) == 0:
+        image_files = list(filter(lambda file: is_image(file), files))
+        for i in image_files:
+            for j in range(repeats):
+                captions.append(default)
     return captions
 
 def create_unet():
