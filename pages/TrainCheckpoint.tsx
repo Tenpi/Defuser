@@ -244,10 +244,10 @@ const TrainCheckpoint: React.FunctionComponent = (props) => {
                         <span className="train-tag-settings-title">Learning Rate:</span>
                         <input className="train-tag-settings-input" type="text" spellCheck={false} value={learningRate} onChange={(event) => setLearningRate(event.target.value)}/>
                     </div>
-                    {/* <div className="train-tag-settings-box">
+                    <div className="train-tag-settings-box">
                         <span className="train-tag-settings-title">Text Learning Rate:</span>
                         <input className="train-tag-settings-input" type="text" spellCheck={false} value={learningRateTE} onChange={(event) => setLearningRateTE(event.target.value)}/>
-                    </div> */}
+                    </div>
                     <div className="train-tag-settings-box">
                         <span className="train-tag-settings-title">Gradient Accumulation Steps:</span>
                         <input className="train-tag-settings-input" type="text" spellCheck={false} value={gradientAccumulationSteps} onChange={(event) => setGradientAccumulationSteps(event.target.value)}/>
