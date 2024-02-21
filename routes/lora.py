@@ -945,6 +945,7 @@ def main(args):
 
         unet.train()
         for step, batch in enumerate(train_dataloader):
+            socketio.emit("train progress", {"step": global_step, "total_step": args.max_train_steps, "epoch": epoch + 1, "total_epoch": args.num_train_epochs})
             with accelerator.accumulate(unet):
                 prompts = batch["prompts"]
                 # encode batch prompts when custom prompts are provided for each image -
@@ -1139,8 +1140,6 @@ def main(args):
             logs = {"loss": loss.detach().item(), "lr": lr_scheduler.get_last_lr()[0]}
             progress_bar.set_postfix(**logs)
             accelerator.log(logs, step=global_step)
-
-            socketio.emit("train progress", {"step": global_step, "total_step": args.max_train_steps, "epoch": epoch + 1, "total_epoch": args.num_train_epochs})
 
             if global_step >= args.max_train_steps:
                 break

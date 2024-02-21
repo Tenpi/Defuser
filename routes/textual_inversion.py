@@ -413,6 +413,7 @@ def main(options):
     for epoch in range(first_epoch, options.num_train_epochs):
         text_encoder.train()
         for step, batch in enumerate(train_dataloader):
+            socketio.emit("train progress", {"step": global_step, "total_step": options.max_train_steps, "epoch": epoch + 1, "total_epoch": options.num_train_epochs})
             if options.resume_from_checkpoint and epoch == first_epoch and step < resume_step:
                 if step % options.gradient_accumulation_steps == 0:
                     progress_bar.update(1)
@@ -517,8 +518,6 @@ def main(options):
             logs = {"loss": loss.detach().item(), "lr": lr_scheduler.get_last_lr()[0]}
             progress_bar.set_postfix(**logs)
             accelerator.log(logs, step=global_step)
-
-            socketio.emit("train progress", {"step": global_step, "total_step": options.max_train_steps, "epoch": epoch + 1, "total_epoch": options.num_train_epochs})
 
             if global_step >= options.max_train_steps:
                 break
