@@ -64,7 +64,7 @@ pip3 install -r requirements.txt
 ### Running
 
 Start the server with the following command.
-```
+```sh
 npm start
 ```
 
