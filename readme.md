@@ -95,6 +95,16 @@ contains spaces, wrap it in parantheses. Examples: \
 `(blue hat)++` \
 `(red hat)1.5`
 
+### Watermark Tool
+
+There is a tool for adding a watermark to the images, its recommended to use it to make it clear that the image is AI. There is 
+also an invisible watermark that isn't visible but can be decoded from the image.
+
+### Image Sources
+
+You should generate sources for the images in order to embed them into the metadata of the trained model. The rate limit of 
+a free saucenao account is 4/30s but you can add them manually by creating a file {image name}.source.txt with the source url.
+
 ### Important
 
 By using this UI you agree not to generate harmful or offensive content, plagiarize specific artworks or artists, impersonate 
