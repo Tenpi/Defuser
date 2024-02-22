@@ -1,6 +1,6 @@
 # Diffusers UI
 
-![Image](https://github.com/Tenpi/Diffusers-UI/blob/main/dist/assets/images/readme.png?raw=true)
+![Image](https://github.com/Tenpi/Diffusers-UI/blob/main/assets/images/readme.png?raw=true)
 
 Diffusers UI is an UI for diffusers (an image generation library). The inferencing and training of diffusion 
 models is supported. It aims to be simple and fast to use.

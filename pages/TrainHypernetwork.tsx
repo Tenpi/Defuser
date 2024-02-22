@@ -205,7 +205,7 @@ const TrainHypernetwork: React.FunctionComponent = (props) => {
     }
 
     const openFolder = async () => {
-        await axios.post("/open-folder", {path: `outputs/lora/${trainName}`})
+        await axios.post("/open-folder", {path: `outputs/hypernetwork/${trainName}`})
     }
 
     const reset = () => {

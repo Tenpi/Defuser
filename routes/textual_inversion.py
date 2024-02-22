@@ -402,11 +402,11 @@ def main(options):
         else:
             accelerator.print(f"Resuming from checkpoint {path}")
             accelerator.load_state(os.path.join(options.output_dir, path))
-            global_step = int(path.split("-")[1])
-
-            resume_global_step = global_step * options.gradient_accumulation_steps
-            first_epoch = global_step // num_update_steps_per_epoch
+            epoch = int(path.split("-")[1])
+            resume_global_step = epoch * num_update_steps_per_epoch * options.gradient_accumulation_steps
+            first_epoch = epoch
             resume_step = resume_global_step % (num_update_steps_per_epoch * options.gradient_accumulation_steps)
+            global_step = resume_global_step
 
     progress_bar = tqdm(range(global_step, options.max_train_steps), disable=not accelerator.is_local_main_process)
     progress_bar.set_description("Steps")

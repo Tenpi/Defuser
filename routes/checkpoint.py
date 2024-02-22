@@ -890,10 +890,11 @@ def main(args):
         else:
             accelerator.print(f"Resuming from checkpoint {path}")
             accelerator.load_state(os.path.join(args.output_dir, path))
-            global_step = int(path.split("-")[1])
+            epoch = int(path.split("-")[1])
 
-            initial_global_step = global_step
-            first_epoch = global_step // num_update_steps_per_epoch
+            initial_global_step = epoch * num_update_steps_per_epoch
+            first_epoch = epoch
+            global_step = initial_global_step
 
     else:
         initial_global_step = 0

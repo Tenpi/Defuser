@@ -1,6 +1,6 @@
 from __main__ import app, socketio
 from .functions import is_image, is_text, get_number_from_filename, get_sources
-from .hypernet import Hypernetwork, load_hypernet, add_hypernet, clear_hypernets
+from .hypernet import create_hypernetwork, add_hypernet, clear_hypernets
 import argparse
 import gc
 import hashlib
@@ -57,6 +57,7 @@ from diffusers.utils import (
 )
 from diffusers.utils.import_utils import is_xformers_available
 import functools
+import copy
 
 dirname = os.path.dirname(__file__)
 logger = get_logger(__name__)
@@ -472,12 +473,13 @@ def main(args):
 
     vae = pipeline.vae
     vae_scaling_factor = vae.config.scaling_factor
+
     unet = pipeline.unet
 
-    # We only train the additional adapter LoRA layers
+    # We only train the hypernetwork layers
     vae.requires_grad_(False)
     text_encoder.requires_grad_(False)
-    #unet.requires_grad_(False)
+    unet.requires_grad_(False)
 
     # Move unet, vae and text_encoder to device and cast to weight_dtype
     unet.to(accelerator.device, dtype=weight_dtype)
@@ -491,7 +493,7 @@ def main(args):
         unet.enable_gradient_checkpointing()
 
     # Add Hypernetwork
-    hypernetwork = load_hypernet(os.path.join(dirname, "../dialog/random.pt"))
+    hypernetwork = create_hypernetwork(name)
     hypernetwork.to(accelerator.device)
     add_hypernet(unet, hypernetwork)
 
@@ -697,14 +699,8 @@ def main(args):
         power=power
     )
 
-    # Prepare everything with our `accelerator`.
-    if not freeze_text_encoder:
-        hypernetwork, unet, text_encoder, optimizer, train_dataloader, lr_scheduler = accelerator.prepare(
-            hypernetwork, unet, text_encoder, optimizer, train_dataloader, lr_scheduler
-        )
-    else:
-        hypernetwork, unet, optimizer, train_dataloader, lr_scheduler = accelerator.prepare(
-            hypernetwork, unet, optimizer, train_dataloader, lr_scheduler
+    hypernetwork, optimizer, train_dataloader, lr_scheduler = accelerator.prepare(
+            hypernetwork,  optimizer, train_dataloader, lr_scheduler
         )
 
     # We need to recalculate our total training steps as the size of the training dataloader may have changed.
@@ -738,8 +734,6 @@ def main(args):
             dirs = sorted(dirs, key=lambda x: int(x.split("-")[1]))
             path = dirs[-1] if len(dirs) > 0 else None
 
-        path = None
-
         if path is None:
             accelerator.print(
                 f"Checkpoint '{args.resume_from_checkpoint}' does not exist. Starting a new training run."
@@ -748,11 +742,14 @@ def main(args):
             initial_global_step = 0
         else:
             accelerator.print(f"Resuming from checkpoint {path}")
+            clear_hypernets(unet)
             accelerator.load_state(os.path.join(args.output_dir, path))
-            global_step = int(path.split("-")[1])
+            add_hypernet(unet, hypernetwork)
+            epoch = int(path.split("-")[1])
 
-            initial_global_step = global_step
-            first_epoch = global_step // num_update_steps_per_epoch
+            initial_global_step = epoch * num_update_steps_per_epoch
+            first_epoch = epoch
+            global_step = initial_global_step
 
     else:
         initial_global_step = 0
@@ -904,7 +901,6 @@ def main(args):
                 if accelerator.is_main_process:
                     if global_step % args.checkpointing_steps == 0:
                         # _before_ saving state, check if this save would set us over the `checkpoints_total_limit`
-                        """
                         if args.checkpoints_total_limit is not None:
                             checkpoints = os.listdir(args.output_dir)
                             checkpoints = [d for d in checkpoints if d.startswith("checkpoint")]
@@ -925,9 +921,10 @@ def main(args):
                                     shutil.rmtree(removing_checkpoint)
 
                         save_path = os.path.join(args.output_dir, f"{name}-{epoch + 1}")
+                        clear_hypernets(unet)
                         accelerator.save_state(save_path)
+                        add_hypernet(unet, hypernetwork)
                         logger.info(f"Saved state to {save_path}")
-                        """
 
                         hypernetwork = accelerator.unwrap_model(hypernetwork)
                         
@@ -959,14 +956,14 @@ def main(args):
                     f" {args.validation_prompt}."
                 )
                 # create pipeline
-                unet = accelerator.unwrap_model(unet)
+                v_unet = copy.deepcopy(accelerator.unwrap_model(unet))
                 hypernetwork = accelerator.unwrap_model(hypernetwork)
                 pipeline = StableDiffusionPipeline.from_single_file(
                     args.pretrained_model_name_or_path,
-                    unet=unet,
+                    unet=v_unet,
                     torch_dtype=weight_dtype,
                 )
-                add_hypernet(unet, hypernetwork)
+                add_hypernet(v_unet, hypernetwork)
 
 
                 # We train on the simplified learning objective. If we were previously predicting a variance, we need the scheduler to ignore it
@@ -1009,9 +1006,10 @@ def main(args):
                     socketio.emit("train image complete", {"image": save_path})
 
                 del pipeline
+                del v_unet
                 torch.mps.empty_cache()
                 torch.cuda.empty_cache()
-
+                
     # Save the hypernetwork
     accelerator.wait_for_everyone()
     if accelerator.is_main_process:

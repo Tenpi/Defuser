@@ -248,7 +248,26 @@ def apply_hypernetworks(hypernetworks, context, layer=None):
 
     return context_k, context_v
 
+def create_hypernetwork(name, enable_sizes=[768, 320, 640, 1280], layer_structure="1,2,1", activation_func="swish", weight_init="Normal", add_layer_norm=False, use_dropout=False, dropout_structure=None):
+    if type(layer_structure) == str:
+        layer_structure = [float(x.strip()) for x in layer_structure.split(",")]
 
+    if use_dropout and dropout_structure and type(dropout_structure) == str:
+        dropout_structure = [float(x.strip()) for x in dropout_structure.split(",")]
+    else:
+        dropout_structure = [0] * len(layer_structure)
+
+    hypernet = Hypernetwork(
+        name=name,
+        enable_sizes=[int(x) for x in enable_sizes],
+        layer_structure=layer_structure,
+        activation_func=activation_func,
+        weight_init=weight_init,
+        add_layer_norm=add_layer_norm,
+        use_dropout=use_dropout,
+        dropout_structure=dropout_structure
+    )
+    return hypernet
 
 class HyperAttnProcessor(nn.Module):
     r"""
@@ -374,6 +393,6 @@ def clear_hypernets(unet: "UNet2DConditionModel") -> None:
     keys = unet.attn_processors.keys()
     for key in keys:
         if isinstance(attn_processors[key], HyperAttnProcessor):
-            attn_processors[key].hypernetworks = []
+            del attn_processors[key]
         else:
             pass
