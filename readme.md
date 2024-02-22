@@ -100,3 +100,7 @@ contains spaces, wrap it in parantheses. Examples: \
 By using this UI you agree not to generate harmful or offensive content, plagiarize specific artworks or artists, impersonate 
 specific indidividuals, or otherwise any other malicious use. This is intended only for personal/offline usage. Note that models 
 other than cc0 mitsua diffusion are prone to generating potential copyright infringing material.
+
+### Related/Credits
+
+- [diffusers](https://github.com/huggingface/diffusers)
