@@ -1,5 +1,5 @@
 from __main__ import app, socketio
-from .functions import is_image, is_text, get_number_from_filename
+from .functions import is_image, is_text, get_number_from_filename, get_sources
 import argparse
 import gc
 import hashlib
@@ -1132,7 +1132,8 @@ def main(args):
                             "learning_rate": str(args.learning_rate),
                             "text_learning_rate": str(args.text_encoder_lr),
                             "gradient_accumulation_steps": str(args.gradient_accumulation_steps),
-                            "learning_functions": learning_function
+                            "learning_function": learning_function,
+                            "sources": "\n".join(args.sources)
                         }
                         save_file(kohya_state_dict, f"{args.output_dir}/{name}-{epoch + 1}.safetensors", metadata=metadata)
                         os.remove(temp_file)
@@ -1244,7 +1245,8 @@ def main(args):
             "learning_rate": str(args.learning_rate),
             "text_learning_rate": str(args.text_encoder_lr),
             "gradient_accumulation_steps": str(args.gradient_accumulation_steps),
-            "learning_functions": learning_function
+            "learning_function": learning_function,
+            "sources": "\n".join(args.sources)
         }
         save_file(kohya_state_dict, f"{args.output_dir}/{name}.safetensors", metadata=metadata)
         os.remove(temp_file)
@@ -1326,7 +1328,7 @@ def get_options(model_name, train_data, instance_prompt, output, max_train_steps
     env_local_rank = int(os.environ.get("LOCAL_RANK", -1))
     if env_local_rank != -1 and env_local_rank != options["local_rank"]:
         options["local_rank"] = env_local_rank
-    return options
+    return DotDict(options)
 
 class DotDict(dict):
     __getattr__ = dict.get
@@ -1358,4 +1360,6 @@ def train_lora(images, model_name, train_data, instance_prompt, output, num_trai
     options = get_options(model_name, train_data, instance_prompt, output, max_train_steps, learning_rate, text_encoder_lr, resolution, save_steps, 
     gradient_accumulation_steps, validation_prompt, validation_epochs, lr_scheduler)
 
-    main(DotDict(options))
+    options.sources = get_sources(train_data)
+
+    main(options)

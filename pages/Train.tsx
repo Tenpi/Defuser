@@ -9,10 +9,13 @@ LearningRateTEContext} from "../Context"
 import functions from "../structures/Functions"
 import CheckpointBar from "../components/CheckpointBar"
 import TrainTag from "./TrainTag"
+import TrainSource from "./TrainSource"
 import TrainTextualInversion from "./TrainTextualInversion"
+import TrainHypernetwork from "./TrainHypernetwork"
 import TrainLora from "./TrainLora"
 import TrainDreamBooth from "./TrainDreamBooth"
 import TrainCheckpoint from "./TrainCheckpoint"
+import TrainMerge from "./TrainMerge"
 import "./styles/generate.less"
 
 const Train: React.FunctionComponent = (props) => {
@@ -117,14 +120,20 @@ const Train: React.FunctionComponent = (props) => {
     const getTab = () => {
         if (trainTab === "tag") {
             return <TrainTag/>
+        } else if (trainTab === "source") {
+            return <TrainSource/>
         } else if (trainTab === "textual inversion") {
             return <TrainTextualInversion/>
+        } else if (trainTab === "hypernetwork") {
+            return <TrainHypernetwork/>
         } else if (trainTab === "lora") {
             return <TrainLora/>
         } else if (trainTab === "dreambooth") {
             return <TrainDreamBooth/>
         } else if (trainTab === "checkpoint") {
             return <TrainCheckpoint/>
+        } else if (trainTab === "merge") {
+            return <TrainMerge/>
         }
     }
 

@@ -4,7 +4,7 @@ import {HashLink as Link} from "react-router-hash-link"
 import favicon from "../assets/icons/favicon.png"
 import {EnableDragContext, MobileContext, SiteHueContext, SiteSaturationContext, SiteLightnessContext, NegativePromptContext, ProcessingContext,
 InterrogatorNameContext, DeletionContext, FormatContext, PrecisionContext, LoopModeContext, WatermarkContext, UpscalerContext, NSFWTabContext,
-InvisibleWatermarkContext} from "../Context"
+InvisibleWatermarkContext, SauceNaoAPIKeyContext} from "../Context"
 import functions from "../structures/Functions"
 import {Dropdown, DropdownButton} from "react-bootstrap"
 import checkbox from "../assets/icons/checkbox2.png"
@@ -30,6 +30,7 @@ const SettingsBar: React.FunctionComponent = (props) => {
     const {nsfwTab, setNSFWTab} = useContext(NSFWTabContext)
     const {invisibleWatermark, setInvisibleWatermark} = useContext(InvisibleWatermarkContext)
     const [convertPrompt, setConvertPrompt] = useState("")
+    const {saucenaoAPIKey, setSaucenaoAPIKey} = useContext(SauceNaoAPIKeyContext)
     const ref = useRef<HTMLCanvasElement>(null)
     const history = useHistory()
 
@@ -60,6 +61,8 @@ const SettingsBar: React.FunctionComponent = (props) => {
         if (savedNSFWTab) setNSFWTab(savedNSFWTab === "true")
         const savedInvisibleWatermark = localStorage.getItem("invisibleWatermark")
         if (savedInvisibleWatermark) setInvisibleWatermark(savedInvisibleWatermark === "true")
+        const savedSaucenaoAPIKey = localStorage.getItem("saucenaoAPIKey")
+        if (savedSaucenaoAPIKey) setSaucenaoAPIKey(savedSaucenaoAPIKey)
     }, [])
 
     useEffect(() => {
@@ -74,7 +77,9 @@ const SettingsBar: React.FunctionComponent = (props) => {
         localStorage.setItem("upscaler", String(upscaler))
         localStorage.setItem("nsfwTab", String(nsfwTab))
         localStorage.setItem("invisibleWatermark", String(invisibleWatermark))
-    }, [negativePrompt, interrogatorName, processing, format, deletion, precision, loopMode, upscaler, nsfwTab, invisibleWatermark, watermark])
+        localStorage.setItem("saucenaoAPIKey", String(saucenaoAPIKey))
+    }, [negativePrompt, interrogatorName, processing, format, deletion, precision, loopMode, 
+        upscaler, nsfwTab, invisibleWatermark, watermark, saucenaoAPIKey])
 
     const resetNegativePrompt = () => {
         setNegativePrompt("")
@@ -177,6 +182,10 @@ const SettingsBar: React.FunctionComponent = (props) => {
                     <Dropdown.Item active={deletion === "trash"} onClick={() => setDeletion("trash")}>trash</Dropdown.Item>
                     <Dropdown.Item active={deletion === "permanent"} onClick={() => setDeletion("permanent")}>permanent</Dropdown.Item>
                 </DropdownButton>
+            </div>
+            <div className="settings-bar-row">
+                <span className="settings-bar-text">SauceNao Key:</span>
+                <input className="settings-bar-input" spellCheck={false} value={saucenaoAPIKey} onChange={(event) => setSaucenaoAPIKey(event.target.value)}/>
             </div>
         </div>
     )

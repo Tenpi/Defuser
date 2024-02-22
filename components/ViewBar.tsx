@@ -24,6 +24,15 @@ const ViewBar: React.FunctionComponent = (props) => {
         return `hue-rotate(${siteHue - 180}deg) saturate(${siteSaturation}%) brightness(${siteLightness + 50}%)`
     }
 
+    useEffect(() => {
+        const savedViewImages = localStorage.getItem("viewImages")
+        if (savedViewImages) setViewImages(JSON.parse(savedViewImages))
+    }, [])
+
+    useEffect(() => {
+        if (viewImages.length) localStorage.setItem("viewImages", JSON.stringify(viewImages))
+    }, [viewImages])
+
     const updateViewImages = async (image: string) => {
         if (!image) return
         const viewImages = await axios.post("/similar-images", {image}).then((r) => r.data)

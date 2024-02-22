@@ -5,6 +5,7 @@ import torch.nn.functional as F
 import torch.nn as nn
 import torch.nn.init as init
 
+device = "mps" if torch.backends.mps.is_available() else "cuda" if torch.cuda.is_available() else "cpu"
 
 class HypernetworkModule(torch.nn.Module):
     activation_dict = {
@@ -19,7 +20,7 @@ class HypernetworkModule(torch.nn.Module):
     # Add all activations from torch.nn.modules.activation.__all__
     activation_dict.update({cls_name.lower(): cls_obj for cls_name, cls_obj in torch.nn.modules.activation.__dict__.items() if cls_name in torch.nn.modules.activation.__all__})
 
-    def __init__(self, dim, state_dict=None, layer_structure=None, activation_func=None, weight_init='Normal',
+    def __init__(self, dim, state_dict=None, layer_structure=None, activation_func=None, weight_init="Normal",
                  add_layer_norm=False, activate_output=False, dropout_structure=None):
         super().__init__()
 
@@ -41,7 +42,7 @@ class HypernetworkModule(torch.nn.Module):
             elif activation_func in self.activation_dict:
                 linears.append(self.activation_dict[activation_func]())
             else:
-                raise RuntimeError(f'hypernetwork uses an unsupported activation function: {activation_func}')
+                raise RuntimeError(f"hypernetwork uses an unsupported activation function: {activation_func}")
 
             # Add _layer normalization
             if add_layer_norm:
@@ -58,11 +59,11 @@ class HypernetworkModule(torch.nn.Module):
 
         # Define a dictionary mapping weight initialization methods to their functions
         weight_init_functions = {
-            "Normal": (init.normal_, {'mean': 0.0, 'std': 0.01}),
+            "Normal": (init.normal_, {"mean": 0.0, "std": 0.01}),
             "XavierUniform": (init.xavier_uniform_, {}),
             "XavierNormal": (init.xavier_normal_, {}),
-            "KaimingUniform": (init.kaiming_uniform_, {'nonlinearity': 'leaky_relu' if 'leakyrelu' == activation_func else 'relu'}),
-            "KaimingNormal": (init.kaiming_normal_, {'nonlinearity': 'leaky_relu' if 'leakyrelu' == activation_func else 'relu'}),
+            "KaimingUniform": (init.kaiming_uniform_, {"nonlinearity": "leaky_relu" if "leakyrelu" == activation_func else "relu"}),
+            "KaimingNormal": (init.kaiming_normal_, {"nonlinearity": "leaky_relu" if "leakyrelu" == activation_func else "relu"}),
         }
 
         def initialize_weights(_layer, _weight_init):
@@ -116,8 +117,8 @@ class Hypernetwork:
         self.add_layer_norm = add_layer_norm
         self.use_dropout = use_dropout
         self.activate_output = activate_output
-        self.last_layer_dropout = kwargs.get('last_layer_dropout', True)
-        self.dropout_structure = kwargs.get('dropout_structure', None)
+        self.last_layer_dropout = kwargs.get("last_layer_dropout", True)
+        self.dropout_structure = kwargs.get("dropout_structure", None)
         if self.dropout_structure is None:
             self.dropout_structure = parse_dropout_structure(self.layer_structure, self.use_dropout, self.last_layer_dropout)
         self.optimizer_name = None
@@ -164,17 +165,46 @@ class Hypernetwork:
             for layer in layers:
                 layer.eval()
         return self
+    
+    def save(self, filename, metadata={}):
+        state_dict = {}
+        optimizer_saved_dict = {}
+
+        for k, v in self.layers.items():
+            state_dict[k] = (v[0].state_dict(), v[1].state_dict())
+
+        #state_dict["step"] = self.step
+        state_dict["name"] = self.name
+        state_dict["layer_structure"] = self.layer_structure
+        state_dict["activation_func"] = self.activation_func
+        state_dict["is_layer_norm"] = self.add_layer_norm
+        state_dict["weight_initialization"] = self.weight_init
+        #state_dict["sd_checkpoint"] = self.sd_checkpoint
+        #state_dict["sd_checkpoint_name"] = self.sd_checkpoint_name
+        state_dict["activate_output"] = self.activate_output
+        state_dict["use_dropout"] = self.use_dropout
+        state_dict["dropout_structure"] = self.dropout_structure
+        state_dict["last_layer_dropout"] = (self.dropout_structure[-2] != 0) if self.dropout_structure is not None else self.last_layer_dropout
+        #state_dict["optional_info"] = self.optional_info if self.optional_info else None
+
+        for k, v in metadata.items():
+            state_dict[k] = v
+
+        if self.optimizer_name is not None:
+            optimizer_saved_dict["optimizer_name"] = self.optimizer_name
+
+        torch.save(state_dict, filename)
 
     def load_state_dict(self, state_dict):
-        self.layer_structure = state_dict.get('layer_structure', [1, 2, 1])
-        self.optional_info = state_dict.get('optional_info', None)
-        self.activation_func = state_dict.get('activation_func', None)
-        self.weight_init = state_dict.get('weight_initialization', 'Normal')
-        self.add_layer_norm = state_dict.get('is_layer_norm', False)
-        self.dropout_structure = state_dict.get('dropout_structure', None)
-        self.use_dropout = True if self.dropout_structure is not None and any(self.dropout_structure) else state_dict.get('use_dropout', False)
-        self.activate_output = state_dict.get('activate_output', True)
-        self.last_layer_dropout = state_dict.get('last_layer_dropout', False)
+        self.layer_structure = state_dict.get("layer_structure", [1, 2, 1])
+        self.optional_info = state_dict.get("optional_info", None)
+        self.activation_func = state_dict.get("activation_func", None)
+        self.weight_init = state_dict.get("weight_initialization", "Normal")
+        self.add_layer_norm = state_dict.get("is_layer_norm", False)
+        self.dropout_structure = state_dict.get("dropout_structure", None)
+        self.use_dropout = True if self.dropout_structure is not None and any(self.dropout_structure) else state_dict.get("use_dropout", False)
+        self.activate_output = state_dict.get("activate_output", True)
+        self.last_layer_dropout = state_dict.get("last_layer_dropout", False)
         # Dropout structure should have same length as layer structure, Every digits should be in [0,1), and last digit must be 0.
         if self.dropout_structure is None:
             self.dropout_structure = parse_dropout_structure(self.layer_structure, self.use_dropout, self.last_layer_dropout)
@@ -188,10 +218,10 @@ class Hypernetwork:
                                        self.add_layer_norm, self.activate_output, self.dropout_structure),
                 )
 
-        self.name = state_dict.get('name', self.name)
-        self.step = state_dict.get('step', 0)
-        self.sd_checkpoint = state_dict.get('sd_checkpoint', None)
-        self.sd_checkpoint_name = state_dict.get('sd_checkpoint_name', None)
+        self.name = state_dict.get("name", self.name)
+        self.step = state_dict.get("step", 0)
+        self.sd_checkpoint = state_dict.get("sd_checkpoint", None)
+        self.sd_checkpoint_name = state_dict.get("sd_checkpoint_name", None)
         self.eval()
 
 
@@ -235,7 +265,7 @@ class HyperAttnProcessor(nn.Module):
    
     def __call__(
         self,
-        attn: 'Attention',
+        attn: "Attention",
         hidden_states,
         encoder_hidden_states=None,
         attention_mask=None,
@@ -311,8 +341,16 @@ class HyperAttnProcessor(nn.Module):
 
         return hidden_states
 
+def load_hypernet(path, multiplier=None, device=device):
+        hyper_model = torch.load(path, map_location=device)
+        hypernetwork = Hypernetwork()
+        hypernetwork.load_state_dict(hyper_model)
+        hypernetwork.set_multiplier(multiplier if multiplier else 1.0)
+        hypernetwork.to(device=device)
+        hypernetwork.eval()
+        return hypernetwork
 
-def add_hypernet(unet: 'UNet2DConditionModel', hypernet: Hypernetwork) -> None:
+def add_hypernet(unet: "UNet2DConditionModel", hypernet: Hypernetwork) -> None:
     """
     Add a hypernetwork to an unet.
     """
@@ -327,7 +365,7 @@ def add_hypernet(unet: 'UNet2DConditionModel', hypernet: Hypernetwork) -> None:
     unet.set_attn_processor(attn_processors)
 
 
-def clear_hypernets(unet: 'UNet2DConditionModel') -> None:
+def clear_hypernets(unet: "UNet2DConditionModel") -> None:
     """
     Remove all hypernetworks from an unet.
     """

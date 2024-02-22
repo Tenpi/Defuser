@@ -16,7 +16,7 @@ HeunDiscreteScheduler, AutoencoderKL, MotionAdapter, AnimateDiffPipeline
 from diffusers.utils import export_to_gif
 from .stable_diffusion_controlnet_reference import StableDiffusionControlNetReferencePipeline
 from .stable_diffusion_xl_reference import StableDiffusionXLReferencePipeline
-from .hypernet import Hypernetwork, add_hypernet, clear_hypernets
+from .hypernet import load_hypernet, add_hypernet, clear_hypernets
 from transformers import CLIPTextModel
 from compel import Compel, ReturnedEmbeddingsType, DiffusersTextualInversionManager
 from PIL import Image, PngImagePlugin
@@ -99,15 +99,6 @@ def get_seed(seed):
     if not seed or seed == -1:
         return int(random.randrange(4294967294))
     return int(seed)
-
-def load_hypernet(path, multiplier=None):
-        hyper_model = torch.load(path, map_location=device)
-        hypernetwork = Hypernetwork()
-        hypernetwork.load_state_dict(hyper_model)
-        hypernetwork.set_multiplier(multiplier if multiplier else 1.0)
-        hypernetwork.to(device=device)
-        hypernetwork.eval()
-        return hypernetwork
 
 def get_motion_adapter():
     global motion_adapter
@@ -391,7 +382,8 @@ def update_precision():
     return "done"
 
 def generate(request_data, request_files):
-    global gen_thread 
+    global gen_thread
+    global device
     gen_thread = threading.get_ident()
     mode = "text"
     data = json.loads(request_data)
@@ -491,7 +483,7 @@ def generate(request_data, request_files):
         hypernet_path = os.path.join(dirname, f'../{hypernetwork["model"]}')
         has_hypernet = True
         try:
-            hypernet = load_hypernet(hypernet_path, hypernet_scale)
+            hypernet = load_hypernet(hypernet_path, hypernet_scale, device)
             add_hypernet(generator.unet, hypernet)
         except ValueError:
             continue

@@ -5,7 +5,7 @@ TrainTabContext, FolderLocationContext, SocketContext, TrainStartedContext, Trai
 TrainProgressTextContext, TrainCompletedContext, TrainImagesContext, ModelNameContext, EpochsContext,
 SaveEpochsContext, PreviewEpochsContext, PreviewPromptContext, LearningRateContext, GradientAccumulationStepsContext,
 ResolutionContext, LearningFunctionContext, ImageBrightnessContext, ImageContrastContext, PreviewImageContext,
-TrainRenderImageContext, TrainNameContext} from "../Context"
+TrainRenderImageContext, TrainNameContext, LearningRateTEContext} from "../Context"
 import {ProgressBar, Dropdown, DropdownButton} from "react-bootstrap"
 import xIcon from "../assets/icons/x.png"
 import xIconHover from "../assets/icons/x-hover.png"
@@ -18,7 +18,7 @@ import axios from "axios"
 let timer = null as any
 let clicking = false
 
-const TrainTextualInversion: React.FunctionComponent = (props) => {
+const TrainHypernetwork: React.FunctionComponent = (props) => {
     const {enableDrag, setEnableDrag} = useContext(EnableDragContext)
     const {mobile, setMobile} = useContext(MobileContext)
     const {siteHue, setSiteHue} = useContext(SiteHueContext)
@@ -35,7 +35,6 @@ const TrainTextualInversion: React.FunctionComponent = (props) => {
     const {trainStarted, setTrainStarted} = useContext(TrainStartedContext)
     const {trainCompleted, setTrainCompleted} = useContext(TrainCompletedContext)
     const {modelName, setModelName} = useContext(ModelNameContext)
-    const [vectors, setVectors] = useState("1")
     const {epochs, setEpochs} = useContext(EpochsContext)
     const {saveEpochs, setSaveEpochs} = useContext(SaveEpochsContext)
     const {previewEpochs, setPreviewEpochs} = useContext(PreviewEpochsContext)
@@ -47,6 +46,7 @@ const TrainTextualInversion: React.FunctionComponent = (props) => {
     const {previewImage, setPreviewImage} = useContext(PreviewImageContext)
     const {trainRenderImage, setTrainRenderImage} = useContext(TrainRenderImageContext)
     const {trainName, setTrainName} = useContext(TrainNameContext)
+    const {learningRateTE, setLearningRateTE} = useContext(LearningRateTEContext)
     const [hover, setHover] = useState(false)
     const [xHover, setXHover] = useState(false)
     const progressBarRef = useRef(null) as React.RefObject<HTMLDivElement>
@@ -56,15 +56,6 @@ const TrainTextualInversion: React.FunctionComponent = (props) => {
     const getFilter = () => {
         return `hue-rotate(${siteHue - 180}deg) saturate(${siteSaturation}%) brightness(${siteLightness + 50}%)`
     }
-
-    useEffect(() => {
-        const savedVectors = localStorage.getItem("vectors")
-        if (savedVectors) setVectors(savedVectors)
-    }, [])
-
-    useEffect(() => {
-        localStorage.setItem("vectors", String(vectors))
-    }, [vectors])
 
     useEffect(() => {
         if (!socket) return
@@ -192,17 +183,17 @@ const TrainTextualInversion: React.FunctionComponent = (props) => {
         json.images = trainImages.map((i: string) => i.replace("/retrieve?path=", ""))
         json.model_name = modelName
         json.train_data = folderLocation
-        json.token = trainName
-        json.num_vectors = Number(vectors)
+        json.instance_prompt = trainName
         json.num_train_epochs = Number(epochs)
         json.learning_rate = Number(learningRate)
+        json.text_encoder_lr = Number(learningRateTE)
         json.gradient_accumulation_steps = Number(gradientAccumulationSteps)
         json.resolution = Number(resolution)
         json.save_epochs = Number(saveEpochs)
         json.validation_epochs = Number(previewEpochs)
         json.validation_prompt = previewPrompt
         json.learning_function = learningFunction
-        await axios.post("/train-textual-inversion", json)
+        await axios.post("/train-hypernetwork", json)
     }
 
     const interruptTrain = async () => {
@@ -214,17 +205,17 @@ const TrainTextualInversion: React.FunctionComponent = (props) => {
     }
 
     const openFolder = async () => {
-        await axios.post("/open-folder", {path: `outputs/textual inversion/${trainName}`})
+        await axios.post("/open-folder", {path: `outputs/lora/${trainName}`})
     }
 
     const reset = () => {
         setTrainName("")
-        setVectors("1")
         setEpochs("20")
         setSaveEpochs("5")
         setPreviewEpochs("5")
         setPreviewPrompt("")
         setLearningRate("1e-4")
+        setLearningRateTE("5e-6")
         setGradientAccumulationSteps("1")
         setResolution("256")
         setLearningFunction("constant")
@@ -246,10 +237,6 @@ const TrainTextualInversion: React.FunctionComponent = (props) => {
                         <input className="train-tag-settings-input" type="text" spellCheck={false} value={trainName} onChange={(event) => setTrainName(event.target.value)}/>
                     </div>
                     <div className="train-tag-settings-box">
-                        <span className="train-tag-settings-title">Vectors:</span>
-                        <input className="train-tag-settings-input" type="text" spellCheck={false} value={vectors} onChange={(event) => setVectors(event.target.value)}/>
-                    </div>
-                    <div className="train-tag-settings-box">
                         <span className="train-tag-settings-title">Epochs:</span>
                         <input className="train-tag-settings-input" type="text" spellCheck={false} value={epochs} onChange={(event) => setEpochs(event.target.value)}/>
                     </div>
@@ -257,6 +244,10 @@ const TrainTextualInversion: React.FunctionComponent = (props) => {
                         <span className="train-tag-settings-title">Learning Rate:</span>
                         <input className="train-tag-settings-input" type="text" spellCheck={false} value={learningRate} onChange={(event) => setLearningRate(event.target.value)}/>
                     </div>
+                    {/* <div className="train-tag-settings-box">
+                        <span className="train-tag-settings-title">Text Learning Rate:</span>
+                        <input className="train-tag-settings-input" type="text" spellCheck={false} value={learningRateTE} onChange={(event) => setLearningRateTE(event.target.value)}/>
+                    </div> */}
                     <div className="train-tag-settings-box">
                         <span className="train-tag-settings-title">Gradient Accumulation Steps:</span>
                         <input className="train-tag-settings-input" type="text" spellCheck={false} value={gradientAccumulationSteps} onChange={(event) => setGradientAccumulationSteps(event.target.value)}/>
@@ -312,4 +303,4 @@ const TrainTextualInversion: React.FunctionComponent = (props) => {
     )
 }
 
-export default TrainTextualInversion
+export default TrainHypernetwork

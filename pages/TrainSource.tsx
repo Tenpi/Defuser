@@ -1,8 +1,8 @@
 import React, {useContext, useEffect, useState, useRef} from "react"
 import {useHistory} from "react-router-dom"
 import {EnableDragContext, MobileContext, SiteHueContext, SiteSaturationContext, SiteLightnessContext, 
-TrainTabContext, FolderLocationContext, InterrogatorNameContext, SocketContext, TrainStartedContext, TrainProgressContext,
-TrainProgressTextContext, TrainCompletedContext, TrainImagesContext} from "../Context"
+TrainTabContext, FolderLocationContext, SocketContext, TrainStartedContext, TrainProgressContext,
+TrainProgressTextContext, TrainCompletedContext, TrainImagesContext, SauceNaoAPIKeyContext} from "../Context"
 import {ProgressBar} from "react-bootstrap"
 import functions from "../structures/Functions"
 import folder from "../assets/icons/folder.png"
@@ -10,7 +10,7 @@ import TrainImage from "../components/TrainImage"
 import "./styles/traintag.less"
 import axios from "axios"
 
-const TrainTag: React.FunctionComponent = (props) => {
+const TrainSource: React.FunctionComponent = (props) => {
     const {enableDrag, setEnableDrag} = useContext(EnableDragContext)
     const {mobile, setMobile} = useContext(MobileContext)
     const {siteHue, setSiteHue} = useContext(SiteHueContext)
@@ -19,12 +19,12 @@ const TrainTag: React.FunctionComponent = (props) => {
     const {socket, setSocket} = useContext(SocketContext)
     const {trainTab, setTrainTab} = useContext(TrainTabContext)
     const {folderLocation, setFolderLocation} = useContext(FolderLocationContext)
-    const {interrogatorName, setInterrogatorName} = useContext(InterrogatorNameContext)
     const {trainImages, setTrainImages} = useContext(TrainImagesContext)
     const {trainProgress, setTrainProgress} = useContext(TrainProgressContext)
     const {trainProgressText, setTrainProgressText} = useContext(TrainProgressTextContext)
     const {trainStarted, setTrainStarted} = useContext(TrainStartedContext)
     const {trainCompleted, setTrainCompleted} = useContext(TrainCompletedContext)
+    const {saucenaoAPIKey, setSaucenaoAPIKey} = useContext(SauceNaoAPIKeyContext)
     const progressBarRef = useRef(null) as React.RefObject<HTMLDivElement>
     const ref = useRef<HTMLCanvasElement>(null)
     const history = useHistory()
@@ -108,15 +108,15 @@ const TrainTag: React.FunctionComponent = (props) => {
     }
 
     const tag = async () => {
-        await axios.post("/tag", {images: trainImages.map((i: string) => i.replace("/retrieve?path=", "")), model: interrogatorName})
+        await axios.post("/source", {images: trainImages.map((i: string) => i.replace("/retrieve?path=", "")), saucenao_key: saucenaoAPIKey})
     }
 
     const interruptTag = async () => {
         axios.post("/interrupt-train")
     }
 
-    const deleteTags = async () => {
-        await axios.post("/delete-tags", {images: trainImages.map((i: string) => i.replace("/retrieve?path=", ""))})
+    const deleteSources = async () => {
+        await axios.post("/delete-sources", {images: trainImages.map((i: string) => i.replace("/retrieve?path=", ""))})
     }
 
     return (
@@ -124,8 +124,8 @@ const TrainTag: React.FunctionComponent = (props) => {
             <div className="train-tag-folder-container">
                 <img className="train-tag-folder" src={folder} style={{filter: getFilter()}} onClick={updateLocation}/>
                 <div className="train-tag-location" onDoubleClick={openImageLocation}>{folderLocation ? folderLocation : "None"}</div>
-                <button className="train-tag-button" onClick={() => trainStarted ? interruptTag() : tag()} style={{backgroundColor: trainStarted ? "var(--buttonBGStop)" : "var(--buttonBG)"}}>{trainStarted ? "Stop" : "Tag"}</button>
-                <button className="train-tag-button" onClick={() => deleteTags()}>Delete Tags</button>
+                <button className="train-tag-button" onClick={() => trainStarted ? interruptTag() : tag()} style={{backgroundColor: trainStarted ? "var(--buttonBGStop)" : "var(--buttonBG)"}}>{trainStarted ? "Stop" : "Source"}</button>
+                <button className="train-tag-button" onClick={() => deleteSources()}>Delete Sources</button>
             </div>
             {trainStarted ? <div className="train-tag-progress">
                 <div className="render-progress-container" style={{filter: getFilter()}}>
@@ -140,4 +140,4 @@ const TrainTag: React.FunctionComponent = (props) => {
     )
 }
 
-export default TrainTag
+export default TrainSource

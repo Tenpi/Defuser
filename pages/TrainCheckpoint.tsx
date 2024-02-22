@@ -65,7 +65,7 @@ const TrainCheckpoint: React.FunctionComponent = (props) => {
             setTrainProgress(-1)
             setTrainProgressText("")
         }
-        const trainProgress = (data: any) => {
+        const trackProgress = (data: any) => {
             const progress = (100 / Number(data.total_step)) * Number(data.step)
             setTrainStarted(true)
             setTrainCompleted(false)
@@ -96,14 +96,14 @@ const TrainCheckpoint: React.FunctionComponent = (props) => {
             setTrainRenderImage(data.image ? `/retrieve?path=${data.image}` : "")
         }
         socket.on("train starting", startTrain)
-        socket.on("train progress", trainProgress)
+        socket.on("train progress", trackProgress)
         socket.on("train complete", completeTrain)
         socket.on("train interrupt", interruptTrain)
         socket.on("train image progress", trainImageProgress)
         socket.on("train image complete", trainImageComplete)
         return () => {
             socket.off("train starting", startTrain)
-            socket.off("train progress", trainProgress)
+            socket.off("train progress", trackProgress)
             socket.off("train complete", completeTrain)
             socket.off("train interrupt", interruptTrain)
             socket.off("train image progress", trainImageProgress)

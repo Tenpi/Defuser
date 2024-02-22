@@ -1,4 +1,5 @@
 from __main__ import app, socketio
+from .functions import get_sources
 import argparse
 import logging
 import math
@@ -130,7 +131,9 @@ def save_progress(text_encoder, placeholder_token_ids, accelerator, options, sav
         "checkpoint": save_data.checkpoint,
         "images": save_data.images,
         "learning_rate": save_data.learning_rate,
-        "gradient_accumulation_steps": save_data.gradient_accumulation_steps
+        "gradient_accumulation_steps": save_data.gradient_accumulation_steps,
+        "learning_function": save_data.learning_function,
+        "sources": save_data.sources
     }
     torch.save(learned_embeds_dict, save_path)
 
@@ -471,7 +474,8 @@ def main(options):
                         "images": len(train_dataloader),
                         "learning_rate": options.learning_rate,
                         "gradient_accumulation_steps": options.gradient_accumulation_steps,
-                        "learning_functions": learning_function
+                        "learning_function": learning_function,
+                        "sources": options.sources
                     }
                     options.name = name
                     options.steps = global_step
@@ -545,7 +549,8 @@ def main(options):
             "images": len(train_dataloader),
             "learning_rate": options.learning_rate,
             "gradient_accumulation_steps": options.gradient_accumulation_steps,
-            "learning_functions": learning_function
+            "learning_function": learning_function,
+            "sources": options.sources
         }
         save_progress(text_encoder, placeholder_token_ids, accelerator, options, save_path, DotDict(save_data))
     accelerator.end_training()
@@ -590,7 +595,7 @@ def get_options(model_name, train_data, initializer_token, output_dir, max_train
     env_local_rank = int(os.environ.get("LOCAL_RANK", -1))
     if env_local_rank != -1 and env_local_rank != options["local_rank"]:
         options["local_rank"] = env_local_rank
-    return options
+    return DotDict(options)
 
 class DotDict(dict):
     __getattr__ = dict.get
@@ -622,4 +627,6 @@ def train_textual_inversion(images, model_name, train_data, token, output, num_t
     options = get_options(model_name, train_data, token, output, max_train_steps, learning_rate, resolution, save_steps, num_vectors, 
     gradient_accumulation_steps, validation_prompt, validation_steps, lr_scheduler)
 
-    main(DotDict(options))
+    options.sources = get_sources(train_data)
+
+    main(options)

@@ -6,6 +6,8 @@ import math
 import base64
 import struct
 import json
+import torchvision
+import itertools
 
 dirname = os.path.dirname(__file__)
 
@@ -29,8 +31,16 @@ def is_text(filename):
     if filename == ".DS_Store": return False
     if ".source.txt" in filename: return False
     ext = pathlib.Path(filename).suffix.lower().replace(".", "")
-    text_exts = ["txt", "md"]
-    if ext in text_exts:
+    if ext == "txt":
+        return True
+    else:
+        return False
+    
+def is_source_text(filename):
+    if filename == ".DS_Store": return False
+    if not ".source.txt" in filename: return False
+    ext = pathlib.Path(filename).suffix.lower().replace(".", "")
+    if ext == "txt":
         return True
     else:
         return False
@@ -93,3 +103,55 @@ def get_safetensors_metadata(filename):
     metadata_as_bytes = safe_bytes[8:8+metadata_size]
     metadata_as_dict = json.loads(metadata_as_bytes.decode(errors="ignore"))
     return metadata_as_dict.get("__metadata__", {})
+
+def get_images(folder, resolution=512, center_crop=True, repeats=1):
+    files = os.listdir(folder.strip())
+    image_files = list(filter(lambda file: is_image(file), files))
+    image_files = sorted(image_files, key=lambda x: get_number_from_filename(x), reverse=False)
+    image_files = list(map(lambda file: Image.open(os.path.join(folder, file)).convert("RGB"), image_files))
+    images = []
+    for image in image_files:
+        images.extend(itertools.repeat(image, repeats))
+
+    tensors = []
+    image_transforms = torchvision.transforms.Compose([
+                torchvision.transforms.Resize(resolution, interpolation=torchvision.transforms.InterpolationMode.BILINEAR),
+                torchvision.transforms.CenterCrop(resolution) if center_crop else torchvision.transforms.RandomCrop(resolution),
+                torchvision.transforms.ToTensor(),
+                torchvision.transforms.Normalize([0.5], [0.5]),
+            ])
+    for image in images:
+        tensor = image_transforms(image).unsqueeze(0)
+        tensors.append(tensor)
+    return tensors
+
+def get_captions(folder, default="", repeats=1):
+    files = os.listdir(folder.strip())
+    text_files = list(filter(lambda file: is_text(file), files))
+    text_files = sorted(text_files, key=lambda x: get_number_from_filename(x), reverse=False)
+    if len(text_files) == 0:
+        image_files = list(filter(lambda file: is_image(file), files))
+        for i in image_files:
+            text_files.append(default)
+    texts = []
+    for text in text_files:
+        texts.extend(itertools.repeat(text, repeats))
+
+    captions = []
+    for text in texts:
+        f = open(os.path.join(folder, text))
+        captions.append(f.read())
+        f.close()
+    return captions
+
+def get_sources(folder):
+    files = os.listdir(folder.strip())
+    source_files = list(filter(lambda file: is_source_text(file), files))
+    source_files = sorted(source_files, key=lambda x: get_number_from_filename(x), reverse=False)
+
+    sources = []
+    for source in source_files:
+        f = open(os.path.join(folder, source))
+        sources.append(f.read())
+        f.close()
+    return sources

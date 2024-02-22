@@ -21,6 +21,7 @@ models/controlnet/lineart anime/*
 models/controlnet/scribble/*
 models/controlnet/softedge/*
 models/segmentator/*
+models/promptgen/*
 models/vae/*
 outputs/image/*
 outputs/text/*
@@ -50,4 +51,5 @@ outputs/merged
 !models/interrogator/blip/readme.txt
 !models/interrogator/deepbooru/readme.txt
 !models/interrogator/wdtagger/readme.txt
+!models/promptgen/readme.txt
 !outputs/readme.txt
