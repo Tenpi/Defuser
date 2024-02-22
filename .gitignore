@@ -33,6 +33,7 @@ outputs/textual inversion
 outputs/hypernetwork
 outputs/checkpoint
 outputs/merged
+dialog/random.pt
 
 !models/diffusion/readme.txt
 !models/lora/readme.txt
