@@ -46,7 +46,7 @@ cd diffusers-ui
 Download the models from https://huggingface.co/Moepi/models 
 and place them in the correct folder in "models". This script 
 should download all of them.
-```
+```sh
 rm -rf models
 # Windows: rmdir /s models
 git lfs install
@@ -56,7 +56,7 @@ rm models/.git models/.gitattributes
 ```
 
 Install the code dependencies.
-```
+```sh
 npm install
 pip3 install -r requirements.txt
 ```
