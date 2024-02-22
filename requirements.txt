@@ -2,7 +2,7 @@ accelerate==0.24.1
 bitsandbytes==0.42.0
 compel==2.0.2
 controlnet_aux==0.0.6
-diffusers==0.27.0.dev0
+diffusers==0.26.3
 Flask==2.3.2
 Flask_SocketIO==5.3.4
 huggingface_hub==0.20.3
