@@ -25,8 +25,6 @@ import transformers
 from accelerate import Accelerator
 from accelerate.logging import get_logger
 from accelerate.utils import DistributedDataParallelKwargs, ProjectConfiguration, set_seed
-from huggingface_hub import create_repo, upload_folder
-from packaging import version
 from peft import LoraConfig
 from peft.utils import get_peft_model_state_dict
 from PIL import Image
@@ -532,11 +530,6 @@ def main(args):
         if args.output_dir is not None:
             os.makedirs(args.output_dir, exist_ok=True)
 
-        model_id = args.hub_model_id or Path(args.output_dir).name
-        repo_id = None
-        if args.push_to_hub:
-            repo_id = create_repo(repo_id=model_id, exist_ok=True, token=args.hub_token).repo_id
-
     # For mixed precision training we cast all non-trainable weights (vae, non-lora text_encoder and non-lora unet) to half-precision
     # as these weights are only used for inference, keeping weights in full precision is not required.
     weight_dtype = torch.float32
@@ -601,20 +594,6 @@ def main(args):
     vae.to(accelerator.device, dtype=torch.float32)
 
     text_encoder_one.to(accelerator.device, dtype=weight_dtype)
-
-    if args.enable_xformers_memory_efficient_attention:
-        if is_xformers_available():
-            import xformers
-
-            xformers_version = version.parse(xformers.__version__)
-            if xformers_version == version.parse("0.0.16"):
-                logger.warn(
-                    "xFormers 0.0.16 cannot be used for training in some GPUs. If you observe problems during training, "
-                    "please update xFormers to at least 0.0.17. See https://huggingface.co/docs/diffusers/main/en/optimization/xformers for more details."
-                )
-            unet.enable_xformers_memory_efficient_attention()
-        else:
-            raise ValueError("xformers is not available. Make sure it is installed correctly")
 
     if args.gradient_checkpointing:
         unet.enable_gradient_checkpointing()

@@ -25,8 +25,6 @@ import transformers
 from accelerate import Accelerator
 from accelerate.logging import get_logger
 from accelerate.utils import DistributedDataParallelKwargs, ProjectConfiguration, set_seed
-from huggingface_hub import create_repo, upload_folder
-from packaging import version
 from peft import LoraConfig
 from peft.utils import get_peft_model_state_dict
 from PIL import Image
