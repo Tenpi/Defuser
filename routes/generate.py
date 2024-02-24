@@ -5,7 +5,7 @@ import random
 import os
 import torch
 from torchvision.transforms.functional import pil_to_tensor
-from .functions import next_index, is_nsfw, get_normalized_dimensions
+from .functions import next_index, is_nsfw, get_normalized_dimensions, is_image, get_number_from_filename
 from .invisiblewatermark import encode_watermark
 from .info import get_diffusion_models, get_vae_models, get_clip_model
 import numpy as np
@@ -31,6 +31,7 @@ import inspect
 import ctypes
 import threading
 import platform
+import asyncio
 import gc
 
 dirname = os.path.dirname(__file__)
@@ -381,12 +382,35 @@ def update_precision():
         dtype = torch.bfloat16
     return "done"
 
+async def clear_step_frames():
+    step_dir = os.path.join(dirname, f"../outputs/steps")
+    images = os.listdir(step_dir)
+    images = list(filter(lambda file: is_image(file, False), images))
+    images = sorted(images, key=lambda x: get_number_from_filename(x), reverse=False)
+    images = list(map(lambda image: os.path.join(step_dir, image), images))
+    for image in images:
+        os.remove(image)
+
+async def generate_step_animation():
+    step_dir = os.path.join(dirname, f"../outputs/steps")
+    images = os.listdir(step_dir)
+    images = list(filter(lambda file: is_image(file, False), images))
+    images = sorted(images, key=lambda x: get_number_from_filename(x), reverse=False)
+    images = list(map(lambda image: os.path.join(step_dir, image), images))
+    frames = list(map(lambda image: Image.open(image).convert("RGB"), images))
+    gif_path = os.path.join(step_dir, "step.gif")
+    frames[0].save(gif_path, save_all=True, append_images=frames[1:], duration=100, loop=0)
+    socketio.emit("step animation complete", {"path": f"/outputs/steps/step.gif"})
+    
+
 def generate(request_data, request_files):
     global gen_thread
     global device
     gen_thread = threading.get_ident()
     mode = "text"
     data = json.loads(request_data)
+
+    asyncio.run(clear_step_frames())
                 
     seed = get_seed(data["seed"]) if "seed" in data else get_seed(-1)
     amount = int(data["amount"]) if "amount" in data else 1
@@ -560,6 +584,10 @@ def generate(request_data, request_files):
             if sampler == "heun":
                 total_steps = int(total_steps * 2)
             socketio.emit("step progress", {"step": step, "total_step": total_steps, "width": w, "height": h, "image": pixels})
+            step_dir = os.path.join(dirname, f"../outputs/steps")
+            pathlib.Path(step_dir).mkdir(parents=True, exist_ok=True)
+            img_path = os.path.join(step_dir, f"step{step}.png")
+            image.save(img_path)
         return call_dict
 
     images = []
@@ -606,6 +634,7 @@ def generate(request_data, request_files):
             pathlib.Path(dir_path).mkdir(parents=True, exist_ok=True)
             out_path = os.path.join(dir_path, f"image{next_index(dir_path)}.{format}")
             image.save(out_path)
+            asyncio.run(generate_step_animation())
             if upscaling:
                 socketio.emit("image upscaling")
                 upscale(out_path, upscaler)
@@ -659,6 +688,7 @@ def generate(request_data, request_files):
             pathlib.Path(dir_path).mkdir(parents=True, exist_ok=True)
             out_path = os.path.join(dir_path, f"image{next_index(dir_path)}.{format}")
             image.save(out_path)
+            asyncio.run(generate_step_animation())
             if upscaling:
                 socketio.emit("image upscaling")
                 upscale(out_path, upscaler)
@@ -720,6 +750,7 @@ def generate(request_data, request_files):
             pathlib.Path(dir_path).mkdir(parents=True, exist_ok=True)
             out_path = os.path.join(dir_path, f"image{next_index(dir_path)}.{format}")
             image.save(out_path)
+            asyncio.run(generate_step_animation())
             if upscaling:
                 socketio.emit("image upscaling")
                 upscale(out_path, upscaler)
@@ -780,6 +811,7 @@ def generate(request_data, request_files):
             pathlib.Path(dir_path).mkdir(parents=True, exist_ok=True)
             out_path = os.path.join(dir_path, f"image{next_index(dir_path)}.{format}")
             image.save(out_path)
+            asyncio.run(generate_step_animation())
             if upscaling:
                 socketio.emit("image upscaling")
                 upscale(out_path, upscaler)
@@ -845,6 +877,7 @@ def generate(request_data, request_files):
             pathlib.Path(dir_path).mkdir(parents=True, exist_ok=True)
             out_path = os.path.join(dir_path, f"image{next_index(dir_path)}.{format}")
             image.save(out_path)
+            asyncio.run(generate_step_animation())
             if upscaling:
                 socketio.emit("image upscaling")
                 upscale(out_path, upscaler)
@@ -913,6 +946,7 @@ def generate(request_data, request_files):
             pathlib.Path(dir_path).mkdir(parents=True, exist_ok=True)
             out_path = os.path.join(dir_path, f"image{next_index(dir_path)}.{format}")
             image.save(out_path)
+            asyncio.run(generate_step_animation())
             if upscaling:
                 socketio.emit("image upscaling")
                 upscale(out_path, upscaler)
@@ -973,6 +1007,7 @@ def generate(request_data, request_files):
             pathlib.Path(dir_path).mkdir(parents=True, exist_ok=True)
             out_path = os.path.join(dir_path, f"image{next_index(dir_path)}.{format}")
             image.save(out_path)
+            asyncio.run(generate_step_animation())
             if upscaling:
                 socketio.emit("image upscaling")
                 upscale(out_path, upscaler)

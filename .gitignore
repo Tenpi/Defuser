@@ -33,6 +33,7 @@ outputs/textual inversion
 outputs/hypernetwork
 outputs/checkpoint
 outputs/merged
+outputs/steps
 dialog/random.pt
 
 !models/diffusion/readme.txt

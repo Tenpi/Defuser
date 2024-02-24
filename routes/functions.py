@@ -45,10 +45,12 @@ def is_source_text(filename):
     else:
         return False
 
-def is_image(filename):
+def is_image(filename, include_animated=True):
     if filename == ".DS_Store": return False
     ext = pathlib.Path(filename).suffix.lower().replace(".", "")
-    image_exts = ["jpg", "jpeg", "png", "webp", "gif", "apng", "avif", "bmp"]
+    image_exts = ["jpg", "jpeg", "png", "webp", "avif", "bmp"]
+    if include_animated:
+        image_exts.extend(["gif", "apng"])
     if ext in image_exts:
         return True
     else:

@@ -6,9 +6,13 @@ import {ProgressBar} from "react-bootstrap"
 import {EnableDragContext, MobileContext, SiteHueContext, SiteSaturationContext, SiteLightnessContext, RenderImageContext, StartedContext,
 SocketContext, UpdateImagesContext, PreviewImageContext, ImageBrightnessContext, ImageContrastContext, SidebarTypeContext, AIWatermarkBrightnessContext, 
 AIWatermarkHueContext, AIWatermarkInvertContext, AIWatermarkMarginXContext, AIWatermarkMarginYContext, AIWatermarkOpacityContext, AIWatermarkPositionContext, 
-AIWatermarkSaturationContext, AIWatermarkScaleContext, AIWatermarkTypeContext, WatermarkContext, InvisibleWatermarkContext} from "../Context"
+AIWatermarkSaturationContext, AIWatermarkScaleContext, AIWatermarkTypeContext, WatermarkContext, InvisibleWatermarkContext, StepAnimationContext} from "../Context"
 import xIcon from "../assets/icons/x.png"
 import xIconHover from "../assets/icons/x-hover.png"
+import playIcon from "../assets/icons/play.png"
+import playIconHover from "../assets/icons/play-hover.png"
+import pauseIcon from "../assets/icons/pause.png"
+import pauseIconHover from "../assets/icons/pause-hover.png"
 import functions from "../structures/Functions"
 import "./styles/render.less"
 import ai from "../assets/icons/AI/ai.png"
@@ -19,6 +23,7 @@ import axios from "axios"
 
 let timer = null as any
 let clicking = false
+let clickLock = false
 
 const Render: React.FunctionComponent = (props) => {
     const {enableDrag, setEnableDrag} = useContext(EnableDragContext)
@@ -37,8 +42,6 @@ const Render: React.FunctionComponent = (props) => {
     const {started, setStarted} = useContext(StartedContext)
     const [completed, setCompleted] = useState(false)
     const [upscaling, setUpscaling] = useState(false)
-    const [hover, setHover] = useState(false)
-    const [xHover, setXHover] = useState(false)
     const {aiWatermarkPosition, setAIWatermarkPosition} = useContext(AIWatermarkPositionContext)
     const {aiWatermarkType, setAIWatermarkType} = useContext(AIWatermarkTypeContext)
     const {aiWatermarkHue, setAIWatermarkHue} = useContext(AIWatermarkHueContext)
@@ -51,6 +54,11 @@ const Render: React.FunctionComponent = (props) => {
     const {aiWatermarkScale, setAIWatermarkScale} = useContext(AIWatermarkScaleContext)
     const {watermark, setWatermark} = useContext(WatermarkContext)
     const {invisibleWatermark, setInvisibleWatermark} = useContext(InvisibleWatermarkContext)
+    const {stepAnimation, setStepAnimation} = useContext(StepAnimationContext)
+    const [hover, setHover] = useState(false)
+    const [xHover, setXHover] = useState(false)
+    const [playHover, setPlayHover] = useState(false)
+    const [stepAnimationToggle, setStepAnimationToggle] = useState(false)
     const progressBarRef = useRef(null) as React.RefObject<HTMLDivElement>
     const ref = useRef<HTMLCanvasElement>(null)
     const history = useHistory()
@@ -73,6 +81,7 @@ const Render: React.FunctionComponent = (props) => {
             setStarted(true)
             setCompleted(false)
             setProgress(-1)
+            setStepAnimation("")
         }
         const stepProgress = (data: any) => {
             const pixels = new Uint8Array(data.image)
@@ -120,17 +129,22 @@ const Render: React.FunctionComponent = (props) => {
             setUpscaling(false)
             setRenderImage("")
         }
+        const completedStepAnimation = async (data: any) => {
+            setStepAnimation(data.path)
+        }
         socket.on("image starting", startingImage)
         socket.on("step progress", stepProgress)
         socket.on("image upscaling", upscalingImage)
         socket.on("image complete", completedImage)
         socket.on("image interrupt", interruptImage)
+        socket.on("step animation complete", completedStepAnimation)
         return () => {
             socket.off("image starting", startingImage)
             socket.off("step progress", stepProgress)
             socket.off("image upscaling", upscalingImage)
             socket.off("image complete", completedImage)
             socket.off("image interrupt", interruptImage)
+            socket.off("step animation complete", completedStepAnimation)
         }
     }, [socket, sidebarType, aiWatermarkPosition, aiWatermarkType, aiWatermarkHue, aiWatermarkSaturation, aiWatermarkBrightness, 
         aiWatermarkInvert, aiWatermarkOpacity, aiWatermarkMarginX, aiWatermarkMarginY,aiWatermarkScale, watermark])
@@ -160,15 +174,21 @@ const Render: React.FunctionComponent = (props) => {
 
     const preview = () => {
         if (!completed || !renderImage) return
-        setPreviewImage(renderImage)
+        const image = stepAnimationToggle && stepAnimation ? stepAnimation : renderImage
+        setPreviewImage(image)
     }
 
     const showInFolder = () => {
         if (!completed || !renderImage) return
-        axios.post("/show-in-folder", {path: renderImage})
+        const path = stepAnimationToggle && stepAnimation ? stepAnimation : renderImage
+        axios.post("/show-in-folder", {path})
     }
 
     const handleClick = (event: any) => {
+        if (clickLock) {
+            clickLock = false
+            return
+        }
         if (previewImage) return clearTimeout(timer)
         if (clicking) {
             clicking = false
@@ -183,10 +203,32 @@ const Render: React.FunctionComponent = (props) => {
         }, 200)
     }
 
-    const remove = () => {
+    const remove = (event: any) => {
+        clickLock = true
         if (!completed) return
         setStarted(false)
         setRenderImage("")
+    }
+
+    const toggleAnimation = (event: any) => {
+        clickLock = true
+        setStepAnimationToggle((prev: boolean) => !prev)
+    }
+
+    const getRenderImage = () => {
+        if (stepAnimationToggle && stepAnimation) return stepAnimation
+        return renderImage
+    }
+
+    const getPlayButton = () => {
+        if (!stepAnimation) return null
+        if (stepAnimationToggle) {
+            return (<img className="render-img-button" src={playHover ? pauseIconHover : pauseIcon} style={{filter: getFilter()}}
+            onMouseEnter={() => setPlayHover(true)} onMouseLeave={() => setPlayHover(false)} onClick={toggleAnimation}/>)
+        } else {
+            return (<img className="render-img-button" src={playHover ? playIconHover : playIcon} style={{filter: getFilter()}}
+            onMouseEnter={() => setPlayHover(true)} onMouseLeave={() => setPlayHover(false)} onClick={toggleAnimation}/>)
+        }
     }
 
     if (!renderImage && !started) return null
@@ -199,10 +241,11 @@ const Render: React.FunctionComponent = (props) => {
             </div>
             {renderImage ? <div className="render-img-container" onClick={handleClick} onMouseEnter={() => setHover(true)} onMouseLeave={() => setHover(false)}>
                 {completed ? <div className={`render-img-button-container ${hover ? "render-buttons-show" : ""}`}>
+                    {getPlayButton()}
                     <img className="render-img-button" src={xHover ? xIconHover : xIcon} style={{filter: getFilter()}}
                     onMouseEnter={() => setXHover(true)} onMouseLeave={() => setXHover(false)} onClick={remove}/>
                 </div> : null}
-                <img className="render-img" src={renderImage} draggable={false} style={{filter: `brightness(${imageBrightness + 100}%) contrast(${imageContrast + 100}%)`}}/>
+                <img className="render-img" src={getRenderImage()} draggable={false} style={{filter: `brightness(${imageBrightness + 100}%) contrast(${imageContrast + 100}%)`}}/>
             </div> : null}
         </div>
     )
