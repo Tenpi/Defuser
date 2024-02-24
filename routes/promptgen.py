@@ -12,7 +12,13 @@ def generate_prompt():
     global tokenizer
     global model
     data = flask.request.json
-    prompt = "1girl" # data["prompt"] if "prompt" in data else "1girl"
+    mode = data["mode"]
+    prompt = data["prompt"]
+
+    if mode == "1girl":
+        prompt = "1girl"
+    elif mode == "1boy":
+        prompt = "1boy"
 
     if not tokenizer:
         tokenizer = GPT2Tokenizer.from_pretrained("distilgpt2")

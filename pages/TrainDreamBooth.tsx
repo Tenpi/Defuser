@@ -120,7 +120,7 @@ const TrainDreamBooth: React.FunctionComponent = (props) => {
         const updateTrainImages = async () => {
             let images = await axios.post("/list-files", {folder: folderLocation}).then((r) => r.data)
             if (images?.length) {
-                images = images.map((i: string) => `/retrieve?path=${i}`)
+                images = images.map((i: string) => `/retrieve?path=${i}&?v=${new Date().getTime()}`)
                 setTrainImages(images)
             }
         }
@@ -180,7 +180,7 @@ const TrainDreamBooth: React.FunctionComponent = (props) => {
 
     const train = async () => {
         const json = {} as any
-        json.images = trainImages.map((i: string) => i.replace("/retrieve?path=", ""))
+        json.images = trainImages.map((i: string) => i.replace("/retrieve?path=", "").split("&")[0])
         json.model_name = modelName
         json.train_data = folderLocation
         json.instance_prompt = trainName

@@ -76,7 +76,7 @@ const TrainSource: React.FunctionComponent = (props) => {
         const updateTrainImages = async () => {
             let images = await axios.post("/list-files", {folder: folderLocation}).then((r) => r.data)
             if (images?.length) {
-                images = images.map((i: string) => `/retrieve?path=${i}`)
+                images = images.map((i: string) => `/retrieve?path=${i}&?v=${new Date().getTime()}`)
                 setTrainImages(images)
             }
         }
@@ -108,7 +108,7 @@ const TrainSource: React.FunctionComponent = (props) => {
     }
 
     const tag = async () => {
-        await axios.post("/source", {images: trainImages.map((i: string) => i.replace("/retrieve?path=", "")), saucenao_key: saucenaoAPIKey})
+        await axios.post("/source", {images: trainImages.map((i: string) => i.replace("/retrieve?path=", "").split("&")[0]), saucenao_key: saucenaoAPIKey})
     }
 
     const interruptTag = async () => {
@@ -116,7 +116,7 @@ const TrainSource: React.FunctionComponent = (props) => {
     }
 
     const deleteSources = async () => {
-        await axios.post("/delete-sources", {images: trainImages.map((i: string) => i.replace("/retrieve?path=", ""))})
+        await axios.post("/delete-sources", {images: trainImages.map((i: string) => i.replace("/retrieve?path=", "").split("&")[0])})
     }
 
     return (

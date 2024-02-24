@@ -1,5 +1,6 @@
 import flask
 from __main__ import app, socketio
+from .functions import resize_box
 from .interrogate import interrogate
 from .textual_inversion import train_textual_inversion
 from .hypernetwork import train_hypernetwork
@@ -8,7 +9,8 @@ from .dreambooth import train_dreambooth
 from .checkpoint import train_checkpoint
 from .checkpoint_merger import merge
 from .info import show_in_folder
-from pysaucenao import SauceNao, TooManyFailedRequestsException
+from pysaucenao import SauceNao
+import animeface
 import asyncio
 import time
 import os
@@ -19,6 +21,8 @@ import inspect
 import ctypes
 import pathlib
 import re
+from PIL import Image
+import cv2
 
 gen_thread = None
 dirname = os.path.dirname(__file__)
@@ -121,12 +125,18 @@ async def source(images, saucenao_key):
     socketio.emit("train starting")
     sn = SauceNao(api_key=saucenao_key, priority=[9, 5])
     for i, image in enumerate(images):
+        result = ""
         try:
-            results = await sn.from_file(image)
+            pixiv_shortcut = re.search(r"\d{5,}", image)
+            if pixiv_shortcut:
+                result = f"https://www.pixiv.net/en/artworks/{pixiv_shortcut.group()}"
+            else:
+                results = await sn.from_file(image)
+                result = results[0].source_url
         except:
             time.sleep(31)
             results = await sn.from_file(image)
-        result = results[0].source_url
+            result = results[0].source_url
         if result:
             if "pixiv" in result or "pximg" in result:
                 match = re.search(r"\d{5,}", result)
@@ -384,6 +394,36 @@ def merge_route():
     alpha = data["alpha"]
     interpolation = data["interpolation"]
     thread = threading.Thread(target=merge_checkpoints, args=(models, alpha, interpolation))
+    thread.start()
+    thread.join()
+    gen_thread = None
+    return "done"
+
+def crop_anime_face(images, size=512):
+    global gen_thread 
+    gen_thread = threading.get_ident()
+    socketio.emit("train starting")
+    for i, img_path in enumerate(images):
+        if (".DS_Store" in img_path): return
+        img = cv2.imread(img_path)
+        img_h, img_w, img_c = img.shape
+        faces = animeface.detect(Image.open(img_path))
+        if len(faces):
+            pos = faces[0].face.pos
+            x, x1, y, y1 = resize_box(pos.x, pos.x + pos.width, pos.y, pos.y + pos.height, img_w, img_h, size)
+            face_img = img[int(y):int(y1), int(x):int(x1)]
+            cv2.imwrite(img_path, face_img)
+        socketio.emit("train progress", {"step": i+1, "total_step": len(images)})
+    socketio.emit("train complete")
+    return "done"
+
+@app.route("/crop", methods=["POST"])
+def crop_anime_route():
+    global gen_thread
+    data = flask.request.json
+    images = data["images"]
+    size = data["resolution"]
+    thread = threading.Thread(target=crop_anime_face, args=(images, int(size)))
     thread.start()
     thread.join()
     gen_thread = None

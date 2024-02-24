@@ -129,7 +129,7 @@ const TrainTextualInversion: React.FunctionComponent = (props) => {
         const updateTrainImages = async () => {
             let images = await axios.post("/list-files", {folder: folderLocation}).then((r) => r.data)
             if (images?.length) {
-                images = images.map((i: string) => `/retrieve?path=${i}`)
+                images = images.map((i: string) => `/retrieve?path=${i}&?v=${new Date().getTime()}`)
                 setTrainImages(images)
             }
         }

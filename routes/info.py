@@ -247,11 +247,11 @@ def save_watermark():
 
 @app.route("/update-location", methods=["POST"])
 def update_location():
-    program = os.path.join(dirname, "../dialog/dialog.AppImage")
+    program = os.path.join(dirname, "../dialog/dialog")
     if platform.system() == "Windows":
         program = os.path.join(dirname, "../dialog/dialog.exe")
     if platform.system() == "Darwin":
-        program = os.path.join(dirname, "../dialog/dialog")
+        program = os.path.join(dirname, "../dialog/dialog.app")
     process = subprocess.Popen([program, "-d"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     folder_selected, err = process.communicate()
     return folder_selected

@@ -100,6 +100,7 @@ export const ResolutionContext = React.createContext<any>(null)
 export const TrainRenderImageContext = React.createContext<any>(null)
 export const TrainNameContext = React.createContext<any>(null)
 export const SauceNaoAPIKeyContext = React.createContext<any>(null)
+export const RandomPromptModeContext = React.createContext<any>(null)
 
 const Context: React.FunctionComponent = (props: any) => {
     const [theme, setTheme] = useState("light")
@@ -189,9 +190,11 @@ const Context: React.FunctionComponent = (props: any) => {
     const [trainRenderImage, setTrainRenderImage] = useState("")
     const [trainName, setTrainName] = useState("")
     const [saucenaoAPIKey, setSaucenaoAPIKey] = useState("0458b69644c4fbab43f7c7b96724c98539303814")
+    const [randomPromptMode, setRandomPromptMode] = useState("1girl")
 
     return (
         <>  
+            <RandomPromptModeContext.Provider value={{randomPromptMode, setRandomPromptMode}}>
             <SauceNaoAPIKeyContext.Provider value={{saucenaoAPIKey, setSaucenaoAPIKey}}>
             <TrainNameContext.Provider value={{trainName, setTrainName}}>
             <LearningRateTEContext.Provider value={{learningRateTE, setLearningRateTE}}>
@@ -367,6 +370,7 @@ const Context: React.FunctionComponent = (props: any) => {
             </LearningRateTEContext.Provider>
             </TrainNameContext.Provider>
             </SauceNaoAPIKeyContext.Provider>
+            </RandomPromptModeContext.Provider>
         </>
     )
 }

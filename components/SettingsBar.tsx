@@ -4,7 +4,7 @@ import {HashLink as Link} from "react-router-hash-link"
 import favicon from "../assets/icons/favicon.png"
 import {EnableDragContext, MobileContext, SiteHueContext, SiteSaturationContext, SiteLightnessContext, NegativePromptContext, ProcessingContext,
 InterrogatorNameContext, DeletionContext, FormatContext, PrecisionContext, LoopModeContext, WatermarkContext, UpscalerContext, NSFWTabContext,
-InvisibleWatermarkContext, SauceNaoAPIKeyContext} from "../Context"
+InvisibleWatermarkContext, SauceNaoAPIKeyContext, RandomPromptModeContext} from "../Context"
 import functions from "../structures/Functions"
 import {Dropdown, DropdownButton} from "react-bootstrap"
 import checkbox from "../assets/icons/checkbox2.png"
@@ -31,6 +31,7 @@ const SettingsBar: React.FunctionComponent = (props) => {
     const {invisibleWatermark, setInvisibleWatermark} = useContext(InvisibleWatermarkContext)
     const [convertPrompt, setConvertPrompt] = useState("")
     const {saucenaoAPIKey, setSaucenaoAPIKey} = useContext(SauceNaoAPIKeyContext)
+    const {randomPromptMode, setRandomPromptMode} = useContext(RandomPromptModeContext)
     const ref = useRef<HTMLCanvasElement>(null)
     const history = useHistory()
 
@@ -63,6 +64,8 @@ const SettingsBar: React.FunctionComponent = (props) => {
         if (savedInvisibleWatermark) setInvisibleWatermark(savedInvisibleWatermark === "true")
         const savedSaucenaoAPIKey = localStorage.getItem("saucenaoAPIKey")
         if (savedSaucenaoAPIKey) setSaucenaoAPIKey(savedSaucenaoAPIKey)
+        const savedRandomPromptMode = localStorage.getItem("randomPromptMode")
+        if (savedRandomPromptMode) setRandomPromptMode(savedRandomPromptMode)
     }, [])
 
     useEffect(() => {
@@ -78,8 +81,9 @@ const SettingsBar: React.FunctionComponent = (props) => {
         localStorage.setItem("nsfwTab", String(nsfwTab))
         localStorage.setItem("invisibleWatermark", String(invisibleWatermark))
         localStorage.setItem("saucenaoAPIKey", String(saucenaoAPIKey))
+        localStorage.setItem("randomPromptMode", String(randomPromptMode))
     }, [negativePrompt, interrogatorName, processing, format, deletion, precision, loopMode, 
-        upscaler, nsfwTab, invisibleWatermark, watermark, saucenaoAPIKey])
+        upscaler, nsfwTab, invisibleWatermark, watermark, saucenaoAPIKey, randomPromptMode])
 
     const resetNegativePrompt = () => {
         setNegativePrompt("")
@@ -158,6 +162,14 @@ const SettingsBar: React.FunctionComponent = (props) => {
                 <DropdownButton title={invisibleWatermark ? "Yes" : "No"} drop="down" className="checkpoint-selector">
                     <Dropdown.Item active={invisibleWatermark === true} onClick={() => setInvisibleWatermark(true)}>Yes</Dropdown.Item>
                     <Dropdown.Item active={invisibleWatermark === false} onClick={() => setInvisibleWatermark(false)}>No</Dropdown.Item>
+                </DropdownButton>
+            </div>
+            <div className="settings-bar-row">
+                <span className="settings-bar-text">Prompt Gen:</span>
+                <DropdownButton title={randomPromptMode} drop="down" className="checkpoint-selector">
+                    <Dropdown.Item active={randomPromptMode === "1girl"} onClick={() => setRandomPromptMode("1girl")}>1girl</Dropdown.Item>
+                    <Dropdown.Item active={randomPromptMode === "1boy"} onClick={() => setRandomPromptMode("1boy")}>1boy</Dropdown.Item>
+                    <Dropdown.Item active={randomPromptMode === "custom"} onClick={() => setRandomPromptMode("custom")}>custom</Dropdown.Item>
                 </DropdownButton>
             </div>
             <div className="settings-bar-row">

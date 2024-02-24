@@ -30,6 +30,8 @@ def models(filename):
 def retrieve():
     file_path = flask.request.args.get("path")
     if file_path:
+        if "&" in file_path:
+            file_path = file_path.split("&")[0]
         return flask.send_file(file_path)
     else:
         return "Path not provided", 400

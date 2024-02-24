@@ -16,6 +16,7 @@ import TrainLora from "./TrainLora"
 import TrainDreamBooth from "./TrainDreamBooth"
 import TrainCheckpoint from "./TrainCheckpoint"
 import TrainMerge from "./TrainMerge"
+import TrainCrop from "./TrainCrop"
 import "./styles/generate.less"
 
 const Train: React.FunctionComponent = (props) => {
@@ -89,6 +90,9 @@ const Train: React.FunctionComponent = (props) => {
     const trainTabsJSX = () => {
         return (
             <div className="train-tab-row">
+                <div className="train-tab-container" onClick={() => setTrainTab("crop")}>
+                    <span className={trainTab === "crop" ? "train-tab-text-selected" : "train-tab-text"}>Crop</span>
+                </div>
                 <div className="train-tab-container" onClick={() => setTrainTab("tag")}>
                     <span className={trainTab === "tag" ? "train-tab-text-selected" : "train-tab-text"}>Tag</span>
                 </div>
@@ -118,7 +122,9 @@ const Train: React.FunctionComponent = (props) => {
     }
 
     const getTab = () => {
-        if (trainTab === "tag") {
+        if (trainTab === "crop") {
+            return <TrainCrop/>
+        } else if (trainTab === "tag") {
             return <TrainTag/>
         } else if (trainTab === "source") {
             return <TrainSource/>

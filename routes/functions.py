@@ -155,3 +155,37 @@ def get_sources(folder):
         sources.append(f.read())
         f.close()
     return sources
+
+def resize_box(x, x1, y, y1, img_w, img_h, size=512):
+    if size == 0:
+        return {"x": x, "x1": x1, "y": y, "y1": y1}
+    center_x = math.floor((x + x1) / 2)
+    center_y = math.floor((y + y1) / 2)
+    new_x = center_x - math.floor(size / 2)
+    corr_x1 = 0
+    if new_x < 0:
+        while new_x < 0:
+            new_x += 1
+            corr_x1 += 1
+    new_x1 = center_x + math.floor(size / 2) + corr_x1
+    if new_x1 > img_w:
+        while new_x1 > img_w:
+            new_x1 -= 1
+            new_x -= 1
+        if new_x < 0:
+           new_x = 0
+
+    new_y = center_y - math.floor(size / 2)
+    corr_y1 = 0
+    if new_y < 0:
+        while new_y < 0:
+            new_y += 1
+            corr_y1 += 1
+    new_y1 = center_y + math.floor(size / 2) + corr_y1
+    if new_y1 > img_h:
+        while new_y1 > img_h:
+            new_y1 -= 1
+            new_y -= 1
+        if new_y < 0:
+           new_y = 0
+    return new_x, new_x1, new_y, new_y1

@@ -70,6 +70,17 @@ npm start
 
 By default, it will be available at http://localhost:8084.
 
+### Animeface
+
+If you have trouble installing animeface (to crop images to the face) you have to build it from the source.
+```sh
+git clone https://github.com/nya3jp/python-animeface.git
+cd python-animeface/third_party/nvxs-1.0.2
+./configure
+make
+sudo make install
+```
+
 ### ControlNet
 
 ControlNet lets you control the generation using a "control image". The possible control images are canny, depth,
@@ -103,7 +114,8 @@ also an invisible watermark that isn't visible but can be decoded from the image
 ### Image Sources
 
 You should generate sources for the images in order to embed them into the metadata of the trained model. The rate limit of 
-a free saucenao account is 4/30s but you can add them manually by creating a file {image name}.source.txt with the source url.
+a free saucenao account is 4/30s but you can add them manually by creating a file {image name}.source.txt with the source url. 
+Shortcut: Any image with name like 1234567.png will be assumed to be from pixiv with source https://www.pixiv.net/en/artworks/1234567. 
 
 ### Important
 

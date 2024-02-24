@@ -9,7 +9,7 @@ FormatContext, DeletionContext, TextualInversionsContext, HypernetworksContext, 
 ControlImageContext, ControlProcessorContext, ControlScaleContext, ControlGuessModeContext, ControlStartContext, ControlEndContext,
 ControlInvertContext, StyleFidelityContext, ControlReferenceImageContext, HorizontalExpandContext, VerticalExpandContext, UpscalerContext,
 ExpandImageContext, ExpandMaskContext, StartedContext, SocketContext, LoopModeContext, SavedPromptsContext, WatermarkContext, NSFWTabContext,
-InvisibleWatermarkContext} from "../Context"
+InvisibleWatermarkContext, SauceNaoAPIKeyContext, RandomPromptModeContext} from "../Context"
 import functions from "../structures/Functions"
 import checkbox from "../assets/icons/checkbox2.png"
 import checkboxChecked from "../assets/icons/checkbox2-checked.png"
@@ -75,6 +75,8 @@ const GenerateBar: React.FunctionComponent = (props) => {
     const {watermark, setWatermark} = useContext(WatermarkContext)
     const {invisibleWatermark, setInvisibleWatermark} = useContext(InvisibleWatermarkContext)
     const {nsfwTab, setNSFWTab} = useContext(NSFWTabContext)
+    const {saucenaoAPIKey, setSaucenaoAPIKey} = useContext(SauceNaoAPIKeyContext)
+    const {randomPromptMode, setRandomPromptMode} = useContext(RandomPromptModeContext)
     const ref = useRef<HTMLCanvasElement>(null)
     const history = useHistory()
 
@@ -111,6 +113,10 @@ const GenerateBar: React.FunctionComponent = (props) => {
         if (savedNSFWTab) setNSFWTab(savedNSFWTab === "true")
         const savedInvisibleWatermark = localStorage.getItem("invisibleWatermark")
         if (savedInvisibleWatermark) setInvisibleWatermark(savedInvisibleWatermark === "true")
+        const savedSaucenaoAPIKey = localStorage.getItem("saucenaoAPIKey")
+        if (savedSaucenaoAPIKey) setSaucenaoAPIKey(savedSaucenaoAPIKey)
+        const savedRandomPromptMode = localStorage.getItem("randomPromptMode")
+        if (savedRandomPromptMode) setRandomPromptMode(savedRandomPromptMode)
     }, [])
 
     useEffect(() => {
@@ -229,7 +235,7 @@ const GenerateBar: React.FunctionComponent = (props) => {
     const getPrompt = async (looping?: boolean) => {
         if (looping) {
             if (loopMode === "random prompt") {
-                const randomPrompt = await randomizePrompt("1girl")
+                const randomPrompt = await randomizePrompt()
                 return randomPrompt
             } else if (loopMode === "saved prompt") {
                 const saved = savedPrompt()
@@ -330,9 +336,8 @@ const GenerateBar: React.FunctionComponent = (props) => {
         if (size) setSize(functions.getSizeDimensionsReverse(Number(size.split("x")[1])))
     }
 
-    const randomizePrompt = async (override?: string) => {
-        const promptText = override ? override : prompt
-        const text = await axios.post("/generate-prompt", {prompt: promptText}).then((r) => r.data)
+    const randomizePrompt = async () => {
+        const text = await axios.post("/generate-prompt", {prompt, mode: randomPromptMode}).then((r) => r.data)
         setPrompt(text)
         return text
     }
@@ -371,7 +376,7 @@ const GenerateBar: React.FunctionComponent = (props) => {
                     <input className="generate-bar-times" value={amount} onChange={(event) => setAmount(event.target.value)}></input>
                 </div>
                 <div className="generate-bar-interrogate-container">
-                    <div className="generate-bar-loop-container" onClick={() => randomizePrompt(prompt)}>
+                    <div className="generate-bar-loop-container" onClick={() => randomizePrompt()}>
                         <img className="generate-bar-icon" src={diceIcon} style={{filter: getFilter()}}/>
                     </div>
                     <div className="generate-bar-loop-container" onClick={() => savedPrompt()}>

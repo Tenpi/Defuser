@@ -378,7 +378,7 @@ def update_precision():
     if precision == "full":
         dtype = torch.float32
     elif precision == "half":
-        dtype = torch.float16
+        dtype = torch.bfloat16
     return "done"
 
 def generate(request_data, request_files):
