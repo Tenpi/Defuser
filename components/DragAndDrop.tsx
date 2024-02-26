@@ -1,7 +1,8 @@
 import React, {useContext, useEffect, useRef, useState, useReducer} from "react"
 import {useHistory} from "react-router-dom"
 import {ImageInputContext, InterrogateTextContext, MaskImageContext, MaskDataContext, ExpandImageContext, ExpandMaskContext,
-HorizontalExpandContext, VerticalExpandContext} from "../Context"
+HorizontalExpandContext, VerticalExpandContext, ShadeImageInputContext, SimplifyImageInputContext, AIImageInputContext, TabContext,
+MiscTabContext} from "../Context"
 import {HashLink as Link} from "react-router-hash-link"
 import functions from "../structures/Functions"
 import path from "path"
@@ -22,6 +23,11 @@ const DragAndDrop: React.FunctionComponent = (props) => {
     const {expandMask, setExpandMask} = useContext(ExpandMaskContext)
     const {horizontalExpand, setHorizontalExpand} = useContext(HorizontalExpandContext)
     const {verticalExpand, setVerticalExpand} = useContext(VerticalExpandContext)
+    const {aiImageInput, setAIImageInput} = useContext(AIImageInputContext)
+    const {simplifyImageInput, setSimplifyImageInput} = useContext(SimplifyImageInputContext)
+    const {shadeImageInput, setShadeImageInput} = useContext(ShadeImageInputContext)
+    const {tab, setTab} = useContext(TabContext)
+    const {miscTab, setMiscTab} = useContext(MiscTabContext)
     const [uploadHover, setUploadHover] = useState(false)
     const history = useHistory()
 
@@ -92,7 +98,17 @@ const DragAndDrop: React.FunctionComponent = (props) => {
                     const metadata = await functions.getImageMetaData(link)
                     if (metadata) setInterrogateText(metadata)
                     setTimeout(() => {
-                        setImageInput(link)
+                        if (tab === "misc") {
+                            if (miscTab === "ai detector") {
+                                setAIImageInput(link)
+                            } else if (miscTab === "simplify sketch") {
+                                setSimplifyImageInput(link)
+                            } else if (miscTab === "shade sketch") {
+                                setShadeImageInput(link)
+                            }
+                        } else {
+                            setImageInput(link)
+                        }
                     }, 100)
                 }
                 resolve()
@@ -102,13 +118,23 @@ const DragAndDrop: React.FunctionComponent = (props) => {
     }
 
     const removeImage = (event?: any) => {
-        setImageInput("")
-        setMaskImage("")
-        setMaskData("")
-        setHorizontalExpand("0")
-        setVerticalExpand("0")
-        setExpandImage("")
-        setExpandMask("")
+        if (tab === "misc") {
+            if (miscTab === "ai detector") {
+                setAIImageInput("")
+            } else if (miscTab === "simplify sketch") {
+                setSimplifyImageInput("")
+            } else if (miscTab === "shade sketch") {
+                setShadeImageInput("")
+            }
+        } else {
+            setImageInput("")
+            setMaskImage("")
+            setMaskData("")
+            setHorizontalExpand("0")
+            setVerticalExpand("0")
+            setExpandImage("")
+            setExpandMask("")
+        }
     }
 
 

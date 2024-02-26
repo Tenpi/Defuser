@@ -2,7 +2,9 @@ import flask
 from __main__ import app, socketio
 from .classifier import train_classifier
 from .info import open_folder
-from .functions import clean_image
+from .functions import clean_image, next_index
+from .simplify_sketch import SketchSimplificationModel
+from .shade_sketch import shade_sketch
 from transformers import BeitFeatureExtractor, BeitForImageClassification
 from PIL import Image
 import os
@@ -14,6 +16,7 @@ from io import BytesIO
 import base64
 
 gen_thread = None
+simplify_model = None
 dirname = os.path.dirname(__file__)
 
 def _async_raise(tid, exctype):
@@ -28,8 +31,8 @@ def _async_raise(tid, exctype):
         ctypes.pythonapi.PyThreadState_SetAsyncExc(ctypes.c_long(tid), None)
         raise SystemError("PyThreadState_SetAsyncExc failed")
 
-@app.route("/interrupt-classify", methods=["POST"])
-def interrupt_classify():
+@app.route("/interrupt-misc", methods=["POST"])
+def interrupt_misc():
     global gen_thread
     if gen_thread:
         try:
@@ -70,10 +73,10 @@ def start_image_classifier():
     gen_thread = None
     return "done"
 
-@app.route("/ai-detector", methods=["POST"])
-def ai_detector():
-    data = flask.request.json
-    image = data["image"]
+def ai_detector(image):
+    global gen_thread 
+    gen_thread = threading.get_ident()
+    socketio.emit("train starting")
     img = Image.open(BytesIO(base64.b64decode(image + "=="))).convert("RGB")
     img = clean_image(img)
     feature_extractor = BeitFeatureExtractor.from_pretrained(os.path.join(dirname, "../models/detector"))
@@ -85,4 +88,75 @@ def ai_detector():
     predicted_class_idx = probs.argmax().item()
     label = model.config.id2label[predicted_class_idx]
     probability = probs[0][predicted_class_idx].item()
-    return {"label": label, "probability": round(probability * 100, 2)}
+    socketio.emit("train complete", {"label": label, "probability": round(probability * 100, 2)})
+
+@app.route("/ai-detector", methods=["POST"])
+def start_ai_detector():
+    global gen_thread
+    data = flask.request.json
+    image = data["image"]
+    thread = threading.Thread(target=ai_detector, args=(image))
+    thread.start()
+    thread.join()
+    gen_thread = None
+    return "done"
+
+def simplify_sketch(image, format):
+    global simplify_model
+    global gen_thread 
+    gen_thread = threading.get_ident()
+    socketio.emit("train starting")
+    img = Image.open(BytesIO(base64.b64decode(image + "=="))).convert("RGB")
+    if not simplify_model:
+        simplify_model = SketchSimplificationModel()
+
+    dir_path = os.path.join(dirname, f"../outputs/image")
+    pathlib.Path(dir_path).mkdir(parents=True, exist_ok=True)
+    out_path = os.path.join(dir_path, f"image{next_index(dir_path)}.{format}")
+    simplify_model(img, out_path)
+    compressed = Image.open(out_path)
+    compressed.save(out_path, quality=90, optimize=True)
+    socketio.emit("train complete", {"image": f"/outputs/image/{os.path.basename(out_path)}"})
+    return "done"
+
+@app.route("/simplify-sketch", methods=["POST"])
+def start_simplify_sketch():
+    global gen_thread
+    data = flask.request.json
+    image = data["image"]
+    format = data["format"]
+    if format == "gif": format = "jpg"
+    thread = threading.Thread(target=simplify_sketch, args=(image, format))
+    thread.start()
+    thread.join()
+    gen_thread = None
+    return "done"
+
+def run_shade_sketch(image, format, direction):
+    global gen_thread 
+    gen_thread = threading.get_ident()
+    socketio.emit("train starting")
+    img = Image.open(BytesIO(base64.b64decode(image + "=="))).convert("RGB")
+    dir_path = os.path.join(dirname, f"../outputs/image")
+    pathlib.Path(dir_path).mkdir(parents=True, exist_ok=True)
+    
+    out_path = os.path.join(dir_path, f"image{next_index(dir_path)}.{format}")
+    shade_sketch(img, out_path, direction)
+    compressed = Image.open(out_path)
+    compressed.save(out_path, quality=90, optimize=True)
+    socketio.emit("train complete", {"image": f"/outputs/image/{os.path.basename(out_path)}"})
+    return "done"
+
+@app.route("/shade-sketch", methods=["POST"])
+def start_shade_sketch():
+    global gen_thread
+    data = flask.request.json
+    image = data["image"]
+    format = data["format"]
+    direction = data["direction"]
+    if format == "gif": format = "jpg"
+    thread = threading.Thread(target=run_shade_sketch, args=(image, format, direction))
+    thread.start()
+    thread.join()
+    gen_thread = None
+    return "done"

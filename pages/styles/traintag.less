@@ -85,12 +85,24 @@
     margin-top: 10px;
 }
 
+.train-tag-row {
+    position: relative;
+    display: flex;
+    width: 100%;
+    height: max-content;
+    background-color: var(--background);
+    flex-direction: row;
+    align-items: center;
+    margin-top: 10px;
+    margin-left: 10px;
+}
+
 .train-tag-column {
     display: flex;
     flex-direction: column;  
     justify-content: center;
     align-items: center;
-    margin-left: 30px;
+    margin-left: 50px;
 }
 
 .train-tag-settings-column {
@@ -133,4 +145,44 @@
     width: 100%;
     justify-content: flex-start;
     align-items: center;
+}
+
+.shade-sketch-box {
+    display: flex;
+    flex-direction: column;
+    border: 2px solid black;
+    margin-bottom: 10px;
+    justify-content: center;
+    align-items: center;
+}
+
+.shade-sketch-box-row {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+}
+
+.shade-sketch-radio-button {
+    width: auto;
+    height: 30px;
+    background: var(--buttonBG);
+    padding: 5px;
+}
+
+.shade-sketch-button {
+    background-color: var(--buttonBG);
+    outline: none;
+    font-family: Arial, sans-serif;
+    color: black;
+    font-size: 21px;
+    padding: 5px;
+    padding-top: 0px;
+    padding-bottom: 0px;
+    cursor: pointer;
+    font-weight: bold;
+    width: max-content;
+    border: none;
+    &:hover {
+        color: white;
+    }
 }

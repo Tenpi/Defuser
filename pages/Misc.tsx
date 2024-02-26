@@ -3,22 +3,24 @@ import {useHistory} from "react-router-dom"
 import {HashLink as Link} from "react-router-hash-link"
 import favicon from "../assets/icons/favicon.png"
 import {EnableDragContext, MobileContext, SiteHueContext, SiteSaturationContext, SiteLightnessContext, 
-ClassifyTabContext, ClassifyFolderLocationContext, EpochsContext, SaveStepsContext,
+MiscTabContext, ClassifyFolderLocationContext, EpochsContext, SaveStepsContext,
 GradientAccumulationStepsContext, LearningRateContext, ResolutionContext, LearningFunctionContext,
 LearningRateTEContext} from "../Context"
 import functions from "../structures/Functions"
 import CheckpointBar from "../components/CheckpointBar"
-import ClassifyTrain from "./ClassifyTrain"
+import TrainClassifier from "./TrainClassifier"
 import AIDetector from "./AIDetector"
+import SimplifySketch from "./SimplifySketch"
+import ShadeSketch from "./ShadeSketch"
 import "./styles/generate.less"
 
-const Classify: React.FunctionComponent = (props) => {
+const Misc: React.FunctionComponent = (props) => {
     const {enableDrag, setEnableDrag} = useContext(EnableDragContext)
     const {mobile, setMobile} = useContext(MobileContext)
     const {siteHue, setSiteHue} = useContext(SiteHueContext)
     const {siteSaturation, setSiteSaturation} = useContext(SiteSaturationContext)
     const {siteLightness, setSiteLightness} = useContext(SiteLightnessContext)
-    const {classifyTab, setClassifyTab} = useContext(ClassifyTabContext)
+    const {miscTab, setMiscTab} = useContext(MiscTabContext)
     const {classifyFolderLocation, setClassifyFolderLocation} = useContext(ClassifyFolderLocationContext)
     const {epochs, setEpochs} = useContext(EpochsContext)
     const {saveSteps, setSaveSteps} = useContext(SaveStepsContext)
@@ -37,8 +39,8 @@ const Classify: React.FunctionComponent = (props) => {
     useEffect(() => {
         const savedClassifyFolderLocation = localStorage.getItem("classifyFolderLocation")
         if (savedClassifyFolderLocation) setClassifyFolderLocation(savedClassifyFolderLocation)
-        const savedClassifyTab = localStorage.getItem("classifyTab")
-        if (savedClassifyTab) setClassifyTab(savedClassifyTab)
+        const savedMiscTab = localStorage.getItem("miscTab")
+        if (savedMiscTab) setMiscTab(savedMiscTab)
         const savedEpochs = localStorage.getItem("epochs")
         if (savedEpochs) setEpochs(savedEpochs)
         const savedSaveSteps = localStorage.getItem("saveSteps")
@@ -57,7 +59,7 @@ const Classify: React.FunctionComponent = (props) => {
 
     useEffect(() => {
         localStorage.setItem("classifyFolderLocation", String(classifyFolderLocation))
-        localStorage.setItem("classifyTab", String(classifyTab))
+        localStorage.setItem("miscTab", String(miscTab))
         localStorage.setItem("epochs", String(epochs))
         localStorage.setItem("saveSteps", String(saveSteps))
         localStorage.setItem("learningRate", String(learningRate))
@@ -65,37 +67,47 @@ const Classify: React.FunctionComponent = (props) => {
         localStorage.setItem("resolution", String(resolution))
         localStorage.setItem("learningFunction", String(learningFunction))
         localStorage.setItem("learningRateTE", String(learningRateTE))
-    }, [classifyFolderLocation, classifyTab, epochs, saveSteps, learningRate, 
+    }, [classifyFolderLocation, miscTab, epochs, saveSteps, learningRate, 
         gradientAccumulationSteps, learningFunction, resolution, learningRateTE])
 
-    const classifyTabsJSX = () => {
+    const miscTabsJSX = () => {
         return (
             <div className="train-tab-row">
-                <div className="train-tab-container" onClick={() => setClassifyTab("ai")}>
-                    <span className={classifyTab === "ai" ? "train-tab-text-selected" : "train-tab-text"}>AI Detector</span>
+                <div className="train-tab-container" onClick={() => setMiscTab("ai detector")}>
+                    <span className={miscTab === "ai detector" ? "train-tab-text-selected" : "train-tab-text"}>AI Detector</span>
                 </div>
-                <div className="train-tab-container" onClick={() => setClassifyTab("train")}>
-                    <span className={classifyTab === "train" ? "train-tab-text-selected" : "train-tab-text"}>Train Classifier</span>
+                <div className="train-tab-container" onClick={() => setMiscTab("train classifier")}>
+                    <span className={miscTab === "train classifier" ? "train-tab-text-selected" : "train-tab-text"}>Train Classifier</span>
+                </div>
+                <div className="train-tab-container" onClick={() => setMiscTab("simplify sketch")}>
+                    <span className={miscTab === "simplify sketch" ? "train-tab-text-selected" : "train-tab-text"}>Simplify Sketch</span>
+                </div>
+                <div className="train-tab-container" onClick={() => setMiscTab("shade sketch")}>
+                    <span className={miscTab === "shade sketch" ? "train-tab-text-selected" : "train-tab-text"}>Shade Sketch</span>
                 </div>
             </div>
         )
     }
 
     const getTab = () => {
-        if (classifyTab === "train") {
-            return <ClassifyTrain/>
-        } else if (classifyTab === "ai") {
+        if (miscTab === "train classifier") {
+            return <TrainClassifier/>
+        } else if (miscTab === "ai detector") {
             return <AIDetector/>
+        } else if (miscTab === "simplify sketch") {
+            return <SimplifySketch/>
+        } else if (miscTab === "shade sketch") {
+            return <ShadeSketch/>
         }
     }
 
     return (
         <div className="generate" onMouseEnter={() => setEnableDrag(false)}>
             <CheckpointBar/>
-            {classifyTabsJSX()}
+            {miscTabsJSX()}
             {getTab()}
         </div>
     )
 }
 
-export default Classify
+export default Misc

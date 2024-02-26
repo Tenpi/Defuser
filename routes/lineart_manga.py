@@ -189,7 +189,7 @@ class LineartMangaDetector():
     def __call__(self, image):
         with torch.no_grad():
             img = pil_to_cv2(image)
-            img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY) 
+            img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
             rows = int(np.ceil(img.shape[0]/16))*16
             cols = int(np.ceil(img.shape[1]/16))*16
             patch = np.ones((1, 1, rows, cols), dtype="float32")

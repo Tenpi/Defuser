@@ -12,7 +12,7 @@ import ExpandDialog from "../components/ExpandDialog"
 import View from "./View"
 import SavedPrompts from "./SavedPrompts"
 import Watermark from "./Watermark"
-import Classify from "./Classify"
+import Misc from "./Misc"
 
 const MainPage: React.FunctionComponent = (props) => {
     const [ignored, forceUpdate] = useReducer(x => x + 1, 0)
@@ -45,8 +45,8 @@ const MainPage: React.FunctionComponent = (props) => {
             return <SavedPrompts/>
         } else if (tab === "watermark") {
             return <Watermark/>
-        } else if (tab === "classify") {
-            return <Classify/>
+        } else if (tab === "misc") {
+            return <Misc/>
         }
     }
 

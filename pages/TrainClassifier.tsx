@@ -13,7 +13,7 @@ import "./styles/traintag.less"
 import axios from "axios"
 import path from "path"
 
-const ClassifyTrain: React.FunctionComponent = (props) => {
+const TrainClassifier: React.FunctionComponent = (props) => {
     const {enableDrag, setEnableDrag} = useContext(EnableDragContext)
     const {mobile, setMobile} = useContext(MobileContext)
     const {siteHue, setSiteHue} = useContext(SiteHueContext)
@@ -131,8 +131,8 @@ const ClassifyTrain: React.FunctionComponent = (props) => {
         await axios.post("/train-classifier", json)
     }
 
-    const interruptTrain = async () => {
-        axios.post("/interrupt-classify")
+    const interrupt = async () => {
+        axios.post("/interrupt-misc")
     }
 
     const openFolder = async () => {
@@ -153,7 +153,7 @@ const ClassifyTrain: React.FunctionComponent = (props) => {
             <div className="train-tag-folder-container">
                 <img className="train-tag-folder" src={folder} style={{filter: getFilter()}} onClick={updateLocation}/>
                 <div className="train-tag-location" onDoubleClick={openImageLocation}>{classifyFolderLocation ? classifyFolderLocation : "None"}</div>
-                <button className="train-tag-button" onClick={() => trainStarted ? interruptTrain() : train()} style={{backgroundColor: trainStarted ? "var(--buttonBGStop)" : "var(--buttonBG)"}}>{trainStarted ? "Stop" : "Train"}</button>
+                <button className="train-tag-button" onClick={() => trainStarted ? interrupt() : train()} style={{backgroundColor: trainStarted ? "var(--buttonBGStop)" : "var(--buttonBG)"}}>{trainStarted ? "Stop" : "Train"}</button>
                 <button className="train-tag-button" onClick={() => openFolder()}>Open</button>
                 <button className="train-tag-button" onClick={() => reset()}>Reset</button>
             </div>
@@ -207,4 +207,4 @@ const ClassifyTrain: React.FunctionComponent = (props) => {
     )
 }
 
-export default ClassifyTrain
+export default TrainClassifier

@@ -12,7 +12,7 @@ import routes.controlnet
 import routes.promptgen
 import routes.info
 import routes.train
-import routes.classify
+import routes.misc
 
 @app.route("/assets/<path:filename>")
 def assets(filename):

@@ -153,7 +153,7 @@ const TrainLora: React.FunctionComponent = (props) => {
     }
 
     const showInFolder = () => {
-        if (!trainCompleted || !trainRenderImage) return
+        if (!trainCompleted && !trainRenderImage) return
         axios.post("/show-in-folder", {path: trainRenderImage})
     }
 

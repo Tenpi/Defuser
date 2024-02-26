@@ -1,8 +1,8 @@
 import React, {useContext, useEffect, useState, useRef} from "react"
 import {useHistory} from "react-router-dom"
-import {EnableDragContext, MobileContext, SiteHueContext, SiteSaturationContext, 
-SiteLightnessContext, SocketContext, ImageBrightnessContext, ImageContrastContext,
-TrainStartedContext, TrainCompletedContext, AIImageInputContext} from "../Context"
+import {EnableDragContext, MobileContext, SiteHueContext, SiteSaturationContext, FormatContext,
+SiteLightnessContext, SocketContext, ImageBrightnessContext, ImageContrastContext, TrainStartedContext,
+TrainCompletedContext, PreviewImageContext, UpdateImagesContext, SimplifyImageInputContext} from "../Context"
 import functions from "../structures/Functions"
 import imgPlaceHolder from "../assets/images/img-placeholder.png"
 import xIcon from "../assets/icons/x-alt.png"
@@ -11,7 +11,10 @@ import fileType from "magic-bytes.js"
 import axios from "axios"
 import path from "path"
 
-const AIDetector: React.FunctionComponent = (props) => {
+let timer = null as any
+let clicking = false
+
+const SimplifySketch: React.FunctionComponent = (props) => {
     const {enableDrag, setEnableDrag} = useContext(EnableDragContext)
     const {mobile, setMobile} = useContext(MobileContext)
     const {siteHue, setSiteHue} = useContext(SiteHueContext)
@@ -20,13 +23,15 @@ const AIDetector: React.FunctionComponent = (props) => {
     const {imageBrightness, setImageBrightness} = useContext(ImageBrightnessContext)
     const {imageContrast, setImageContrast} = useContext(ImageContrastContext)
     const {socket, setSocket} = useContext(SocketContext)
+    const {format, setFormat} = useContext(FormatContext)
+    const {previewImage, setPreviewImage} = useContext(PreviewImageContext)
+    const {updateImages, setUpdateImages} = useContext(UpdateImagesContext)
     const {trainStarted, setTrainStarted} = useContext(TrainStartedContext)
     const {trainCompleted, setTrainCompleted} = useContext(TrainCompletedContext)
-    const {aiImageInput, setAIImageInput} = useContext(AIImageInputContext)
+    const {simplifyImageInput, setSimplifyImageInput} = useContext(SimplifyImageInputContext)
     const [hover, setHover] = useState(false)
     const [img, setImg] = useState(null) as any
-    const [label, setLabel] = useState("")
-    const [probability, setProbability] = useState(0)
+    const [output, setOutput] = useState("")
     const [started, setStarted] = useState(false)
     const progressBarRef = useRef(null) as React.RefObject<HTMLDivElement>
     const ref = useRef<HTMLCanvasElement>(null)
@@ -37,29 +42,30 @@ const AIDetector: React.FunctionComponent = (props) => {
     }
 
     useEffect(() => {
-        const savedImage = localStorage.getItem("aiImageInput")
-        if (savedImage) setAIImageInput(savedImage)
+        const savedImage = localStorage.getItem("simplifyImageInput")
+        if (savedImage) setSimplifyImageInput(savedImage)
     }, [])
 
     useEffect(() => {
         try {
-            localStorage.setItem("aiImageInput", String(aiImageInput))
+            localStorage.setItem("simplifyImageInput", String(simplifyImageInput))
         } catch {
             // ignore
         }
-    }, [aiImageInput])
+    }, [simplifyImageInput])
 
     useEffect(() => {
         if (!socket) return
         const startTrain = () => {
             setTrainStarted(true)
             setTrainCompleted(false)
+            setOutput("")
         }
         const completeTrain = async (data: any) => {
             setTrainCompleted(true)
             setTrainStarted(false)
-            setLabel(data.label)
-            setProbability(data.probability)
+            setOutput(data.image)
+            setUpdateImages(true)
         }
         const interruptTrain = () => {
             setTrainStarted(false)
@@ -93,7 +99,7 @@ const AIDetector: React.FunctionComponent = (props) => {
                     const link = `${url}#.${result.typename}`
                     removeImage()
                     setTimeout(() => {
-                        setAIImageInput(link)
+                        setSimplifyImageInput(link)
                     }, 100)
                 }
                 resolve()
@@ -103,27 +109,51 @@ const AIDetector: React.FunctionComponent = (props) => {
         if (event.target) event.target.value = ""
     }
 
+    const preview = () => {
+        if (!trainCompleted && !output) return
+        setPreviewImage(output)
+    }
+
+    const showInFolder = () => {
+        if (!trainCompleted && !output) return
+        axios.post("/show-in-folder", {path: output})
+    }
+
+    const handleClick = (event: any) => {
+        if (previewImage) return clearTimeout(timer)
+        if (clicking) {
+            clicking = false
+            clearTimeout(timer)
+            return showInFolder()
+        }
+        clicking = true
+        timer = setTimeout(() => {
+            clicking = false
+            clearTimeout(timer)
+            preview()
+        }, 200)
+    }
+
     const removeImage = (event?: any) => {
         event?.preventDefault()
         event?.stopPropagation()
-        setAIImageInput("")
+        setSimplifyImageInput("")
         setImg(null)
-        setLabel("")
-        setProbability(0)
+        setOutput("")
     }
 
     const loadImages = async () => {
-        if (!aiImageInput) return
+        if (!simplifyImageInput) return
         const image = document.createElement("img")
         await new Promise<void>((resolve) => {
             image.onload = () => resolve()
-            image.src = aiImageInput
+            image.src = simplifyImageInput
         })
         setImg(image)
     }
     useEffect(() => {
         loadImages()
-    }, [aiImageInput])
+    }, [simplifyImageInput])
 
     const getNormalizedDimensions = () => {
         let greaterValue = img.width > img.height ? img.width : img.height
@@ -146,42 +176,39 @@ const AIDetector: React.FunctionComponent = (props) => {
         updateImage()
     }, [img, siteHue, siteSaturation, siteLightness])
 
-    const detect = async () => {
+    const simplify = async () => {
         const json = {} as any
-        json.image = functions.cleanBase64(aiImageInput)
-        await axios.post("/ai-detector", json)
+        json.image = functions.cleanBase64(simplifyImageInput)
+        json.format = format
+        await axios.post("/simplify-sketch", json)
     }
 
     const interrupt = async () => {
         axios.post("/interrupt-misc")
     }
 
-    const getLabel = () => {
-        if (label === "ai") return "AI"
-        if (label === "human") return "Human"
-    }
-
     return (
-        <div className="train-tag" onMouseEnter={() => setEnableDrag(false)}>
-            <div className="train-tag-column">
+        <div className="train-tag-row" onMouseEnter={() => setEnableDrag(false)}>
+            <div className="train-tag-column" style={{marginRight: "100px"}}>
                 <div className="options-bar-img-input">
                     <span className="options-bar-text">Img Input</span>
                     <label htmlFor="img" className="options-bar-img-container" onMouseEnter={() => setHover(true)} onMouseLeave={() => setHover(false)}>
-                        <div className={`options-bar-img-button-container ${aiImageInput && hover ? "show-options-bar-img-buttons" : ""}`}>
+                        <div className={`options-bar-img-button-container ${simplifyImageInput && hover ? "show-options-bar-img-buttons" : ""}`}>
                             <img className="options-bar-img-button" src={xIcon} onClick={removeImage} style={{filter: getFilter()}} draggable={false}/>
                         </div>
-                        {aiImageInput ? 
+                        {simplifyImageInput ? 
                         <canvas ref={ref} className="options-bar-img" draggable={false} style={{filter: `brightness(${imageBrightness + 100}%) contrast(${imageContrast + 100}%)`}}></canvas> :
                         <img className="options-bar-img" src={imgPlaceHolder} style={{filter: getFilter()}} draggable={false}/>}
                     </label>
                     <input id="img" type="file" onChange={(event) => loadImage(event)}/>
                 </div>
-                <button className="train-tag-button" onClick={() => trainStarted ? interrupt() : detect()} style={{backgroundColor: trainStarted ? "var(--buttonBGStop)" : "var(--buttonBG)", marginLeft: "0px"}}>{trainStarted ? "Stop" : "Detect"}</button>
-                {label ? <span className="train-tag-settings-title">Result: {getLabel()}</span> : null}
-                {probability ? <span className="train-tag-settings-title">Confidence: {probability}%</span> : null}
+                <button className="train-tag-button" onClick={() => trainStarted ? interrupt() : simplify()} style={{backgroundColor: trainStarted ? "var(--buttonBGStop)" : "var(--buttonBG)", marginLeft: "0px"}}>{trainStarted ? "Stop" : "Simplify"}</button>
             </div>
+            {output ? <div className="train-tag-column">
+                <img className="options-bar-img" src={output} style={{filter: getFilter()}} draggable={false} onClick={handleClick}/>
+            </div> : null}
         </div>
     )
 }
 
-export default AIDetector
+export default SimplifySketch
