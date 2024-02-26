@@ -5,7 +5,7 @@ import favicon from "../assets/icons/favicon.png"
 import {EnableDragContext, MobileContext, SiteHueContext, SiteSaturationContext, SiteLightnessContext, DrawImageContext, MaskImageContext,
 MaskDataContext, ControlProcessorContext, ThemeContext, ImageInputContext, ControlImageContext, ControlScaleContext, ControlGuessModeContext,
 ControlStartContext, ControlEndContext, ControlInvertContext, StyleFidelityContext, ControlReferenceImageContext, ImageBrightnessContext, ImageContrastContext,
-ExpandImageContext} from "../Context"
+ExpandImageContext, UpscalerContext} from "../Context"
 import functions from "../structures/Functions"
 import Slider from "react-slider"
 import radioButtonOff from "../assets/icons/radiobutton-off.png"
@@ -39,6 +39,7 @@ const ControlNet: React.FunctionComponent = (props) => {
     const {controlReferenceImage, setControlReferenceImage} = useContext(ControlReferenceImageContext)
     const {expandImage, setExpandImage} = useContext(ExpandImageContext)
     const [imageHover, setImageHover] = useState(false)
+    const {upscaler, setUpscaler} = useContext(UpscalerContext)
     const {styleFidelity, setStyleFidity} = useContext(StyleFidelityContext)
     const history = useHistory()
 
@@ -100,6 +101,7 @@ const ControlNet: React.FunctionComponent = (props) => {
         form.append("processor", controlProcessor)
         if (upscale) {
             form.append("upscale", "true")
+            form.append("upscaler", upscaler)
             form.append("invert", String(controlInvert))
             form.append("alpha", alpha ? "true" : "false")
         }
@@ -215,7 +217,11 @@ const ControlNet: React.FunctionComponent = (props) => {
                     </div>
                     <div className="controlnet-button-container" onClick={() => setControlProcessor("lineart anime")}>
                         <img className="controlnet-radio-button" src={getRadioButton(controlProcessor === "lineart anime")} style={{filter: getFilter()}}/>
-                        <button className="controlnet-button">Lineart Anime</button>
+                        <button className="controlnet-button">Anime</button>
+                    </div>
+                    <div className="controlnet-button-container" onClick={() => setControlProcessor("lineart manga")}>
+                        <img className="controlnet-radio-button" src={getRadioButton(controlProcessor === "lineart manga")} style={{filter: getFilter()}}/>
+                        <button className="controlnet-button">Manga</button>
                     </div>
                     <div className="controlnet-button-container" onClick={() => setControlProcessor("softedge")}>
                         <img className="controlnet-radio-button" src={getRadioButton(controlProcessor === "softedge")} style={{filter: getFilter()}}/>

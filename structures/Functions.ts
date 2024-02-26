@@ -507,6 +507,11 @@ export default class Functions {
         return fetch(base64).then((r) => r.arrayBuffer()).then((a) => new Uint8Array(a))
     }
 
+    public static cleanBase64 = (base64: string) => {
+        const matches = base64.split("#")[0].match(/^data:([A-Za-z-+\/]+);base64,(.+)$/)!
+        return matches[2]
+    }
+
     public static multiTrim = (str: string) => {
         return str.replace(/^\s+/gm, "").replace(/\s+$/gm, "").replace(/newline/g, " ")
     }
@@ -1032,7 +1037,7 @@ export default class Functions {
     }
 
     public static extractMetaValues = (metadata: string) => {
-        const prompt = metadata.match(/Prompt: ([^\n]+)/i)?.[1] || ""
+        let prompt = metadata.match(/Prompt: ([^\n]+)/i)?.[1] || ""
         const negativePrompt = metadata.match(/Negative Prompt: ([^\n]+)/i)?.[1] || ""
         const size = metadata.match(/Size: (\d+x\d+)/i)?.[1] || ""
         const model = metadata.match(/Model: ([^\n]+)/i)?.[1] || ""
@@ -1043,6 +1048,7 @@ export default class Functions {
         const sampler = metadata.match(/Sampler: ([^\n]+)/i)?.[1] || ""
         const clipSkip = metadata.match(/Clip Skip: (\d+)/i)?.[1] || ""
         const seed = metadata.match(/Seed: (\d+)/i)?.[1] || ""
+        if (!prompt) prompt = metadata
         return {prompt, negativePrompt, size, model, vae, denoise, steps, cfg, sampler, clipSkip, seed}
     }
 

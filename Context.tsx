@@ -102,6 +102,10 @@ export const TrainNameContext = React.createContext<any>(null)
 export const SauceNaoAPIKeyContext = React.createContext<any>(null)
 export const RandomPromptModeContext = React.createContext<any>(null)
 export const StepAnimationContext = React.createContext<any>(null)
+export const ClassifyFolderLocationContext = React.createContext<any>(null)
+export const ClassifyTabContext = React.createContext<any>(null)
+export const ClassifyFoldersContext = React.createContext<any>(null)
+export const SaveStepsContext = React.createContext<any>(null)
 
 const Context: React.FunctionComponent = (props: any) => {
     const [theme, setTheme] = useState("light")
@@ -193,9 +197,17 @@ const Context: React.FunctionComponent = (props: any) => {
     const [saucenaoAPIKey, setSaucenaoAPIKey] = useState("0458b69644c4fbab43f7c7b96724c98539303814")
     const [randomPromptMode, setRandomPromptMode] = useState("1girl")
     const [stepAnimation, setStepAnimation] = useState("")
+    const [classifyTab, setClassifyTab] = useState("train")
+    const [classifyFolderLocation, setClassifyFolderLocation] = useState("")
+    const [classifyFolders, setClassifyFolders] = useState([])
+    const [saveSteps, setSaveSteps] = useState("500")
 
     return (
         <>  
+            <SaveStepsContext.Provider value={{saveSteps, setSaveSteps}}>
+            <ClassifyFoldersContext.Provider value={{classifyFolders, setClassifyFolders}}>
+            <ClassifyTabContext.Provider value={{classifyTab, setClassifyTab}}>
+            <ClassifyFolderLocationContext.Provider value={{classifyFolderLocation, setClassifyFolderLocation}}>
             <StepAnimationContext.Provider value={{stepAnimation, setStepAnimation}}>
             <RandomPromptModeContext.Provider value={{randomPromptMode, setRandomPromptMode}}>
             <SauceNaoAPIKeyContext.Provider value={{saucenaoAPIKey, setSaucenaoAPIKey}}>
@@ -375,6 +387,10 @@ const Context: React.FunctionComponent = (props: any) => {
             </SauceNaoAPIKeyContext.Provider>
             </RandomPromptModeContext.Provider>
             </StepAnimationContext.Provider>
+            </ClassifyFolderLocationContext.Provider>
+            </ClassifyTabContext.Provider>
+            </ClassifyFoldersContext.Provider>
+            </SaveStepsContext.Provider>
         </>
     )
 }

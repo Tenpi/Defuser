@@ -27,6 +27,8 @@ models is supported. It aims to be simple and fast to use.
 - Generate random prompts or pick a random saved prompt.
 - Past image history viewer (including on the sidebar).
 - Generate a gif with AnimateDiff.
+- Detect AI images.
+- Train image classifiers.
 
 ### Requirements
 
@@ -84,7 +86,7 @@ sudo make install
 ### ControlNet
 
 ControlNet lets you control the generation using a "control image". The possible control images are canny, depth,
-lineart, lineart anime, softedge, scribble, and original image (reference). By clicking on "reference image", it will
+lineart, anime, manga, softedge, scribble, and original image (reference). By clicking on "reference image", it will
 also reference the input image rather than just the control image. "Guess mode" is an option that will try to guess the
 content if no prompt is provided.
 

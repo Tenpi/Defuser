@@ -254,7 +254,10 @@ def update_location():
         program = os.path.join(dirname, "../dialog/dialog.app")
     process = subprocess.Popen([program, "-d"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     folder_selected, err = process.communicate()
-    return folder_selected
+    folder_selected = folder_selected.decode("utf-8")
+    if "None" in folder_selected:
+        folder_selected = ""
+    return folder_selected.strip()
 
 @app.route("/list-files", methods=["POST"])
 def list_files():
@@ -265,3 +268,12 @@ def list_files():
     files = list(filter(lambda file: not is_unwanted(file) and is_image(file), files))
     files = sorted(files, key=lambda x: get_number_from_filename(x), reverse=False)
     return list(map(lambda file: f"{folder}/{file}", files))
+
+@app.route("/list-folders", methods=["POST"])
+def list_folders():
+    data = flask.request.json
+    folder = data["folder"]
+    folder = folder.strip()
+    files = os.listdir(folder)
+    files = list(filter(lambda file: file != ".DS_Store" and os.path.isdir(os.path.join(folder, file)), files))
+    return files

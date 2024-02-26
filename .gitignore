@@ -22,6 +22,7 @@ models/controlnet/scribble/*
 models/controlnet/softedge/*
 models/segmentator/*
 models/promptgen/*
+models/detector/*
 models/vae/*
 outputs/image/*
 outputs/text/*
@@ -34,6 +35,7 @@ outputs/hypernetwork
 outputs/checkpoint
 outputs/merged
 outputs/steps
+outputs/classifier
 dialog/random.pt
 
 !models/diffusion/readme.txt
@@ -53,5 +55,6 @@ dialog/random.pt
 !models/interrogator/blip/readme.txt
 !models/interrogator/deepbooru/readme.txt
 !models/interrogator/wdtagger/readme.txt
+!models/detector/readme.txt
 !models/promptgen/readme.txt
 !outputs/readme.txt

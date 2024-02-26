@@ -1,13 +1,15 @@
 import os
 import re
 import pathlib
-from PIL import Image
 import math
 import base64
 import struct
 import json
 import torchvision
 import itertools
+from PIL import Image
+import cv2
+import numpy as np
 
 dirname = os.path.dirname(__file__)
 
@@ -191,3 +193,21 @@ def resize_box(x, x1, y, y1, img_w, img_h, size=512):
         if new_y < 0:
            new_y = 0
     return new_x, new_x1, new_y, new_y1
+
+def clean_image(input_image, diameter = 5, sigma_color = 8, sigma_space = 8):
+    img = np.array(input_image).astype(np.float32)
+    y = img.copy()
+
+    for i in range(64):
+        y = cv2.bilateralFilter(y, diameter, sigma_color, sigma_space)
+
+    output_image = Image.fromarray(y.clip(0, 255).astype(np.uint8))
+    return output_image
+
+def pil_to_cv2(pil_image):
+    cv2_image = np.array(pil_image)
+    return cv2_image[:, :, ::-1].copy()
+
+def cv2_to_pil(cv2_image):
+    cv2_image = cv2.cvtColor(cv2_image, cv2.COLOR_BGR2RGB)
+    return Image.fromarray(cv2_image.astype(np.uint8))

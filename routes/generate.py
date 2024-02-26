@@ -123,6 +123,9 @@ def get_controlnet(processor: str = "none"):
         if processor == "lineart anime":
             control_model = os.path.join(dirname, "../models/controlnet/lineart anime")
             controlnet = ControlNetModel.from_pretrained(control_model, local_files_only=True)
+        if processor == "lineart manga":
+            control_model = os.path.join(dirname, "../models/controlnet/lineart anime")
+            controlnet = ControlNetModel.from_pretrained(control_model, local_files_only=True)
         if processor == "scribble":
             control_model = os.path.join(dirname, "../models/controlnet/scribble")
             controlnet = ControlNetModel.from_pretrained(control_model, local_files_only=True)

@@ -18,7 +18,6 @@ import "./styles/optionsbar.less"
 
 const OptionsImage: React.FunctionComponent = (props) => {
     const {imageInput, setImageInput} = useContext(ImageInputContext)
-    const [hover, setHover] = useState(false)
     const {siteHue, setSiteHue} = useContext(SiteHueContext)
     const {siteSaturation, setSiteSaturation} = useContext(SiteSaturationContext)
     const {siteLightness, setSiteLightness} = useContext(SiteLightnessContext)
@@ -33,6 +32,7 @@ const OptionsImage: React.FunctionComponent = (props) => {
     const {expandMask, setExpandMask} = useContext(ExpandMaskContext)
     const {horizontalExpand, setHorizontalExpand} = useContext(HorizontalExpandContext)
     const {verticalExpand, setVerticalExpand} = useContext(VerticalExpandContext)
+    const [hover, setHover] = useState(false)
     const [img, setImg] = useState(null) as any
     const [maskImg, setMaskImg] = useState(null) as any 
     const ref = useRef(null) as any
@@ -47,7 +47,11 @@ const OptionsImage: React.FunctionComponent = (props) => {
     }, [])
 
     useEffect(() => {
-        localStorage.setItem("imageInput", String(imageInput))
+        try {
+            localStorage.setItem("imageInput", String(imageInput))
+        } catch {
+            // ignore
+        }
     }, [imageInput])
 
     const loadImage = async (event: any) => {
