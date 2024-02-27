@@ -5,7 +5,6 @@ import logging
 import math
 import os
 from pathlib import Path
-
 import datasets
 import evaluate
 import torch
@@ -29,6 +28,10 @@ from tqdm.auto import tqdm
 import transformers
 from transformers import ResNetConfig, ResNetForImageClassification, ConvNextImageProcessor, SchedulerType, get_scheduler
 from transformers.utils.versions import require_version
+
+from PIL import Image, ImageFile
+Image.MAX_IMAGE_PIXELS = None
+ImageFile.LOAD_TRUNCATED_IMAGES = True
 
 logger = get_logger(__name__)
 

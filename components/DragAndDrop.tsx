@@ -2,7 +2,7 @@ import React, {useContext, useEffect, useRef, useState, useReducer} from "react"
 import {useHistory} from "react-router-dom"
 import {ImageInputContext, InterrogateTextContext, MaskImageContext, MaskDataContext, ExpandImageContext, ExpandMaskContext,
 HorizontalExpandContext, VerticalExpandContext, ShadeImageInputContext, SimplifyImageInputContext, AIImageInputContext, TabContext,
-MiscTabContext} from "../Context"
+MiscTabContext, ColorizeSketchInputContext, ColorizeStyleInputContext} from "../Context"
 import {HashLink as Link} from "react-router-hash-link"
 import functions from "../structures/Functions"
 import path from "path"
@@ -26,6 +26,8 @@ const DragAndDrop: React.FunctionComponent = (props) => {
     const {aiImageInput, setAIImageInput} = useContext(AIImageInputContext)
     const {simplifyImageInput, setSimplifyImageInput} = useContext(SimplifyImageInputContext)
     const {shadeImageInput, setShadeImageInput} = useContext(ShadeImageInputContext)
+    const {colorizeSketchInput, setColorizeSketchInput} = useContext(ColorizeSketchInputContext)
+    const {colorizeStyleInput, setColorizeStyleInput} = useContext(ColorizeStyleInputContext)
     const {tab, setTab} = useContext(TabContext)
     const {miscTab, setMiscTab} = useContext(MiscTabContext)
     const [uploadHover, setUploadHover] = useState(false)
@@ -105,6 +107,12 @@ const DragAndDrop: React.FunctionComponent = (props) => {
                                 setSimplifyImageInput(link)
                             } else if (miscTab === "shade sketch") {
                                 setShadeImageInput(link)
+                            } else if (miscTab === "colorize sketch") {
+                                if (colorizeSketchInput) {
+                                    setColorizeStyleInput(link) 
+                                } else {
+                                    setColorizeSketchInput(link)   
+                                }
                             }
                         } else {
                             setImageInput(link)
@@ -125,6 +133,12 @@ const DragAndDrop: React.FunctionComponent = (props) => {
                 setSimplifyImageInput("")
             } else if (miscTab === "shade sketch") {
                 setShadeImageInput("")
+            } else if (miscTab === "colorize sketch") {
+                if (colorizeSketchInput) {
+                    setColorizeStyleInput("") 
+                } else {
+                    setColorizeSketchInput("")   
+                }
             }
         } else {
             setImageInput("")

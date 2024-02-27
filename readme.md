@@ -29,6 +29,9 @@ models is supported. It aims to be simple and fast to use.
 - Generate a gif with AnimateDiff.
 - Detect AI images.
 - Train image classifiers.
+- Simplify and clean a rough sketch.
+- Shade a sketch from different lighting directions.
+- Colorize a sketch using reference image.
 
 ### Requirements
 

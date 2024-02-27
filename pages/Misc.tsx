@@ -12,6 +12,7 @@ import TrainClassifier from "./TrainClassifier"
 import AIDetector from "./AIDetector"
 import SimplifySketch from "./SimplifySketch"
 import ShadeSketch from "./ShadeSketch"
+import ColorizeSketch from "./ColorizeSketch"
 import "./styles/generate.less"
 
 const Misc: React.FunctionComponent = (props) => {
@@ -85,6 +86,9 @@ const Misc: React.FunctionComponent = (props) => {
                 <div className="train-tab-container" onClick={() => setMiscTab("shade sketch")}>
                     <span className={miscTab === "shade sketch" ? "train-tab-text-selected" : "train-tab-text"}>Shade Sketch</span>
                 </div>
+                <div className="train-tab-container" onClick={() => setMiscTab("colorize sketch")}>
+                    <span className={miscTab === "colorize sketch" ? "train-tab-text-selected" : "train-tab-text"}>Colorize Sketch</span>
+                </div>
             </div>
         )
     }
@@ -98,6 +102,8 @@ const Misc: React.FunctionComponent = (props) => {
             return <SimplifySketch/>
         } else if (miscTab === "shade sketch") {
             return <ShadeSketch/>
+        } else if (miscTab === "colorize sketch") {
+            return <ColorizeSketch/>
         }
     }
 

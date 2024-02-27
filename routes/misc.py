@@ -5,6 +5,7 @@ from .info import open_folder
 from .functions import clean_image, next_index
 from .simplify_sketch import SketchSimplificationModel
 from .shade_sketch import shade_sketch
+from .colorize_sketch import colorize_sketch
 from transformers import BeitFeatureExtractor, BeitForImageClassification
 from PIL import Image
 import os
@@ -156,6 +157,36 @@ def start_shade_sketch():
     direction = data["direction"]
     if format == "gif": format = "jpg"
     thread = threading.Thread(target=run_shade_sketch, args=(image, format, direction))
+    thread.start()
+    thread.join()
+    gen_thread = None
+    return "done"
+
+def run_colorize_sketch(sketch, style, format):
+    global gen_thread 
+    gen_thread = threading.get_ident()
+    socketio.emit("train starting")
+    sketch_img = Image.open(BytesIO(base64.b64decode(sketch + "=="))).convert("RGB")
+    style_img = Image.open(BytesIO(base64.b64decode(style + "=="))).convert("RGB")
+    dir_path = os.path.join(dirname, f"../outputs/image")
+    pathlib.Path(dir_path).mkdir(parents=True, exist_ok=True)
+    out_path = os.path.join(dir_path, f"image{next_index(dir_path)}.{format}")
+
+    colorize_sketch(sketch_img, style_img, out_path)
+    compressed = Image.open(out_path)
+    compressed.save(out_path, quality=90, optimize=True)
+    socketio.emit("train complete", {"image": f"/outputs/image/{os.path.basename(out_path)}"})
+    return "done"
+
+@app.route("/colorize-sketch", methods=["POST"])
+def start_colorize_sketch():
+    global gen_thread
+    data = flask.request.json
+    sketch = data["sketch"]
+    style = data["style"]
+    format = data["format"]
+    if format == "gif": format = "jpg"
+    thread = threading.Thread(target=run_colorize_sketch, args=(sketch, style, format))
     thread.start()
     thread.join()
     gen_thread = None

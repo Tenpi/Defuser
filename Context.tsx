@@ -109,6 +109,8 @@ export const SaveStepsContext = React.createContext<any>(null)
 export const ShadeImageInputContext = React.createContext<any>(null)
 export const SimplifyImageInputContext = React.createContext<any>(null)
 export const AIImageInputContext = React.createContext<any>(null)
+export const ColorizeSketchInputContext = React.createContext<any>(null)
+export const ColorizeStyleInputContext = React.createContext<any>(null)
 
 const Context: React.FunctionComponent = (props: any) => {
     const [theme, setTheme] = useState("light")
@@ -207,9 +209,13 @@ const Context: React.FunctionComponent = (props: any) => {
     const [shadeImageInput, setShadeImageInput] = useState("")
     const [simplifyImageInput, setSimplifyImageInput] = useState("")
     const [aiImageInput, setAIImageInput] = useState("")
+    const [colorizeSketchInput, setColorizeSketchInput] = useState("")
+    const [colorizeStyleInput, setColorizeStyleInput] = useState("")
 
     return (
         <>  
+            <ColorizeStyleInputContext.Provider value={{colorizeStyleInput, setColorizeStyleInput}}>
+            <ColorizeSketchInputContext.Provider value={{colorizeSketchInput, setColorizeSketchInput}}>
             <AIImageInputContext.Provider value={{aiImageInput, setAIImageInput}}>
             <SimplifyImageInputContext.Provider value={{simplifyImageInput, setSimplifyImageInput}}>
             <ShadeImageInputContext.Provider value={{shadeImageInput, setShadeImageInput}}>
@@ -403,6 +409,8 @@ const Context: React.FunctionComponent = (props: any) => {
             </ShadeImageInputContext.Provider>
             </SimplifyImageInputContext.Provider>
             </AIImageInputContext.Provider>
+            </ColorizeSketchInputContext.Provider>
+            </ColorizeStyleInputContext.Provider>
         </>
     )
 }

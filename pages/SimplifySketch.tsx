@@ -204,7 +204,7 @@ const SimplifySketch: React.FunctionComponent = (props) => {
                 </div>
                 <button className="train-tag-button" onClick={() => trainStarted ? interrupt() : simplify()} style={{backgroundColor: trainStarted ? "var(--buttonBGStop)" : "var(--buttonBG)", marginLeft: "0px"}}>{trainStarted ? "Stop" : "Simplify"}</button>
             </div>
-            {output ? <div className="train-tag-column">
+            {output ? <div className="train-tag-column" style={{justifyContent: "center"}}>
                 <img className="options-bar-img" src={output} style={{filter: getFilter()}} draggable={false} onClick={handleClick}/>
             </div> : null}
         </div>
