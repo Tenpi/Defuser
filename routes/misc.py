@@ -96,7 +96,7 @@ def start_ai_detector():
     global gen_thread
     data = flask.request.json
     image = data["image"]
-    thread = threading.Thread(target=ai_detector, args=(image))
+    thread = threading.Thread(target=ai_detector, args=(image,))
     thread.start()
     thread.join()
     gen_thread = None

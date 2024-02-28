@@ -26,7 +26,7 @@ from torchvision.transforms import (
 from tqdm.auto import tqdm
 
 import transformers
-from transformers import ResNetConfig, ResNetForImageClassification, ConvNextImageProcessor, SchedulerType, get_scheduler
+from transformers import ResNetConfig, ResNetForImageClassification, ConvNextImageProcessor, get_scheduler
 from transformers.utils.versions import require_version
 
 from PIL import Image, ImageFile
@@ -81,6 +81,16 @@ def main(args):
             "Make sure to set `--label_column_name` to the correct text column - one of "
             f"{', '.join(dataset_column_names)}."
         )
+    
+    args.train_val_split = 0.1
+    if dataset["train"].num_rows > 5000:
+        args.train_val_split = 0.05
+    if dataset["train"].num_rows > 10000:
+        args.train_val_split = 0.01
+    if dataset["train"].num_rows > 100000:
+        args.train_val_split = 0.005
+    if dataset["train"].num_rows > 1000000:
+        args.train_val_split = 0.001
 
     args.train_val_split = None if "validation" in dataset.keys() else args.train_val_split
     if isinstance(args.train_val_split, float) and args.train_val_split > 0.0:
@@ -89,15 +99,15 @@ def main(args):
         dataset["validation"] = split["test"]
 
     labels = dataset["train"].features[args.label_column_name].names
-    label2id = {label: str(i) for i, label in enumerate(labels)}
     id2label = {str(i): label for i, label in enumerate(labels)}
+    label2id = {label: str(i) for i, label in enumerate(labels)}
 
     config = ResNetConfig(
         num_labels=len(labels),
-        i2label=id2label,
+        id2label=id2label,
         label2id=label2id
     )
-    image_processor =  ConvNextImageProcessor(crop_pct=0.875, size={"shortest_edge": int(args.resolution)}, image_mean=[0.485, 0.456, 0.406], image_std=[0.229, 0.224, 0.225])
+    image_processor = ConvNextImageProcessor(size={"shortest_edge": int(args.resolution)})
     model = ResNetForImageClassification(config)
 
     if "shortest_edge" in image_processor.size:
@@ -150,7 +160,7 @@ def main(args):
         return {"pixel_values": pixel_values, "labels": labels}
 
     train_dataloader = DataLoader(
-        train_dataset, shuffle=True, collate_fn=collate_fn, batch_size=args.per_device_train_batch_size
+        train_dataset, shuffle=False, collate_fn=collate_fn, batch_size=args.per_device_train_batch_size
     )
     eval_dataloader = DataLoader(eval_dataset, collate_fn=collate_fn, batch_size=args.per_device_eval_batch_size)
 
@@ -351,8 +361,8 @@ def get_args(train_dir, output_dir, num_train_epochs, learning_rate, gradient_ac
     args.validation_dir = None
     args.max_train_samples = None
     args.max_eval_samples = None
-    args.train_val_split = 0.15
-    args.model_name_or_path = "microsoft/resnet-50"
+    args.train_val_split = 0.0
+    args.model_name_or_path = ""
     args.per_device_train_batch_size = 1
     args.per_device_eval_batch_size = 1
     args.learning_rate = learning_rate
