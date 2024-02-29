@@ -105,9 +105,10 @@ def main(args):
     config = ResNetConfig(
         num_labels=len(labels),
         id2label=id2label,
-        label2id=label2id
+        label2id=label2id,
+        image_size=int(args.resolution)
     )
-    image_processor = ConvNextImageProcessor(size={"shortest_edge": int(args.resolution)})
+    image_processor = ConvNextImageProcessor(size={"width": int(args.resolution), "height": int(args.resolution)})
     model = ResNetForImageClassification(config)
 
     if "shortest_edge" in image_processor.size:
@@ -120,8 +121,8 @@ def main(args):
         else Lambda(lambda x: x)
     )
     train_transforms = Compose([
-            RandomResizedCrop(size),
-            RandomHorizontalFlip(),
+            Resize(size),
+            CenterCrop(size),
             ToTensor(),
             normalize,
         ])
@@ -289,16 +290,15 @@ def main(args):
                         output_dir = os.path.join(args.output_dir, output_dir)
                     accelerator.save_state(output_dir)
 
-                    if args.push_to_hub and epoch < args.num_train_epochs - 1:
-                        accelerator.wait_for_everyone()
-                        unwrapped_model = accelerator.unwrap_model(model)
-                        unwrapped_model.save_pretrained(
-                            args.output_dir,
-                            is_main_process=accelerator.is_main_process,
-                            save_function=accelerator.save,
-                        )
-                        if accelerator.is_main_process:
-                            image_processor.save_pretrained(args.output_dir)
+                    accelerator.wait_for_everyone()
+                    unwrapped_model = accelerator.unwrap_model(model)
+                    unwrapped_model.save_pretrained(
+                        args.output_dir,
+                        is_main_process=accelerator.is_main_process,
+                        save_function=accelerator.save,
+                    )
+                    if accelerator.is_main_process:
+                        image_processor.save_pretrained(args.output_dir)
 
             if completed_steps >= args.max_train_steps:
                 break
