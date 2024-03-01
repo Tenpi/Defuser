@@ -1282,7 +1282,7 @@ def get_options(model_name, train_data, instance_prompt, output, max_train_steps
     options["enable_xformers_memory_efficient_attention"] = False
     options["noise_offse"] = 0
     options["rank"] = 4
-    options["cache_latents"] = False
+    options["cache_latents"] = True
     env_local_rank = int(os.environ.get("LOCAL_RANK", -1))
     if env_local_rank != -1 and env_local_rank != options["local_rank"]:
         options["local_rank"] = env_local_rank

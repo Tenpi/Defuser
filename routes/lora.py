@@ -568,7 +568,7 @@ def main(args):
     # now we will add new LoRA weights to the attention layers
     unet_lora_config = LoraConfig(
         r=args.rank,
-        lora_alpha=args.rank,
+        lora_alpha=args.alpha,
         init_lora_weights="gaussian",
         target_modules=["to_k", "to_q", "to_v", "to_out.0"],
     )
@@ -579,7 +579,7 @@ def main(args):
     if args.train_text_encoder:
         text_lora_config = LoraConfig(
             r=args.rank,
-            lora_alpha=args.rank,
+            lora_alpha=args.alpha,
             init_lora_weights="gaussian",
             target_modules=["q_proj", "k_proj", "v_proj", "out_proj"],
         )
@@ -1300,11 +1300,12 @@ def get_options(model_name, train_data, instance_prompt, output, max_train_steps
     options["report_to"] = "tensorboard"
     options["mixed_precision"] = None
     options["prior_generation_precision"] = None
-    options["local_rank"] = 1
+    options["local_rank"] = 16
     options["enable_xformers_memory_efficient_attention"] = False
     options["noise_offse"] = 0
-    options["rank"] = 4
-    options["cache_latents"] = False
+    options["rank"] = 32
+    options["alpha"] = 16
+    options["cache_latents"] = True
     env_local_rank = int(os.environ.get("LOCAL_RANK", -1))
     if env_local_rank != -1 and env_local_rank != options["local_rank"]:
         options["local_rank"] = env_local_rank
