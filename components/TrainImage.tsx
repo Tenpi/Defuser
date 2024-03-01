@@ -34,7 +34,7 @@ const TrainImage: React.FunctionComponent<TrainImageProps> = (props) => {
     }
 
     const showInFolder = () => {
-        axios.post("/show-in-folder", {absolute: props.img.replace("/retrieve?path=", "")})
+        axios.post("/show-in-folder", {absolute: props.img.replace("/retrieve?path=", "").split("&")[0]})
     }
 
     const preview = () => {
@@ -58,12 +58,12 @@ const TrainImage: React.FunctionComponent<TrainImageProps> = (props) => {
 
     const showText = async (event: any) => {
         event?.stopPropagation()
-        await axios.post("/show-text", {image: props.img.replace("/retrieve?path=", "")})
+        await axios.post("/show-text", {image: props.img.replace("/retrieve?path=", "").split("&")[0]})
     }
 
     const showSource = async (event: any) => {
         event?.stopPropagation()
-        await axios.post("/show-source", {image: props.img.replace("/retrieve?path=", "")})
+        await axios.post("/show-source", {image: props.img.replace("/retrieve?path=", "").split("&")[0]})
     }
 
     return (

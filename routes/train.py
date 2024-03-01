@@ -87,6 +87,14 @@ def tag(images, model_name):
     socketio.emit("train starting")
     for i, image in enumerate(images):
         result = interrogate(image, model_name)
+        tag_arr = result.split(",")
+        new_tag_arr = []
+        for tag in tag_arr:
+            if len(tag) > 3:
+                new_tag_arr.append(tag.replace("_", " ").strip())
+            else:
+                new_tag_arr.append(tag.strip())
+        result = ", ".join(new_tag_arr)
         name, ext = os.path.splitext(image)
         dest = f"{name}.txt"
         f = open(dest, "w")

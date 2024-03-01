@@ -1,11 +1,8 @@
-import tensorflow
+import tensorflow.compat.v1 as tf
 from .functions import pil_to_cv2
 import numpy as np
 import cv2
 import os
-
-tf = tensorflow.compat.v1
-tf.disable_v2_behavior()
 
 dirname = os.path.dirname(__file__)
 
@@ -49,19 +46,19 @@ def shade_sketch(input, output, direction="810", size=320, threshold=200, use_sm
         with tf.gfile.GFile(os.path.join(dirname, "../models/misc/linesmoother.pb"), "rb") as f:
             smoother_model = tf.GraphDef()
             smoother_model.ParseFromString(f.read())
-    tf.import_graph_def(smoother_model, name="lineSmoother")
+    tf.import_graph_def(smoother_model)
 
     if not norm_model:
         with tf.gfile.GFile(os.path.join(dirname, "../models/misc/linenorm.pb"), "rb") as f:
             norm_model = tf.GraphDef()
             norm_model.ParseFromString(f.read())
-    tf.import_graph_def(norm_model, name="lineNorm")
+    tf.import_graph_def(norm_model)
 
     if not shader_model:
         with tf.gfile.GFile(os.path.join(dirname, "../models/misc/lineshader.pb"), "rb") as f:
             shader_model = tf.GraphDef()
             shader_model.ParseFromString(f.read())
-    tf.import_graph_def(shader_model, name="lineShader")
+    tf.import_graph_def(shader_model)
 
     with tf.Session() as sess:
         img = pil_to_cv2(input)
@@ -77,14 +74,14 @@ def shade_sketch(input, output, direction="810", size=320, threshold=200, use_sm
         ctensors = np.expand_dims(normalize_cond(direction), 0)
 
         if use_smooth or threshold > 0:
-            tensors = sess.run("lineSmoother/conv2d_9/Sigmoid:0", {"lineSmoother/input_1:0": tensors})
+            tensors = sess.run("conv2d_9/Sigmoid:0", feed_dict={"input_1:0": tensors})
             smoothResult = tensors
 
         if use_norm:
-            tensors = sess.run("lineNorm/conv2d_9/Sigmoid:0", {"lineNorm/input_1:0": tensors})
+            tensors = sess.run("conv2d_9/Sigmoid_1:0", feed_dict={"input_1_1:0": tensors})
             normResult = tensors
 
-        tensors = sess.run("lineShader/conv2d_139/Tanh:0", {"lineShader/input_1:0": ctensors, "lineShader/input_2:0": 1. - tensors})
+        tensors = sess.run("conv2d_139/Tanh:0", feed_dict={"input_1_2:0": ctensors, "input_2:0": 1. - tensors})
         shadeResult = tensors
 
         shade = (1 - (np.squeeze(shadeResult) + 1) / 2) * 255.
