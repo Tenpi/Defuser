@@ -3,7 +3,7 @@ import {Switch, Route, Redirect, useHistory, useLocation} from "react-router-dom
 import Context, {EnableDragContext, MobileContext, SocketContext, ImagesContext, UpdateImagesContext, TextualInversionsContext,
 HypernetworksContext, LorasContext, ReverseSortContext, NSFWImagesContext, ImageInputImagesContext, NovelAIImagesContext,
 NovelAINSFWImagesContext, NovelAIImageInputImagesContext, HolaraAIImagesContext, HolaraAINSFWImagesContext, HolaraAIImageInputImagesContext, 
-GeneratorContext} from "./Context"
+GeneratorContext, SavedPromptsContext, SavedPromptsNovelAIContext, SavedPromptsHolaraAIContext} from "./Context"
 import axios from "axios"
 import {io} from "socket.io-client"
 import functions from "./structures/Functions"
@@ -33,6 +33,9 @@ const App: React.FunctionComponent = (props) => {
     const [loras, setLoras] = useState([])
     const [reverseSort, setReverseSort] = useState(false)
     const [generator, setGenerator] = useState("local")
+    const [savedPrompts, setSavedPrompts] = useState([])
+    const [savedPromptsNovelAI, setSavedPromptsNovelAI] = useState([])
+    const [savedPromptsHolaraAI, setSavedPromptsHolaraAI] = useState([])
 
     useEffect(() => {
         functions.preventDragging()
@@ -87,6 +90,28 @@ const App: React.FunctionComponent = (props) => {
         }
     }, [])
 
+    const initSaveData = async () => {
+        let savedLocal = await axios.get("/saved-local-images").then((r) => r.data)
+        localStorage.setItem("saved", JSON.stringify(savedLocal))
+        let savedNovelAI = await axios.get("/saved-novelai-images").then((r) => r.data)
+        localStorage.setItem("saved-novel-ai", JSON.stringify(savedNovelAI))
+        let savedHolaraAI = await axios.get("/saved-holara-images").then((r) => r.data)
+        localStorage.setItem("saved-holara-ai", JSON.stringify(savedHolaraAI))
+        let savedLocalPrompts = await axios.get("/saved-local-prompts").then((r) => r.data)
+        let savedNovelAIPrompts = await axios.get("/saved-novelai-prompts").then((r) => r.data)
+        let savedHolaraAIPrompts = await axios.get("/saved-holara-prompts").then((r) => r.data)
+        localStorage.setItem("savedPrompts", JSON.stringify(savedLocalPrompts))
+        localStorage.setItem("savedPrompts-novel-ai", JSON.stringify(savedNovelAIPrompts))
+        localStorage.setItem("savedPrompts-holara-ai", JSON.stringify(savedHolaraAIPrompts))
+        setSavedPrompts(savedLocalPrompts)
+        setSavedPromptsNovelAI(savedNovelAIPrompts)
+        setSavedPromptsHolaraAI(savedHolaraAIPrompts)
+    }
+
+    useEffect(() => {
+        initSaveData()
+    }, [])
+
     const processImageUpdate = async () => {
         let images = await axios.get("/all-outputs").then((r) => r.data)
         setImages(images)
@@ -130,6 +155,9 @@ const App: React.FunctionComponent = (props) => {
 
     return (
         <div className={`app ${!loaded ? "stop-transitions" : ""}`}>
+            <SavedPromptsContext.Provider value={{savedPrompts, setSavedPrompts}}>
+            <SavedPromptsHolaraAIContext.Provider value={{savedPromptsHolaraAI, setSavedPromptsHolaraAI}}>
+            <SavedPromptsNovelAIContext.Provider value={{savedPromptsNovelAI, setSavedPromptsNovelAI}}>
             <HolaraAIImageInputImagesContext.Provider value={{holaraAIImageInputImages, setHolaraAIImageInputImages}}>
             <HolaraAINSFWImagesContext.Provider value={{holaraAINSFWImages, setHolaraAINSFWImages}}>
             <HolaraAIImagesContext.Provider value={{holaraAIImages, setHolaraAIImages}}>
@@ -172,6 +200,9 @@ const App: React.FunctionComponent = (props) => {
             </HolaraAIImagesContext.Provider>
             </HolaraAINSFWImagesContext.Provider>
             </HolaraAIImageInputImagesContext.Provider>
+            </SavedPromptsNovelAIContext.Provider>
+            </SavedPromptsHolaraAIContext.Provider>
+            </SavedPromptsContext.Provider>
         </div>
     )
 }

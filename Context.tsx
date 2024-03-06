@@ -120,6 +120,8 @@ export const HolaraAICookieContext = React.createContext<any>(null)
 export const HolaraAIImagesContext = React.createContext<any>(null)
 export const HolaraAINSFWImagesContext = React.createContext<any>(null)
 export const HolaraAIImageInputImagesContext = React.createContext<any>(null)
+export const SavedPromptsNovelAIContext = React.createContext<any>(null)
+export const SavedPromptsHolaraAIContext = React.createContext<any>(null)
 
 const Context: React.FunctionComponent = (props: any) => {
     const [theme, setTheme] = useState("light")
@@ -173,7 +175,6 @@ const Context: React.FunctionComponent = (props: any) => {
     const [expandMask, setExpandMask] = useState("")
     const [started, setStarted] = useState(false)
     const [loopMode, setLoopMode] = useState("repeat prompt")
-    const [savedPrompts, setSavedPrompts] = useState([])
     const [viewImages, setViewImages] = useState([])
     const [imageName, setImageName] = useState("")
     const [upscaler, setUpscaler] = useState("real-esrgan")
@@ -273,7 +274,6 @@ const Context: React.FunctionComponent = (props: any) => {
             <WatermarkContext.Provider value={{watermark, setWatermark}}>
             <ImageNameContext.Provider value={{imageName, setImageName}}>
             <ViewImagesContext.Provider value={{viewImages, setViewImages}}>
-            <SavedPromptsContext.Provider value={{savedPrompts, setSavedPrompts}}>
             <LoopModeContext.Provider value={{loopMode, setLoopMode}}>
             <StartedContext.Provider value={{started, setStarted}}>
             <ExpandMaskContext.Provider value={{expandMask, setExpandMask}}>
@@ -377,7 +377,6 @@ const Context: React.FunctionComponent = (props: any) => {
             </ExpandMaskContext.Provider>
             </StartedContext.Provider>
             </LoopModeContext.Provider>
-            </SavedPromptsContext.Provider>
             </ViewImagesContext.Provider>
             </ImageNameContext.Provider>
             </WatermarkContext.Provider>

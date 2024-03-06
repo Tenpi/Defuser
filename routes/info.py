@@ -11,6 +11,7 @@ import pathlib
 import string
 import piexif.helper
 import piexif
+import json
 
 dirname = os.path.dirname(__file__)
 
@@ -327,3 +328,79 @@ def list_folders():
     files = os.listdir(folder)
     files = list(filter(lambda file: file != ".DS_Store" and os.path.isdir(os.path.join(folder, file)), files))
     return files
+
+@app.route("/save-images", methods=["POST"])
+def save_images():
+    data = flask.request.json
+    saved = data["saved"]
+    generator_type = data["generator"]
+    location = os.path.join(dirname, "../outputs/local/saved.json")
+    if generator_type == "novel ai":
+        location = os.path.join(dirname, "../outputs/novel ai/saved.json")
+    if generator_type == "holara ai":
+        location = os.path.join(dirname, "../outputs/holara ai/saved.json")
+    with open(location, "w") as f:
+        json.dump(saved, f, indent=4)
+    return "done"
+
+@app.route("/saved-local-images")
+def saved_local_images():
+    location = os.path.join(dirname, "../outputs/local/saved.json")
+    if not os.path.exists(location): return []
+    with open(location) as f:
+        data = json.load(f)
+    return data
+
+@app.route("/saved-novelai-images")
+def saved_novelai_images():
+    location = os.path.join(dirname, "../outputs/novel ai/saved.json")
+    if not os.path.exists(location): return []
+    with open(location) as f:
+        data = json.load(f)
+    return data
+
+@app.route("/saved-holara-images")
+def saved_holara_images():
+    location = os.path.join(dirname, "../outputs/holara ai/saved.json")
+    if not os.path.exists(location): return []
+    with open(location) as f:
+        data = json.load(f)
+    return data
+
+@app.route("/save-prompts", methods=["POST"])
+def save_prompts():
+    data = flask.request.json
+    prompts = data["prompts"]
+    generator_type = data["generator"]
+    location = os.path.join(dirname, "../outputs/local/prompts.txt")
+    if generator_type == "novel ai":
+        location = os.path.join(dirname, "../outputs/novel ai/prompts.txt")
+    if generator_type == "holara ai":
+        location = os.path.join(dirname, "../outputs/holara ai/prompts.txt")
+    with open(location, "w") as f:
+        f.write("\n".join(prompts))
+    return "done"
+
+@app.route("/saved-local-prompts")
+def saved_local_prompts():
+    location = os.path.join(dirname, "../outputs/local/prompts.txt")
+    if not os.path.exists(location): return []
+    with open(location) as f:
+        data = f.read().split("\n")
+    return data
+
+@app.route("/saved-novelai-prompts")
+def saved_novelai_prompts():
+    location = os.path.join(dirname, "../outputs/novel ai/prompts.txt")
+    if not os.path.exists(location): return []
+    with open(location) as f:
+        data = f.read().split("\n")
+    return data
+
+@app.route("/saved-holara-prompts")
+def saved_holara_prompts():
+    location = os.path.join(dirname, "../outputs/holara ai/prompts.txt")
+    if not os.path.exists(location): return []
+    with open(location) as f:
+        data = f.read().split("\n")
+    return data

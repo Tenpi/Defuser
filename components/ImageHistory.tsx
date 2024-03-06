@@ -41,6 +41,12 @@ const ImageHistory: React.FunctionComponent = (props) => {
         return `hue-rotate(${siteHue - 180}deg) saturate(${siteSaturation}%) brightness(${siteLightness + 50}%)`
     }
 
+    const getSaveKey = () => {
+        if (generator === "novel ai") return "saved-novel-ai"
+        if (generator === "holara ai") return "saved-holara-ai"
+        return "saved"
+    }
+
     useEffect(() => {
         const max = 100 + (sliceIndex * 100)
         if (sidebarType === "history") {
@@ -77,7 +83,7 @@ const ImageHistory: React.FunctionComponent = (props) => {
             setSlice(slice)
         }
         if (sidebarType === "saved") {
-            let saved = localStorage.getItem("saved") || "[]" as any
+            let saved = localStorage.getItem(getSaveKey()) || "[]" as any
             saved = JSON.parse(saved)
             const slice = reverseSort ? saved.slice(Math.max(saved.length - max - 1, 0), saved.length - 1) : saved.slice(0, max)
             setSlice(slice)

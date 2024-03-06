@@ -4,7 +4,7 @@ import {HashLink as Link} from "react-router-hash-link"
 import favicon from "../assets/icons/favicon.png"
 import {EnableDragContext, MobileContext, SiteHueContext, SiteSaturationContext, SiteLightnessContext, UpdateImagesContext, PromptContext, NegativePromptContext, DeletionContext,
 StepsContext, CFGContext, ModelNameContext, SizeContext, SamplerContext, DenoiseContext, InterrogateTextContext, UpdateSavedContext, ClipSkipContext, PreviewImageContext, TabContext,
-SeedContext, VAENameContext, ImageBrightnessContext, ImageContrastContext} from "../Context"
+SeedContext, VAENameContext, ImageBrightnessContext, ImageContrastContext, GeneratorContext} from "../Context"
 import functions from "../structures/Functions"
 import deleteIcon from "../assets/icons/delete.png"
 import deleteIconHover from "../assets/icons/delete-hover.png"
@@ -50,12 +50,19 @@ const Image: React.FunctionComponent<ImageHistoryImageProps> = (props) => {
     const {seed, setSeed} = useContext(SeedContext)
     const {vaeName, setVAEName} = useContext(VAENameContext)
     const {deletion, setDeletion} = useContext(DeletionContext)
+    const {generator, setGenerator} = useContext(GeneratorContext)
     const {tab, setTab} = useContext(TabContext)
     const [isSaved, setIsSaved] = useState(false)
     const [hover, setHover] = useState(false)
 
+    const getSaveKey = () => {
+        if (generator === "novel ai") return "saved-novel-ai"
+        if (generator === "holara ai") return "saved-holara-ai"
+        return "saved"
+    }
+
     const updateSavedImages = () => {
-        let saved = localStorage.getItem("saved") || "[]" as any
+        let saved = localStorage.getItem(getSaveKey()) || "[]" as any
         saved = JSON.parse(saved)
         if (saved.includes(props.img)) {
             setIsSaved(true)
@@ -66,7 +73,7 @@ const Image: React.FunctionComponent<ImageHistoryImageProps> = (props) => {
 
     useEffect(() => {
         updateSavedImages()
-    }, [updateSaved])
+    }, [updateSaved, generator])
 
     const getFilter = () => {
         return `hue-rotate(${siteHue - 180}deg) saturate(${siteSaturation}%) brightness(${siteLightness + 50}%)`
@@ -133,19 +140,20 @@ const Image: React.FunctionComponent<ImageHistoryImageProps> = (props) => {
     const saveImage = (event: any) => {
         event.stopPropagation()
         if (!hover) return
-        let saved = localStorage.getItem("saved") || "[]" as any
+        let saved = localStorage.getItem(getSaveKey()) || "[]" as any
         saved = JSON.parse(saved)
         const exists = saved.find((i: string) => i === props.img)
         if (exists) {
             saved = functions.removeItem(saved, props.img)
-            localStorage.setItem("saved", JSON.stringify(saved))
+            localStorage.setItem(getSaveKey(), JSON.stringify(saved))
             setIsSaved(false)
         } else {
             saved.push(props.img)
-            localStorage.setItem("saved", JSON.stringify(saved))
+            localStorage.setItem(getSaveKey(), JSON.stringify(saved))
             setIsSaved(true)
         }
         setUpdateSaved(true)
+        axios.post("/save-images", {saved, generator})
     }
 
     const deleteImage = async (event: any) => {

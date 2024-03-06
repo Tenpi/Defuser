@@ -9,7 +9,8 @@ FormatContext, DeletionContext, TextualInversionsContext, HypernetworksContext, 
 ControlImageContext, ControlProcessorContext, ControlScaleContext, ControlGuessModeContext, ControlStartContext, ControlEndContext,
 ControlInvertContext, StyleFidelityContext, ControlReferenceImageContext, HorizontalExpandContext, VerticalExpandContext, UpscalerContext,
 ExpandImageContext, ExpandMaskContext, StartedContext, SocketContext, LoopModeContext, SavedPromptsContext, WatermarkContext, NSFWTabContext,
-InvisibleWatermarkContext, SauceNaoAPIKeyContext, RandomPromptModeContext, GeneratorContext, NovelAITokenContext, HolaraAICookieContext} from "../Context"
+InvisibleWatermarkContext, SauceNaoAPIKeyContext, RandomPromptModeContext, GeneratorContext, NovelAITokenContext, HolaraAICookieContext,
+SavedPromptsNovelAIContext, SavedPromptsHolaraAIContext} from "../Context"
 import functions from "../structures/Functions"
 import checkbox from "../assets/icons/checkbox2.png"
 import checkboxChecked from "../assets/icons/checkbox2-checked.png"
@@ -80,6 +81,8 @@ const GenerateBar: React.FunctionComponent = (props) => {
     const {generator, setGenerator} = useContext(GeneratorContext)
     const {novelAIToken, setNovelAIToken} = useContext(NovelAITokenContext)
     const {holaraAICookie, setHolaraAICookie} = useContext(HolaraAICookieContext)
+    const {savedPromptsNovelAI, setSavedPromptsNovelAI} = useContext(SavedPromptsNovelAIContext)
+    const {savedPromptsHolaraAI, setSavedPromptsHolaraAI} = useContext(SavedPromptsHolaraAIContext)
     const ref = useRef<HTMLCanvasElement>(null)
     const history = useHistory()
 
@@ -108,8 +111,6 @@ const GenerateBar: React.FunctionComponent = (props) => {
         if (savedPrecision) setPrecision(savedPrecision)
         const savedLoopMode = localStorage.getItem("loopMode")
         if (savedLoopMode) setLoopMode(savedLoopMode)
-        const savedPrompts = localStorage.getItem("savedPrompts")
-        if (savedPrompts) setSavedPrompts(JSON.parse(savedPrompts))
         const savedWatermark = localStorage.getItem("watermark")
         if (savedWatermark) setWatermark(savedWatermark === "true")
         const savedNSFWTab = localStorage.getItem("nsfwTab")
@@ -126,6 +127,12 @@ const GenerateBar: React.FunctionComponent = (props) => {
         if (savedNovelAIToken) setNovelAIToken(savedNovelAIToken)
         const savedHolaraAICookie = localStorage.getItem("holaraAICookie")
         if (savedHolaraAICookie) setHolaraAICookie(savedHolaraAICookie)
+        const savedPrompts = localStorage.getItem("savedPrompts")
+        if (savedPrompts) setSavedPrompts(JSON.parse(savedPrompts))
+        const savedPromptsNovelAI = localStorage.getItem("savedPrompts-novel-ai")
+        if (savedPromptsNovelAI) setSavedPromptsNovelAI(JSON.parse(savedPromptsNovelAI))
+        const savedPromptsHolaraAI = localStorage.getItem("savedPrompts-holara-ai")
+        if (savedPromptsHolaraAI) setSavedPromptsHolaraAI(JSON.parse(savedPromptsHolaraAI))
     }, [])
 
     useEffect(() => {
@@ -363,7 +370,9 @@ const GenerateBar: React.FunctionComponent = (props) => {
     }
 
     const savedPrompt = () => {
-        const arr = savedPrompts.filter(Boolean)
+        let arr = savedPrompts.filter(Boolean)
+        if (generator === "novel ai") arr = savedPromptsNovelAI.filter(Boolean)
+        if (generator === "holara ai") arr = savedPromptsHolaraAI.filter(Boolean)
         if (arr.length) {
             let saved = prompt
             while (prompt === saved) {
@@ -384,7 +393,7 @@ const GenerateBar: React.FunctionComponent = (props) => {
         return () => {
             socket.off("repeat generation", repeatGeneration)
         }
-    }, [socket, loopMode, prompt, negativePrompt, savedPrompts, loras, hypernetworks, textualInversions, generator])
+    }, [socket, loopMode, prompt, negativePrompt, savedPrompts, savedPromptsNovelAI, savedPromptsHolaraAI, loras, hypernetworks, textualInversions, generator])
 
     const getSizeDim = () => {
         if (generator === "novel ai") return "640"
