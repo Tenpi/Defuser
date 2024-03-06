@@ -217,9 +217,12 @@ def cv2_to_pil(cv2_image):
     cv2_image = cv2.cvtColor(cv2_image, cv2.COLOR_BGR2RGB)
     return Image.fromarray(cv2_image.astype(np.uint8))
 
-def get_seed(seed):
-    if not seed or seed == -1:
-        return int(random.randrange(4294967294))
+def get_seed(seed, half=False):
+    range = 4294967294
+    if half:
+        range = 2147483647
+    if not seed or int(seed) == -1:
+        return int(random.randrange(range))
     return int(seed)
 
 def append_info(image: str, info: dict):

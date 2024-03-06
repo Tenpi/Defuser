@@ -14,7 +14,7 @@ from diffusers.utils import export_to_gif
 from .stable_diffusion_controlnet_reference import StableDiffusionControlNetReferencePipeline
 from .stable_diffusion_xl_reference import StableDiffusionXLReferencePipeline
 from .hypernet import load_hypernet, add_hypernet, clear_hypernets
-from .external import generate_novelai, update_ext_upscaling, update_ext_infinite
+from .external import generate_novelai, generate_holara, update_ext_upscaling, update_ext_infinite
 from compel import Compel, ReturnedEmbeddingsType, DiffusersTextualInversionManager
 from PIL import Image
 import pathlib
@@ -363,6 +363,8 @@ def generate(request_data, request_files):
     generator_type = data["generator"] if "generator" in data else "local"
     if generator_type == "novel ai":
         return generate_novelai(data, request_files)
+    elif generator_type == "holara ai":
+        return generate_holara(data, request_files)
                 
     seed = get_seed(data["seed"]) if "seed" in data else get_seed(-1)
     amount = int(data["amount"]) if "amount" in data else 1

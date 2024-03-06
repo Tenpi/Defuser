@@ -4,7 +4,7 @@ import {HashLink as Link} from "react-router-hash-link"
 import path from "path"
 import {EnableDragContext, MobileContext, ImageInputContext, ImageNameContext, ImagesContext, ReverseSortContext, AIWatermarkBrightnessContext,
 AIWatermarkHueContext, AIWatermarkInvertContext, AIWatermarkMarginXContext, AIWatermarkMarginYContext, AIWatermarkOpacityContext, AIWatermarkPositionContext,
-AIWatermarkSaturationContext, AIWatermarkScaleContext, AIWatermarkTypeContext, GeneratorContext, NovelAIImagesContext} from "../Context"
+AIWatermarkSaturationContext, AIWatermarkScaleContext, AIWatermarkTypeContext, GeneratorContext, NovelAIImagesContext, HolaraAIImagesContext} from "../Context"
 import functions from "../structures/Functions"
 import Slider from "react-slider"
 import fileType from "magic-bytes.js"
@@ -37,6 +37,7 @@ const WatermarkBar: React.FunctionComponent = (props) => {
     const {aiWatermarkScale, setAIWatermarkScale} = useContext(AIWatermarkScaleContext)
     const {images, setImages} = useContext(ImagesContext)
     const {novelAIImages, setNovelAIImages} = useContext(NovelAIImagesContext)
+    const {holaraAIImages, setHolaraAIImages} = useContext(HolaraAIImagesContext)
     const {generator, setGenerator} = useContext(GeneratorContext)
     const {reverseSort, setReverseSort} = useContext(ReverseSortContext)
     const {imageName, setImageName} = useContext(ImageNameContext)
@@ -142,6 +143,8 @@ const WatermarkBar: React.FunctionComponent = (props) => {
         if (imageInput) return imageInput
         if (generator === "novel ai") {
             return reverseSort ? novelAIImages[novelAIImages.length - 1] : novelAIImages[0]
+        } else if (generator === "holara ai") {
+            return reverseSort ? holaraAIImages[holaraAIImages.length - 1] : holaraAIImages[0]
         } else {
             return reverseSort ? images[images.length - 1] : images[0]
         }

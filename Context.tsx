@@ -116,6 +116,10 @@ export const NovelAITokenContext = React.createContext<any>(null)
 export const NovelAIImagesContext = React.createContext<any>(null)
 export const NovelAINSFWImagesContext = React.createContext<any>(null)
 export const NovelAIImageInputImagesContext = React.createContext<any>(null)
+export const HolaraAICookieContext = React.createContext<any>(null)
+export const HolaraAIImagesContext = React.createContext<any>(null)
+export const HolaraAINSFWImagesContext = React.createContext<any>(null)
+export const HolaraAIImageInputImagesContext = React.createContext<any>(null)
 
 const Context: React.FunctionComponent = (props: any) => {
     const [theme, setTheme] = useState("light")
@@ -217,9 +221,11 @@ const Context: React.FunctionComponent = (props: any) => {
     const [colorizeSketchInput, setColorizeSketchInput] = useState("")
     const [colorizeStyleInput, setColorizeStyleInput] = useState("")
     const [novelAIToken, setNovelAIToken] = useState("")
+    const [holaraAICookie, setHolaraAICookie] = useState("")
 
     return (
         <>  
+            <HolaraAICookieContext.Provider value={{holaraAICookie, setHolaraAICookie}}>
             <NovelAITokenContext.Provider value={{novelAIToken, setNovelAIToken}}>
             <ColorizeStyleInputContext.Provider value={{colorizeStyleInput, setColorizeStyleInput}}>
             <ColorizeSketchInputContext.Provider value={{colorizeSketchInput, setColorizeSketchInput}}>
@@ -419,6 +425,7 @@ const Context: React.FunctionComponent = (props: any) => {
             </ColorizeSketchInputContext.Provider>
             </ColorizeStyleInputContext.Provider>
             </NovelAITokenContext.Provider>
+            </HolaraAICookieContext.Provider>
         </>
     )
 }

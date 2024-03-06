@@ -55,6 +55,11 @@ const CheckpointBar: React.FunctionComponent = (props) => {
             setModelNames(modelNames)
             if (first) setModelName(modelNames[0])
             if (!modelNames.includes(modelName)) setModelName(modelNames[0])
+        } else if (generator === "holara ai") {
+            const modelNames = ["Aika", "Akasha", "Vibrance", "Aurora", "Chroma", "Tranquility", "Yami"]
+            setModelNames(modelNames)
+            if (first) setModelName(modelNames[0])
+            if (!modelNames.includes(modelName)) setModelName(modelNames[0])
         } else {
             const modelNames = await axios.get("/diffusion-models").then((r) => r.data)
             setModelNames(modelNames)
@@ -80,7 +85,7 @@ const CheckpointBar: React.FunctionComponent = (props) => {
     }
 
     const updateVAENames = async (first?: boolean) => {
-        if (generator === "novel ai") {
+        if (generator === "novel ai" || generator === "holara ai") {
             const vaeNames = ["None"]
             setVAENames(vaeNames)
             if (first) setVAEName(vaeNames[0])

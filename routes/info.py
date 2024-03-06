@@ -104,6 +104,14 @@ def get_novelai_outputs(folder: str):
     files = sorted(files, key=lambda x: get_number_from_filename(x), reverse=True)
     return list(map(lambda file: f"outputs/novel ai/{folder}/{file}", files))
 
+def get_holara_outputs(folder: str):
+    dir = os.path.join(dirname, f"../outputs/holara ai/{folder}")
+    if not os.path.exists(dir): return []
+    files = os.listdir(dir)
+    files = list(filter(lambda file: not is_unwanted(file), files))
+    files = sorted(files, key=lambda x: get_number_from_filename(x), reverse=True)
+    return list(map(lambda file: f"outputs/holara ai/{folder}/{file}", files))
+
 @app.route("/all-outputs")
 def get_all_outputs():
     return get_outputs("text")
@@ -131,6 +139,21 @@ def get_all_novelai_nsfw_outputs():
 def get_all_novelai_image_outputs():
     image_outputs = get_novelai_outputs("image")
     image_nsfw_outputs = get_novelai_outputs("image nsfw")
+    all_outputs = image_outputs + image_nsfw_outputs
+    return sorted(all_outputs, key=lambda x: os.path.getmtime(x), reverse=True)
+
+@app.route("/all-holara-outputs")
+def get_all_holara_outputs():
+    return get_holara_outputs("text")
+
+@app.route("/all-holara-nsfw-outputs")
+def get_all_holara_nsfw_outputs():
+    return get_holara_outputs("text nsfw")
+
+@app.route("/all-holara-image-outputs")
+def get_all_holara_image_outputs():
+    image_outputs = get_holara_outputs("image")
+    image_nsfw_outputs = get_holara_outputs("image nsfw")
     all_outputs = image_outputs + image_nsfw_outputs
     return sorted(all_outputs, key=lambda x: os.path.getmtime(x), reverse=True)
 
@@ -232,6 +255,7 @@ def similar_images():
     prompt = get_prompt(image)
     all_images = get_outputs("text") + get_outputs("text nsfw") 
     all_images += get_novelai_outputs("text") + get_novelai_outputs("text nsfw")
+    all_images += get_holara_outputs("text") + get_holara_outputs("text nsfw")
     images = []
     for img in all_images:
         prompt_check = get_prompt(img)

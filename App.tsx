@@ -2,7 +2,8 @@ import React, {useEffect, useState, useContext, useReducer} from "react"
 import {Switch, Route, Redirect, useHistory, useLocation} from "react-router-dom"
 import Context, {EnableDragContext, MobileContext, SocketContext, ImagesContext, UpdateImagesContext, TextualInversionsContext,
 HypernetworksContext, LorasContext, ReverseSortContext, NSFWImagesContext, ImageInputImagesContext, NovelAIImagesContext,
-NovelAINSFWImagesContext, NovelAIImageInputImagesContext, GeneratorContext} from "./Context"
+NovelAINSFWImagesContext, NovelAIImageInputImagesContext, HolaraAIImagesContext, HolaraAINSFWImagesContext, HolaraAIImageInputImagesContext, 
+GeneratorContext} from "./Context"
 import axios from "axios"
 import {io} from "socket.io-client"
 import functions from "./structures/Functions"
@@ -23,6 +24,9 @@ const App: React.FunctionComponent = (props) => {
     const [novelAIImages, setNovelAIImages] = useState([])
     const [novelAINSFWImages, setNovelAINSFWImages] = useState([])
     const [novelAIImageInputImages, setNovelAIImageInputImages] = useState([])
+    const [holaraAIImages, setHolaraAIImages] = useState([])
+    const [holaraAINSFWImages, setHolaraAINSFWImages] = useState([])
+    const [holaraAIImageInputImages, setHolaraAIImageInputImages] = useState([])
     const [updateImages, setUpdateImages] = useState(true)
     const [textualInversions, setTextualInversions] = useState([])
     const [hypernetworks, setHypernetworks] = useState([])
@@ -96,6 +100,12 @@ const App: React.FunctionComponent = (props) => {
         setNovelAINSFWImages(novelAINSFWImages)
         let novelAIImageInputImages = await axios.get("/all-novelai-image-outputs").then((r) => r.data)
         setNovelAIImageInputImages(novelAIImageInputImages)
+        let holaraAIImages = await axios.get("/all-holara-outputs").then((r) => r.data)
+        setHolaraAIImages(holaraAIImages)
+        let holaraAINSFWImages = await axios.get("/all-holara-nsfw-outputs").then((r) => r.data)
+        setHolaraAINSFWImages(holaraAINSFWImages)
+        let holaraAIImageInputImages = await axios.get("/all-holara-image-outputs").then((r) => r.data)
+        setHolaraAIImageInputImages(holaraAIImageInputImages)
     }
 
     useEffect(() => {
@@ -120,6 +130,9 @@ const App: React.FunctionComponent = (props) => {
 
     return (
         <div className={`app ${!loaded ? "stop-transitions" : ""}`}>
+            <HolaraAIImageInputImagesContext.Provider value={{holaraAIImageInputImages, setHolaraAIImageInputImages}}>
+            <HolaraAINSFWImagesContext.Provider value={{holaraAINSFWImages, setHolaraAINSFWImages}}>
+            <HolaraAIImagesContext.Provider value={{holaraAIImages, setHolaraAIImages}}>
             <GeneratorContext.Provider value={{generator, setGenerator}}>
             <NovelAIImageInputImagesContext.Provider value={{novelAIImageInputImages, setNovelAIImageInputImages}}>
             <NovelAINSFWImagesContext.Provider value={{novelAINSFWImages, setNovelAINSFWImages}}>
@@ -156,6 +169,9 @@ const App: React.FunctionComponent = (props) => {
             </NovelAINSFWImagesContext.Provider>
             </NovelAIImageInputImagesContext.Provider>
             </GeneratorContext.Provider>
+            </HolaraAIImagesContext.Provider>
+            </HolaraAINSFWImagesContext.Provider>
+            </HolaraAIImageInputImagesContext.Provider>
         </div>
     )
 }

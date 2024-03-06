@@ -9,7 +9,7 @@ FormatContext, DeletionContext, TextualInversionsContext, HypernetworksContext, 
 ControlImageContext, ControlProcessorContext, ControlScaleContext, ControlGuessModeContext, ControlStartContext, ControlEndContext,
 ControlInvertContext, StyleFidelityContext, ControlReferenceImageContext, HorizontalExpandContext, VerticalExpandContext, UpscalerContext,
 ExpandImageContext, ExpandMaskContext, StartedContext, SocketContext, LoopModeContext, SavedPromptsContext, WatermarkContext, NSFWTabContext,
-InvisibleWatermarkContext, SauceNaoAPIKeyContext, RandomPromptModeContext, GeneratorContext, NovelAITokenContext} from "../Context"
+InvisibleWatermarkContext, SauceNaoAPIKeyContext, RandomPromptModeContext, GeneratorContext, NovelAITokenContext, HolaraAICookieContext} from "../Context"
 import functions from "../structures/Functions"
 import checkbox from "../assets/icons/checkbox2.png"
 import checkboxChecked from "../assets/icons/checkbox2-checked.png"
@@ -79,6 +79,7 @@ const GenerateBar: React.FunctionComponent = (props) => {
     const {randomPromptMode, setRandomPromptMode} = useContext(RandomPromptModeContext)
     const {generator, setGenerator} = useContext(GeneratorContext)
     const {novelAIToken, setNovelAIToken} = useContext(NovelAITokenContext)
+    const {holaraAICookie, setHolaraAICookie} = useContext(HolaraAICookieContext)
     const ref = useRef<HTMLCanvasElement>(null)
     const history = useHistory()
 
@@ -123,6 +124,8 @@ const GenerateBar: React.FunctionComponent = (props) => {
         if (savedGenerator) setGenerator(savedGenerator)
         const savedNovelAIToken = localStorage.getItem("novelAIToken")
         if (savedNovelAIToken) setNovelAIToken(savedNovelAIToken)
+        const savedHolaraAICookie = localStorage.getItem("holaraAICookie")
+        if (savedHolaraAICookie) setHolaraAICookie(savedHolaraAICookie)
     }, [])
 
     useEffect(() => {
@@ -271,11 +274,12 @@ const GenerateBar: React.FunctionComponent = (props) => {
         const style_fidelity = styleFidelity
         const invisible_watermark = invisibleWatermark
         const novelai_token = novelAIToken
+        const holara_cookie = holaraAICookie
         const nsfw_tab = nsfwTab
         const json = {prompt, negative_prompt, steps, cfg, width, height, denoise, seed, sampler, amount, model_name, vae_name, 
         clip_skip, processing, format, textual_inversions, hypernetworks, loras, control_processor, control_scale, guess_mode,
         control_start, control_end, style_fidelity, control_reference_image, upscaler, nsfw_tab, watermark, invisible_watermark,
-        generator, novelai_token}
+        generator, novelai_token, holara_cookie}
         if (expandImage) json.denoise = 1.0
         const form = new FormData()
         form.append("data", JSON.stringify(json))
@@ -343,8 +347,10 @@ const GenerateBar: React.FunctionComponent = (props) => {
         if (model) setModelName(model)
         if (vae) setVAEName(vae)
         if (size) setSize(functions.getSizeDimensionsReverse(Number(size.split("x")[1]), getSizeDim()))
-        if (model.includes("nai-diffusion")) {
+        if (functions.isNovelAIModel(model)) {
             if (generator !== "novel ai") setGenerator("novel ai")
+        } else if (functions.isHolaraAIModel(model)) {
+            if (generator !== "holara ai") setGenerator("holara ai")
         } else {
             if (generator !== "local") setGenerator("local")
         }
@@ -382,6 +388,7 @@ const GenerateBar: React.FunctionComponent = (props) => {
 
     const getSizeDim = () => {
         if (generator === "novel ai") return "640"
+        if (generator === "holara ai") return "640"
         return "512"
     }
 

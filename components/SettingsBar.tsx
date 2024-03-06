@@ -4,7 +4,7 @@ import {HashLink as Link} from "react-router-hash-link"
 import favicon from "../assets/icons/favicon.png"
 import {EnableDragContext, MobileContext, SiteHueContext, SiteSaturationContext, SiteLightnessContext, NegativePromptContext, ProcessingContext,
 InterrogatorNameContext, DeletionContext, FormatContext, PrecisionContext, LoopModeContext, WatermarkContext, UpscalerContext, NSFWTabContext,
-InvisibleWatermarkContext, SauceNaoAPIKeyContext, RandomPromptModeContext, GeneratorContext, NovelAITokenContext} from "../Context"
+InvisibleWatermarkContext, SauceNaoAPIKeyContext, RandomPromptModeContext, GeneratorContext, NovelAITokenContext, HolaraAICookieContext} from "../Context"
 import functions from "../structures/Functions"
 import {Dropdown, DropdownButton} from "react-bootstrap"
 import checkbox from "../assets/icons/checkbox2.png"
@@ -34,6 +34,7 @@ const SettingsBar: React.FunctionComponent = (props) => {
     const {randomPromptMode, setRandomPromptMode} = useContext(RandomPromptModeContext)
     const {generator, setGenerator} = useContext(GeneratorContext)
     const {novelAIToken, setNovelAIToken} = useContext(NovelAITokenContext)
+    const {holaraAICookie, setHolaraAICookie} = useContext(HolaraAICookieContext)
     const ref = useRef<HTMLCanvasElement>(null)
     const history = useHistory()
 
@@ -72,6 +73,8 @@ const SettingsBar: React.FunctionComponent = (props) => {
         if (savedGenerator) setGenerator(savedGenerator)
         const savedNovelAIToken = localStorage.getItem("novelAIToken")
         if (savedNovelAIToken) setNovelAIToken(savedNovelAIToken)
+        const savedHolaraAICookie = localStorage.getItem("holaraAICookie")
+        if (savedHolaraAICookie) setHolaraAICookie(savedHolaraAICookie)
     }, [])
 
     useEffect(() => {
@@ -90,9 +93,10 @@ const SettingsBar: React.FunctionComponent = (props) => {
         localStorage.setItem("randomPromptMode", String(randomPromptMode))
         localStorage.setItem("generator", String(generator))
         localStorage.setItem("novelAIToken", String(novelAIToken))
+        localStorage.setItem("holaraAICookie", String(holaraAICookie))
     }, [negativePrompt, interrogatorName, processing, format, deletion, precision, loopMode, 
         upscaler, nsfwTab, invisibleWatermark, watermark, saucenaoAPIKey, randomPromptMode,
-        generator, novelAIToken])
+        generator, novelAIToken, holaraAICookie])
 
     const resetNegativePrompt = () => {
         setNegativePrompt("")
@@ -113,6 +117,7 @@ const SettingsBar: React.FunctionComponent = (props) => {
     const getGenerator = () => {
         if (generator === "local") return "Local"
         if (generator === "novel ai") return "Novel AI"
+        if (generator === "holara ai") return "Holara AI"
     }
 
     return (
@@ -122,6 +127,7 @@ const SettingsBar: React.FunctionComponent = (props) => {
                 <DropdownButton title={getGenerator()} drop="down" className="checkpoint-selector">
                     <Dropdown.Item active={generator === "local"} onClick={() => setGenerator("local")}>Local</Dropdown.Item>
                     <Dropdown.Item active={generator === "novel ai"} onClick={() => setGenerator("novel ai")}>Novel AI</Dropdown.Item>
+                    <Dropdown.Item active={generator === "holara ai"} onClick={() => setGenerator("holara ai")}>Holara AI</Dropdown.Item>
                 </DropdownButton>
             </div>
             <div className="settings-bar-row">
@@ -223,6 +229,10 @@ const SettingsBar: React.FunctionComponent = (props) => {
             <div className="settings-bar-row">
                 <span className="settings-bar-text">Novel AI Token:</span>
                 <input className="settings-bar-input" spellCheck={false} value={novelAIToken} onChange={(event) => setNovelAIToken(event.target.value)}/>
+            </div>
+            <div className="settings-bar-row">
+                <span className="settings-bar-text">Holara AI Cookie:</span>
+                <input className="settings-bar-input" spellCheck={false} value={holaraAICookie} onChange={(event) => setHolaraAICookie(event.target.value)}/>
             </div>
         </div>
     )

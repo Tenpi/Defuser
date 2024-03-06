@@ -846,7 +846,7 @@ export default class Functions {
         return c
     }
 
-    public static getSizeDimensions = (value: number, dimension: "512" | "640" = "512") => {
+    public static getSizeDimensions = (value: number, dimension: "512" | "640" | "1024" = "512") => {
         let ranges = [
             {value: -1, width: 640, height: 384},
             {value: 0, width: 512, height: 512},
@@ -857,6 +857,12 @@ export default class Functions {
                 {value: -1, width: 768, height: 512},
                 {value: 0, width: 640, height: 640},
                 {value: 1, width: 512, height: 768}
+            ]
+        } else if (dimension === "1024") {
+            ranges = [
+                {value: -1, width: 1280, height: 896},
+                {value: 0, width: 1024, height: 1024},
+                {value: 1, width: 896, height: 1280}
             ]
         }
         for (let i = 0; i < ranges.length - 1; i++) {
@@ -879,12 +885,15 @@ export default class Functions {
         return {width: 0, height: 0}
     }
 
-    public static getSizeDimensionsReverse = (height: number, dimension: "512" | "640" = "512") => {
+    public static getSizeDimensionsReverse = (height: number, dimension: "512" | "640" | "1024" = "512") => {
         let oldMin = 384
         let oldMax = 640
         if (dimension === "640") {
             oldMin = 512
             oldMax = 768
+        } else if (dimension === "1024") {
+            oldMin = 896
+            oldMax = 1280
         }
         let newMin = -1
         let newMax = 1
@@ -1267,5 +1276,15 @@ export default class Functions {
         const blob = new Blob([metaBuffer])
         const url = URL.createObjectURL(blob)
         return url
+    }
+
+    public static isNovelAIModel = (model: string) => {
+        const modelNames = ["nai-diffusion-3", "nai-diffusion-2", "nai-diffusion"]
+        return modelNames.includes(model)
+    }
+
+    public static isHolaraAIModel = (model: string) => {
+        const modelNames = ["Aika", "Akasha", "Vibrance", "Aurora", "Chroma", "Tranquility", "Yami"]
+        return modelNames.includes(model)
     }
 }

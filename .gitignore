@@ -28,6 +28,7 @@ models/misc/*
 outputs/local
 outputs/models
 outputs/novel ai
+outputs/holara ai
 dialog/random.pt
 
 !models/diffusion/readme.txt

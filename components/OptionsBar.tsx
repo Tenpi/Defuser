@@ -77,6 +77,7 @@ const OptionsBar: React.FunctionComponent = (props) => {
 
     const getSizeDim = () => {
         if (generator === "novel ai") return "640"
+        if (generator === "holara ai") return "640"
         return "512"
     }
 
