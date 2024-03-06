@@ -25,18 +25,9 @@ models/promptgen/*
 models/detector/*
 models/vae/*
 models/misc/*
-outputs/image/*
-outputs/text/*
-outputs/image nsfw
-outputs/text nsfw
-outputs/lora
-outputs/dreambooth
-outputs/textual inversion
-outputs/hypernetwork
-outputs/checkpoint
-outputs/merged
-outputs/steps
-outputs/classifier
+outputs/local
+outputs/models
+outputs/novel ai
 dialog/random.pt
 
 !models/diffusion/readme.txt

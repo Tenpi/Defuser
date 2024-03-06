@@ -9,7 +9,7 @@ FormatContext, DeletionContext, TextualInversionsContext, HypernetworksContext, 
 ControlImageContext, ControlProcessorContext, ControlScaleContext, ControlGuessModeContext, ControlStartContext, ControlEndContext,
 ControlInvertContext, StyleFidelityContext, ControlReferenceImageContext, HorizontalExpandContext, VerticalExpandContext, UpscalerContext,
 ExpandImageContext, ExpandMaskContext, StartedContext, SocketContext, LoopModeContext, SavedPromptsContext, WatermarkContext, NSFWTabContext,
-InvisibleWatermarkContext, SauceNaoAPIKeyContext, RandomPromptModeContext} from "../Context"
+InvisibleWatermarkContext, SauceNaoAPIKeyContext, RandomPromptModeContext, GeneratorContext, NovelAITokenContext} from "../Context"
 import functions from "../structures/Functions"
 import checkbox from "../assets/icons/checkbox2.png"
 import checkboxChecked from "../assets/icons/checkbox2-checked.png"
@@ -77,6 +77,8 @@ const GenerateBar: React.FunctionComponent = (props) => {
     const {nsfwTab, setNSFWTab} = useContext(NSFWTabContext)
     const {saucenaoAPIKey, setSaucenaoAPIKey} = useContext(SauceNaoAPIKeyContext)
     const {randomPromptMode, setRandomPromptMode} = useContext(RandomPromptModeContext)
+    const {generator, setGenerator} = useContext(GeneratorContext)
+    const {novelAIToken, setNovelAIToken} = useContext(NovelAITokenContext)
     const ref = useRef<HTMLCanvasElement>(null)
     const history = useHistory()
 
@@ -117,6 +119,10 @@ const GenerateBar: React.FunctionComponent = (props) => {
         if (savedSaucenaoAPIKey) setSaucenaoAPIKey(savedSaucenaoAPIKey)
         const savedRandomPromptMode = localStorage.getItem("randomPromptMode")
         if (savedRandomPromptMode) setRandomPromptMode(savedRandomPromptMode)
+        const savedGenerator = localStorage.getItem("generator")
+        if (savedGenerator) setGenerator(savedGenerator)
+        const savedNovelAIToken = localStorage.getItem("novelAIToken")
+        if (savedNovelAIToken) setNovelAIToken(savedNovelAIToken)
     }, [])
 
     useEffect(() => {
@@ -246,7 +252,7 @@ const GenerateBar: React.FunctionComponent = (props) => {
     }
 
     const create = async (looping?: boolean) => {
-        const {width, height} = functions.getSizeDimensions(size)
+        const {width, height} = functions.getSizeDimensions(size, getSizeDim())
         const model_name = modelName
         const vae_name = vaeName
         const clip_skip = clipSkip
@@ -264,9 +270,12 @@ const GenerateBar: React.FunctionComponent = (props) => {
         const control_reference_image = controlReferenceImage
         const style_fidelity = styleFidelity
         const invisible_watermark = invisibleWatermark
+        const novelai_token = novelAIToken
+        const nsfw_tab = nsfwTab
         const json = {prompt, negative_prompt, steps, cfg, width, height, denoise, seed, sampler, amount, model_name, vae_name, 
         clip_skip, processing, format, textual_inversions, hypernetworks, loras, control_processor, control_scale, guess_mode,
-        control_start, control_end, style_fidelity, control_reference_image, upscaler, nsfwTab, watermark, invisible_watermark}
+        control_start, control_end, style_fidelity, control_reference_image, upscaler, nsfw_tab, watermark, invisible_watermark,
+        generator, novelai_token}
         if (expandImage) json.denoise = 1.0
         const form = new FormData()
         form.append("data", JSON.stringify(json))
@@ -333,7 +342,12 @@ const GenerateBar: React.FunctionComponent = (props) => {
         if (denoise) setDenoise(Number(denoise))
         if (model) setModelName(model)
         if (vae) setVAEName(vae)
-        if (size) setSize(functions.getSizeDimensionsReverse(Number(size.split("x")[1])))
+        if (size) setSize(functions.getSizeDimensionsReverse(Number(size.split("x")[1]), getSizeDim()))
+        if (model.includes("nai-diffusion")) {
+            if (generator !== "novel ai") setGenerator("novel ai")
+        } else {
+            if (generator !== "local") setGenerator("local")
+        }
     }
 
     const randomizePrompt = async () => {
@@ -364,7 +378,12 @@ const GenerateBar: React.FunctionComponent = (props) => {
         return () => {
             socket.off("repeat generation", repeatGeneration)
         }
-    }, [socket, loopMode, prompt, negativePrompt, savedPrompts, loras, hypernetworks, textualInversions])
+    }, [socket, loopMode, prompt, negativePrompt, savedPrompts, loras, hypernetworks, textualInversions, generator])
+
+    const getSizeDim = () => {
+        if (generator === "novel ai") return "640"
+        return "512"
+    }
 
     return (
         <div className="generate-bar" onMouseEnter={() => setEnableDrag(false)}>

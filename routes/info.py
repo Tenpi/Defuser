@@ -89,10 +89,20 @@ def get_lora_models():
     return get_model_files("lora")
 
 def get_outputs(folder: str):
-    files = os.listdir(os.path.join(dirname, f"../outputs/{folder}"))
+    dir = os.path.join(dirname, f"../outputs/local/{folder}")
+    if not os.path.exists(dir): return []
+    files = os.listdir(dir)
     files = list(filter(lambda file: not is_unwanted(file), files))
     files = sorted(files, key=lambda x: get_number_from_filename(x), reverse=True)
-    return list(map(lambda file: f"outputs/{folder}/{file}", files))
+    return list(map(lambda file: f"outputs/local/{folder}/{file}", files))
+
+def get_novelai_outputs(folder: str):
+    dir = os.path.join(dirname, f"../outputs/novel ai/{folder}")
+    if not os.path.exists(dir): return []
+    files = os.listdir(dir)
+    files = list(filter(lambda file: not is_unwanted(file), files))
+    files = sorted(files, key=lambda x: get_number_from_filename(x), reverse=True)
+    return list(map(lambda file: f"outputs/novel ai/{folder}/{file}", files))
 
 @app.route("/all-outputs")
 def get_all_outputs():
@@ -106,6 +116,21 @@ def get_all_nsfw_outputs():
 def get_all_image_outputs():
     image_outputs = get_outputs("image")
     image_nsfw_outputs = get_outputs("image nsfw")
+    all_outputs = image_outputs + image_nsfw_outputs
+    return sorted(all_outputs, key=lambda x: os.path.getmtime(x), reverse=True)
+
+@app.route("/all-novelai-outputs")
+def get_all_novelai_outputs():
+    return get_novelai_outputs("text")
+
+@app.route("/all-novelai-nsfw-outputs")
+def get_all_novelai_nsfw_outputs():
+    return get_novelai_outputs("text nsfw")
+
+@app.route("/all-novelai-image-outputs")
+def get_all_novelai_image_outputs():
+    image_outputs = get_novelai_outputs("image")
+    image_nsfw_outputs = get_novelai_outputs("image nsfw")
     all_outputs = image_outputs + image_nsfw_outputs
     return sorted(all_outputs, key=lambda x: os.path.getmtime(x), reverse=True)
 
@@ -205,7 +230,8 @@ def similar_images():
     image = data["image"]
     image = os.path.join(dirname, f"../{image}")
     prompt = get_prompt(image)
-    all_images = get_outputs("text") + get_outputs("text nsfw")
+    all_images = get_outputs("text") + get_outputs("text nsfw") 
+    all_images += get_novelai_outputs("text") + get_novelai_outputs("text nsfw")
     images = []
     for img in all_images:
         prompt_check = get_prompt(img)

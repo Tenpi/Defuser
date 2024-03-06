@@ -1,14 +1,11 @@
 from urllib import request
 import flask      
 from __main__ import app, socketio
-import random
 import os
 import torch
-from torchvision.transforms.functional import pil_to_tensor
-from .functions import next_index, is_nsfw, get_normalized_dimensions, is_image, get_number_from_filename
+from .functions import next_index, is_nsfw, get_normalized_dimensions, is_image, get_number_from_filename, get_seed, append_info, upscale
 from .invisiblewatermark import encode_watermark
 from .info import get_diffusion_models, get_vae_models, get_clip_model
-import numpy as np
 from diffusers import StableDiffusionPipeline, StableDiffusionImg2ImgPipeline, StableDiffusionInpaintPipeline, StableDiffusionXLPipeline, StableDiffusionXLImg2ImgPipeline, StableDiffusionXLInpaintPipeline, StableDiffusionControlNetImg2ImgPipeline, \
 StableDiffusionControlNetInpaintPipeline, StableDiffusionControlNetPipeline, StableDiffusionXLControlNetPipeline, StableDiffusionXLControlNetImg2ImgPipeline, StableDiffusionXLControlNetInpaintPipeline, ControlNetModel, UNet2DConditionModel, \
 EulerAncestralDiscreteScheduler, EulerDiscreteScheduler, DDPMScheduler, DDIMScheduler, UniPCMultistepScheduler, DEISMultistepScheduler, DPMSolverMultistepScheduler, \
@@ -17,20 +14,15 @@ from diffusers.utils import export_to_gif
 from .stable_diffusion_controlnet_reference import StableDiffusionControlNetReferencePipeline
 from .stable_diffusion_xl_reference import StableDiffusionXLReferencePipeline
 from .hypernet import load_hypernet, add_hypernet, clear_hypernets
-from transformers import CLIPTextModel
+from .external import generate_novelai, update_ext_upscaling, update_ext_infinite
 from compel import Compel, ReturnedEmbeddingsType, DiffusersTextualInversionManager
-from PIL import Image, PngImagePlugin
-import subprocess
+from PIL import Image
 import pathlib
-import piexif
-import piexif.helper
 import json
-from io import BytesIO
 from itertools import chain
 import inspect
 import ctypes
 import threading
-import platform
 import asyncio
 import gc
 
@@ -50,56 +42,6 @@ dtype = torch.float32
 controlnet = None
 control_processor = "none"
 motion_adapter = None
-
-def append_info(image: str, info: dict):
-    ext = pathlib.Path(image).suffix
-    img = Image.open(image)
-    if ext == ".png":
-        pnginfo = PngImagePlugin.PngInfo()
-        for key, value in (info).items():
-            pnginfo.add_text(key, str(value))
-        img.save(image, pnginfo=pnginfo)
-    else:
-        info_list = list()
-        for key, value in (info).items():
-            info_list.append(f"{key}: {str(value)}")
-        exif = piexif.dump({
-            "Exif": {piexif.ExifIFD.UserComment: piexif.helper.UserComment.dump("\n".join(info_list), encoding="unicode")}
-        })
-        piexif.insert(exif, image)
-
-def upscale(image: str, upscaler: str, video: bool = False):
-    if upscaler == "waifu2x":
-        program = os.path.join(dirname, "../models/upscaler/waifu2x-ncnn-vulkan")
-        if platform.system() == "Windows":
-            program = os.path.join(dirname, "../models/upscaler/waifu2x-ncnn-vulkan.exe")
-        if platform.system() == "Darwin":
-            program = os.path.join(dirname, "../models/upscaler/waifu2x-ncnn-vulkan.app")
-        format = pathlib.Path(image).suffix.replace(".", "")
-        subprocess.call([program, "-i", image, "-o", image, "-s", "4", "-f", format])
-    elif upscaler == "real-esrgan":
-        program = os.path.join(dirname, "../models/upscaler/realesrgan-ncnn-vulkan")
-        if platform.system() == "Windows":
-            program = os.path.join(dirname, "../models/upscaler/realesrgan-ncnn-vulkan.exe")
-        if platform.system() == "Darwin":
-            program = os.path.join(dirname, "../models/upscaler/realesrgan-ncnn-vulkan.app")
-        models = os.path.join(dirname, "../models/upscaler/models")
-        network = "realesr-animevideov3" if video else "realesrgan-x4plus-anime"
-        format = pathlib.Path(image).suffix.replace(".", "")
-        subprocess.call([program, "-i", image, "-o", image, "-s", "4", "-f", format, "-m", models, "-n", network])
-    elif upscaler == "real-cugan":
-        program = os.path.join(dirname, "../models/upscaler/realcugan-ncnn-vulkan")
-        if platform.system() == "Windows":
-            program = os.path.join(dirname, "../models/upscaler/realcugan-ncnn-vulkan.exe")
-        if platform.system() == "Darwin":
-            program = os.path.join(dirname, "../models/upscaler/realcugan-ncnn-vulkan.app")
-        format = pathlib.Path(image).suffix.replace(".", "")
-        subprocess.call([program, "-i", image, "-o", image, "-s", "4", "-f", format])
-
-def get_seed(seed):
-    if not seed or seed == -1:
-        return int(random.randrange(4294967294))
-    return int(seed)
 
 def get_motion_adapter():
     global motion_adapter
@@ -365,6 +307,7 @@ def update_infinite():
     global infinite
     data = flask.request.json
     infinite = data["infinite"]
+    update_ext_infinite(infinite)
     return "done"
 
 @app.route("/update-upscaling", methods=["POST"])
@@ -372,6 +315,7 @@ def update_upscaling():
     global upscaling
     data = flask.request.json
     upscaling = data["upscaling"]
+    update_ext_upscaling(upscaling)
     return "done"
 
 @app.route("/update-precision", methods=["POST"])
@@ -386,7 +330,7 @@ def update_precision():
     return "done"
 
 async def clear_step_frames():
-    step_dir = os.path.join(dirname, f"../outputs/steps")
+    step_dir = os.path.join(dirname, f"../outputs/local/steps")
     images = os.listdir(step_dir)
     images = list(filter(lambda file: is_image(file, False), images))
     images = sorted(images, key=lambda x: get_number_from_filename(x), reverse=False)
@@ -395,7 +339,7 @@ async def clear_step_frames():
         os.remove(image)
 
 async def generate_step_animation():
-    step_dir = os.path.join(dirname, f"../outputs/steps")
+    step_dir = os.path.join(dirname, f"../outputs/local/steps")
     images = os.listdir(step_dir)
     images = list(filter(lambda file: is_image(file, False), images))
     images = sorted(images, key=lambda x: get_number_from_filename(x), reverse=False)
@@ -403,17 +347,22 @@ async def generate_step_animation():
     frames = list(map(lambda image: Image.open(image).convert("RGB"), images))
     gif_path = os.path.join(step_dir, "step.gif")
     frames[0].save(gif_path, save_all=True, append_images=frames[1:], duration=100, loop=0)
-    socketio.emit("step animation complete", {"path": f"/outputs/steps/step.gif"})
+    socketio.emit("step animation complete", {"path": f"/outputs/local/steps/step.gif"})
     
 
 def generate(request_data, request_files):
     global gen_thread
     global device
+    global infinite
+    global upscaling
     gen_thread = threading.get_ident()
     mode = "text"
     data = json.loads(request_data)
 
     asyncio.run(clear_step_frames())
+    generator_type = data["generator"] if "generator" in data else "local"
+    if generator_type == "novel ai":
+        return generate_novelai(data, request_files)
                 
     seed = get_seed(data["seed"]) if "seed" in data else get_seed(-1)
     amount = int(data["amount"]) if "amount" in data else 1
@@ -443,7 +392,7 @@ def generate(request_data, request_files):
     upscaler = data["upscaler"] if "upscaler" in data else ""
     watermark = data["watermark"] if "watermark" in data else False
     invisible_watermark = data["invisible_watermark"] if "invisible_watermark" in data else True
-    nsfw_enabled = data["nsfwTab"] if "nsfwTab" in data else False
+    nsfw_enabled = data["nsfw_tab"] if "nsfw_tab" in data else False
 
     xl = True if "xl" in model_name.lower() else False
 
@@ -587,7 +536,7 @@ def generate(request_data, request_files):
             if sampler == "heun":
                 total_steps = int(total_steps * 2)
             socketio.emit("step progress", {"step": step, "total_step": total_steps, "width": w, "height": h, "image": pixels})
-            step_dir = os.path.join(dirname, f"../outputs/steps")
+            step_dir = os.path.join(dirname, f"../outputs/local/steps")
             pathlib.Path(step_dir).mkdir(parents=True, exist_ok=True)
             img_path = os.path.join(step_dir, f"step{step}.png")
             image.save(img_path)
@@ -633,7 +582,7 @@ def generate(request_data, request_files):
                     callback_on_step_end=step_progress,
                     cross_attention_kwargs=cross_attention_kwargs
                 ).images[0]
-            dir_path = os.path.join(dirname, f"../outputs/{folder}")
+            dir_path = os.path.join(dirname, f"../outputs/local/{folder}")
             pathlib.Path(dir_path).mkdir(parents=True, exist_ok=True)
             out_path = os.path.join(dir_path, f"image{next_index(dir_path)}.{format}")
             image.save(out_path)
@@ -647,7 +596,7 @@ def generate(request_data, request_files):
             info = {"Prompt": prompt, "Negative Prompt": negative_prompt, "Size": f"{width}x{height}", "Model": model_name, 
                      "VAE": vae_name, "Steps": steps, "CFG": cfg, "Sampler": sampler, "Clip Skip": clip_skip, "Seed": seed}
             append_info(out_path, info)
-            socketio.emit("image complete", {"image": f"/outputs/{folder}/{os.path.basename(out_path)}", "needs_watermark": watermark})
+            socketio.emit("image complete", {"image": f"/outputs/local/{folder}/{os.path.basename(out_path)}", "needs_watermark": watermark})
             images.append(out_path)
             seed += 1
         elif mode == "image":
@@ -687,7 +636,7 @@ def generate(request_data, request_files):
                     callback_on_step_end=step_progress,
                     cross_attention_kwargs=cross_attention_kwargs
                 ).images[0]
-            dir_path = os.path.join(dirname, f"../outputs/{folder}")
+            dir_path = os.path.join(dirname, f"../outputs/local/{folder}")
             pathlib.Path(dir_path).mkdir(parents=True, exist_ok=True)
             out_path = os.path.join(dir_path, f"image{next_index(dir_path)}.{format}")
             image.save(out_path)
@@ -702,7 +651,7 @@ def generate(request_data, request_files):
                     "Model": model_name, "VAE": vae_name, "Steps": steps, "CFG": cfg, "Sampler": sampler, "Clip Skip": clip_skip, 
                     "Seed": seed}
             append_info(out_path, info)
-            socketio.emit("image complete", {"image": f"/outputs/{folder}/{os.path.basename(out_path)}", "needs_watermark": watermark})
+            socketio.emit("image complete", {"image": f"/outputs/local/{folder}/{os.path.basename(out_path)}", "needs_watermark": watermark})
             images.append(out_path)
             seed += 1
         elif mode == "inpaint":
@@ -749,7 +698,7 @@ def generate(request_data, request_files):
                     callback_on_step_end=step_progress,
                     cross_attention_kwargs=cross_attention_kwargs
                 ).images[0]
-            dir_path = os.path.join(dirname, f"../outputs/{folder}")
+            dir_path = os.path.join(dirname, f"../outputs/local/{folder}")
             pathlib.Path(dir_path).mkdir(parents=True, exist_ok=True)
             out_path = os.path.join(dir_path, f"image{next_index(dir_path)}.{format}")
             image.save(out_path)
@@ -764,7 +713,7 @@ def generate(request_data, request_files):
                     "Model": model_name, "VAE": vae_name, "Steps": steps, "CFG": cfg, "Sampler": sampler, "Clip Skip": clip_skip, 
                     "Seed": seed}
             append_info(out_path, info)
-            socketio.emit("image complete", {"image": f"/outputs/{folder}/{os.path.basename(out_path)}", "needs_watermark": watermark})
+            socketio.emit("image complete", {"image": f"/outputs/local/{folder}/{os.path.basename(out_path)}", "needs_watermark": watermark})
             images.append(out_path)
             seed += 1
         elif mode == "controlnet":
@@ -810,7 +759,7 @@ def generate(request_data, request_files):
                     control_guidance_start=control_start,
                     control_guidance_end=control_end
                 ).images[0]
-            dir_path = os.path.join(dirname, f"../outputs/{folder}")
+            dir_path = os.path.join(dirname, f"../outputs/local/{folder}")
             pathlib.Path(dir_path).mkdir(parents=True, exist_ok=True)
             out_path = os.path.join(dir_path, f"image{next_index(dir_path)}.{format}")
             image.save(out_path)
@@ -825,7 +774,7 @@ def generate(request_data, request_files):
                     "Model": model_name, "VAE": vae_name, "Steps": steps, "CFG": cfg, "Sampler": sampler, "Clip Skip": clip_skip, 
                     "Seed": seed}
             append_info(out_path, info)
-            socketio.emit("image complete", {"image": f"/outputs/{folder}/{os.path.basename(out_path)}", "needs_watermark": watermark})
+            socketio.emit("image complete", {"image": f"/outputs/local/{folder}/{os.path.basename(out_path)}", "needs_watermark": watermark})
             images.append(out_path)
             seed += 1
         elif mode == "controlnet image":
@@ -876,7 +825,7 @@ def generate(request_data, request_files):
                     control_guidance_end=control_end
                 ).images[0]
             folder = "image"
-            dir_path = os.path.join(dirname, f"../outputs/{folder}")
+            dir_path = os.path.join(dirname, f"../outputs/local/{folder}")
             pathlib.Path(dir_path).mkdir(parents=True, exist_ok=True)
             out_path = os.path.join(dir_path, f"image{next_index(dir_path)}.{format}")
             image.save(out_path)
@@ -891,7 +840,7 @@ def generate(request_data, request_files):
                     "Model": model_name, "VAE": vae_name, "Steps": steps, "CFG": cfg, "Sampler": sampler, "Clip Skip": clip_skip, 
                     "Seed": seed}
             append_info(out_path, info)
-            socketio.emit("image complete", {"image": f"/outputs/{folder}/{os.path.basename(out_path)}", "needs_watermark": watermark})
+            socketio.emit("image complete", {"image": f"/outputs/local/{folder}/{os.path.basename(out_path)}", "needs_watermark": watermark})
             images.append(out_path)
             seed += 1
         elif mode == "controlnet inpaint":
@@ -945,7 +894,7 @@ def generate(request_data, request_files):
                     control_guidance_end=control_end
                 ).images[0]
             folder = "image"
-            dir_path = os.path.join(dirname, f"../outputs/{folder}")
+            dir_path = os.path.join(dirname, f"../outputs/local/{folder}")
             pathlib.Path(dir_path).mkdir(parents=True, exist_ok=True)
             out_path = os.path.join(dir_path, f"image{next_index(dir_path)}.{format}")
             image.save(out_path)
@@ -960,7 +909,7 @@ def generate(request_data, request_files):
                     "Model": model_name, "VAE": vae_name, "Steps": steps, "CFG": cfg, "Sampler": sampler, "Clip Skip": clip_skip, 
                     "Seed": seed}
             append_info(out_path, info)
-            socketio.emit("image complete", {"image": f"/outputs/{folder}/{os.path.basename(out_path)}", "needs_watermark": watermark})
+            socketio.emit("image complete", {"image": f"/outputs/local/{folder}/{os.path.basename(out_path)}", "needs_watermark": watermark})
             images.append(out_path)
             seed += 1
         elif mode == "controlnet reference":
@@ -1006,7 +955,7 @@ def generate(request_data, request_files):
                     reference_attn=True,
                     reference_adain=True
                 ).images[0]
-            dir_path = os.path.join(dirname, f"../outputs/{folder}")
+            dir_path = os.path.join(dirname, f"../outputs/local/{folder}")
             pathlib.Path(dir_path).mkdir(parents=True, exist_ok=True)
             out_path = os.path.join(dir_path, f"image{next_index(dir_path)}.{format}")
             image.save(out_path)
@@ -1021,7 +970,7 @@ def generate(request_data, request_files):
                     "Model": model_name, "VAE": vae_name, "Steps": steps, "CFG": cfg, "Sampler": sampler, "Clip Skip": clip_skip, 
                     "Seed": seed}
             append_info(out_path, info)
-            socketio.emit("image complete", {"image": f"/outputs/{folder}/{os.path.basename(out_path)}", "needs_watermark": watermark})
+            socketio.emit("image complete", {"image": f"/outputs/local/{folder}/{os.path.basename(out_path)}", "needs_watermark": watermark})
             images.append(out_path)
             seed += 1
         elif mode == "animatediff":
@@ -1041,11 +990,11 @@ def generate(request_data, request_files):
                 callback_on_step_end=step_progress,
                 cross_attention_kwargs=cross_attention_kwargs
             ).frames[0]
-            dir_path = os.path.join(dirname, f"../outputs/{folder}")
+            dir_path = os.path.join(dirname, f"../outputs/local/{folder}")
             pathlib.Path(dir_path).mkdir(parents=True, exist_ok=True)
             out_path = os.path.join(dir_path, f"image{next_index(dir_path)}.{format}")
             export_to_gif(frames, out_path)
-            socketio.emit("image complete", {"image": f"/outputs/{folder}/{os.path.basename(out_path)}", "needs_watermark": watermark})
+            socketio.emit("image complete", {"image": f"/outputs/local/{folder}/{os.path.basename(out_path)}", "needs_watermark": watermark})
             images.append(out_path)
             seed += 1
     gc.collect()

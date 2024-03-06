@@ -64,7 +64,7 @@ def start_image_classifier():
     gradient_accumulation_steps = data["gradient_accumulation_steps"]
     lr_scheduler_type = data["learning_function"]
     resolution = data["resolution"] 
-    output_dir = os.path.join(dirname, f"../outputs/classifier/{pathlib.Path(train_dir).stem}")
+    output_dir = os.path.join(dirname, f"../outputs/models/classifier/{pathlib.Path(train_dir).stem}")
     pathlib.Path(output_dir).mkdir(parents=True, exist_ok=True)
 
     thread = threading.Thread(target=image_classifier, args=(train_dir, output_dir, num_train_epochs, learning_rate, 
@@ -111,13 +111,13 @@ def simplify_sketch(image, format):
     if not simplify_model:
         simplify_model = SketchSimplificationModel()
 
-    dir_path = os.path.join(dirname, f"../outputs/image")
+    dir_path = os.path.join(dirname, f"../outputs/local/image")
     pathlib.Path(dir_path).mkdir(parents=True, exist_ok=True)
     out_path = os.path.join(dir_path, f"image{next_index(dir_path)}.{format}")
     simplify_model(img, out_path)
     compressed = Image.open(out_path)
     compressed.save(out_path, quality=90, optimize=True)
-    socketio.emit("train complete", {"image": f"/outputs/image/{os.path.basename(out_path)}"})
+    socketio.emit("train complete", {"image": f"/outputs/local/image/{os.path.basename(out_path)}"})
     return "done"
 
 @app.route("/simplify-sketch", methods=["POST"])
@@ -138,14 +138,14 @@ def run_shade_sketch(image, format, direction):
     gen_thread = threading.get_ident()
     socketio.emit("train starting")
     img = Image.open(BytesIO(base64.b64decode(image + "=="))).convert("RGB")
-    dir_path = os.path.join(dirname, f"../outputs/image")
+    dir_path = os.path.join(dirname, f"../outputs/local/image")
     pathlib.Path(dir_path).mkdir(parents=True, exist_ok=True)
     
     out_path = os.path.join(dir_path, f"image{next_index(dir_path)}.{format}")
     shade_sketch(img, out_path, direction)
     compressed = Image.open(out_path)
     compressed.save(out_path, quality=90, optimize=True)
-    socketio.emit("train complete", {"image": f"/outputs/image/{os.path.basename(out_path)}"})
+    socketio.emit("train complete", {"image": f"/outputs/local/image/{os.path.basename(out_path)}"})
     return "done"
 
 @app.route("/shade-sketch", methods=["POST"])
@@ -168,14 +168,14 @@ def run_colorize_sketch(sketch, style, format):
     socketio.emit("train starting")
     sketch_img = Image.open(BytesIO(base64.b64decode(sketch + "=="))).convert("RGB")
     style_img = Image.open(BytesIO(base64.b64decode(style + "=="))).convert("RGB")
-    dir_path = os.path.join(dirname, f"../outputs/image")
+    dir_path = os.path.join(dirname, f"../outputs/local/image")
     pathlib.Path(dir_path).mkdir(parents=True, exist_ok=True)
     out_path = os.path.join(dir_path, f"image{next_index(dir_path)}.{format}")
 
     colorize_sketch(sketch_img, style_img, out_path)
     compressed = Image.open(out_path)
     compressed.save(out_path, quality=90, optimize=True)
-    socketio.emit("train complete", {"image": f"/outputs/image/{os.path.basename(out_path)}"})
+    socketio.emit("train complete", {"image": f"/outputs/local/image/{os.path.basename(out_path)}"})
     return "done"
 
 @app.route("/colorize-sketch", methods=["POST"])

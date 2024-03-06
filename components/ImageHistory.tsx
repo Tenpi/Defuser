@@ -3,7 +3,8 @@ import {useHistory} from "react-router-dom"
 import {HashLink as Link} from "react-router-hash-link"
 import favicon from "../assets/icons/favicon.png"
 import {EnableDragContext, MobileContext, SiteHueContext, SiteSaturationContext, SiteLightnessContext, ImagesContext,
-ReverseSortContext, SidebarTypeContext, NSFWImagesContext, ImageInputImagesContext, TabContext, ViewImagesContext} from "../Context"
+ReverseSortContext, SidebarTypeContext, NSFWImagesContext, ImageInputImagesContext, TabContext, ViewImagesContext, GeneratorContext,
+NovelAIImagesContext, NovelAINSFWImagesContext, NovelAIImageInputImagesContext} from "../Context"
 import functions from "../structures/Functions"
 import Image from "./Image"
 import "./styles/imagehistory.less"
@@ -22,6 +23,10 @@ const ImageHistory: React.FunctionComponent = (props) => {
     const {imageInputImages, setImageInputImages} = useContext(ImageInputImagesContext)
     const {viewImages, setViewImages} = useContext(ViewImagesContext)
     const {reverseSort, setReverseSort} = useContext(ReverseSortContext)
+    const {generator, setGenerator} = useContext(GeneratorContext)
+    const {novelAIImages, setNovelAIImages} = useContext(NovelAIImagesContext)
+    const {novelAINSFWImages, setNovelAINSFWImages} = useContext(NovelAINSFWImagesContext)
+    const {novelAIImageInputImages, setNovelAIImageInputImages} = useContext(NovelAIImageInputImagesContext)
     const {tab, setTab} = useContext(TabContext)
     const [slice, setSlice] = useState([])
     const [sliceIndex, setSliceIndex] = useState(0)
@@ -35,15 +40,30 @@ const ImageHistory: React.FunctionComponent = (props) => {
     useEffect(() => {
         const max = 100 + (sliceIndex * 100)
         if (sidebarType === "history") {
-            const slice = reverseSort ? images.slice(Math.max(images.length - max - 1, 0), images.length - 1) : images.slice(0, max)
+            let slice = []
+            if (generator === "novel ai") {
+                slice = reverseSort ? novelAIImages.slice(Math.max(novelAIImages.length - max - 1, 0), novelAIImages.length - 1) : novelAIImages.slice(0, max)
+            } else {
+                slice = reverseSort ? images.slice(Math.max(images.length - max - 1, 0), images.length - 1) : images.slice(0, max)
+            }
             setSlice(slice)
         }
         if (sidebarType === "nsfw") {
-            const slice = reverseSort ? nsfwImages.slice(Math.max(nsfwImages.length - max - 1, 0), nsfwImages.length - 1) : nsfwImages.slice(0, max)
+            let slice = []
+            if (generator === "novel ai") {
+                slice = reverseSort ? novelAINSFWImages.slice(Math.max(novelAINSFWImages.length - max - 1, 0), novelAINSFWImages.length - 1) : novelAINSFWImages.slice(0, max)
+            } else {
+                slice = reverseSort ? nsfwImages.slice(Math.max(nsfwImages.length - max - 1, 0), nsfwImages.length - 1) : nsfwImages.slice(0, max)
+            }
             setSlice(slice)
         }
         if (sidebarType === "image") {
-            const slice = reverseSort ? imageInputImages.slice(Math.max(imageInputImages.length - max - 1, 0), imageInputImages.length - 1) : imageInputImages.slice(0, max)
+            let slice = []
+            if (generator === "novel ai") {
+                slice = reverseSort ? novelAIImageInputImages.slice(Math.max(novelAIImageInputImages.length - max - 1, 0), novelAIImageInputImages.length - 1) : novelAIImageInputImages.slice(0, max)
+            } else {
+                slice = reverseSort ? imageInputImages.slice(Math.max(imageInputImages.length - max - 1, 0), imageInputImages.length - 1) : imageInputImages.slice(0, max)
+            }
             setSlice(slice)
         }
         if (sidebarType === "saved") {
@@ -52,7 +72,8 @@ const ImageHistory: React.FunctionComponent = (props) => {
             const slice = reverseSort ? saved.slice(Math.max(saved.length - max - 1, 0), saved.length - 1) : saved.slice(0, max)
             setSlice(slice)
         }
-    }, [sidebarType, images, nsfwImages, imageInputImages, reverseSort, sliceIndex])
+    }, [sidebarType, images, nsfwImages, imageInputImages, novelAIImages, novelAINSFWImages, 
+        novelAIImageInputImages, reverseSort, sliceIndex, generator])
 
     const handleScroll = (event: Event) => {
         if(!slice.length) return

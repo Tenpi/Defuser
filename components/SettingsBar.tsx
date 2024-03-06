@@ -4,7 +4,7 @@ import {HashLink as Link} from "react-router-hash-link"
 import favicon from "../assets/icons/favicon.png"
 import {EnableDragContext, MobileContext, SiteHueContext, SiteSaturationContext, SiteLightnessContext, NegativePromptContext, ProcessingContext,
 InterrogatorNameContext, DeletionContext, FormatContext, PrecisionContext, LoopModeContext, WatermarkContext, UpscalerContext, NSFWTabContext,
-InvisibleWatermarkContext, SauceNaoAPIKeyContext, RandomPromptModeContext} from "../Context"
+InvisibleWatermarkContext, SauceNaoAPIKeyContext, RandomPromptModeContext, GeneratorContext, NovelAITokenContext} from "../Context"
 import functions from "../structures/Functions"
 import {Dropdown, DropdownButton} from "react-bootstrap"
 import checkbox from "../assets/icons/checkbox2.png"
@@ -32,6 +32,8 @@ const SettingsBar: React.FunctionComponent = (props) => {
     const [convertPrompt, setConvertPrompt] = useState("")
     const {saucenaoAPIKey, setSaucenaoAPIKey} = useContext(SauceNaoAPIKeyContext)
     const {randomPromptMode, setRandomPromptMode} = useContext(RandomPromptModeContext)
+    const {generator, setGenerator} = useContext(GeneratorContext)
+    const {novelAIToken, setNovelAIToken} = useContext(NovelAITokenContext)
     const ref = useRef<HTMLCanvasElement>(null)
     const history = useHistory()
 
@@ -66,6 +68,10 @@ const SettingsBar: React.FunctionComponent = (props) => {
         if (savedSaucenaoAPIKey) setSaucenaoAPIKey(savedSaucenaoAPIKey)
         const savedRandomPromptMode = localStorage.getItem("randomPromptMode")
         if (savedRandomPromptMode) setRandomPromptMode(savedRandomPromptMode)
+        const savedGenerator = localStorage.getItem("generator")
+        if (savedGenerator) setGenerator(savedGenerator)
+        const savedNovelAIToken = localStorage.getItem("novelAIToken")
+        if (savedNovelAIToken) setNovelAIToken(savedNovelAIToken)
     }, [])
 
     useEffect(() => {
@@ -82,8 +88,11 @@ const SettingsBar: React.FunctionComponent = (props) => {
         localStorage.setItem("invisibleWatermark", String(invisibleWatermark))
         localStorage.setItem("saucenaoAPIKey", String(saucenaoAPIKey))
         localStorage.setItem("randomPromptMode", String(randomPromptMode))
+        localStorage.setItem("generator", String(generator))
+        localStorage.setItem("novelAIToken", String(novelAIToken))
     }, [negativePrompt, interrogatorName, processing, format, deletion, precision, loopMode, 
-        upscaler, nsfwTab, invisibleWatermark, watermark, saucenaoAPIKey, randomPromptMode])
+        upscaler, nsfwTab, invisibleWatermark, watermark, saucenaoAPIKey, randomPromptMode,
+        generator, novelAIToken])
 
     const resetNegativePrompt = () => {
         setNegativePrompt("")
@@ -101,8 +110,20 @@ const SettingsBar: React.FunctionComponent = (props) => {
         if (upscaler === "real-cugan") return "Real-CUGAN"
     }
 
+    const getGenerator = () => {
+        if (generator === "local") return "Local"
+        if (generator === "novel ai") return "Novel AI"
+    }
+
     return (
         <div className="settings-bar" onMouseEnter={() => setEnableDrag(false)}>
+            <div className="settings-bar-row">
+                <span className="settings-bar-text">Generator:</span>
+                <DropdownButton title={getGenerator()} drop="down" className="checkpoint-selector">
+                    <Dropdown.Item active={generator === "local"} onClick={() => setGenerator("local")}>Local</Dropdown.Item>
+                    <Dropdown.Item active={generator === "novel ai"} onClick={() => setGenerator("novel ai")}>Novel AI</Dropdown.Item>
+                </DropdownButton>
+            </div>
             <div className="settings-bar-row">
                 <span className="settings-bar-text">Processing:</span>
                 <DropdownButton title={processing.toUpperCase()} drop="down" className="checkpoint-selector">
@@ -198,6 +219,10 @@ const SettingsBar: React.FunctionComponent = (props) => {
             <div className="settings-bar-row">
                 <span className="settings-bar-text">SauceNao Key:</span>
                 <input className="settings-bar-input" spellCheck={false} value={saucenaoAPIKey} onChange={(event) => setSaucenaoAPIKey(event.target.value)}/>
+            </div>
+            <div className="settings-bar-row">
+                <span className="settings-bar-text">Novel AI Token:</span>
+                <input className="settings-bar-input" spellCheck={false} value={novelAIToken} onChange={(event) => setNovelAIToken(event.target.value)}/>
             </div>
         </div>
     )

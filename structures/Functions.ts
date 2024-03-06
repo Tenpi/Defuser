@@ -846,12 +846,19 @@ export default class Functions {
         return c
     }
 
-    public static getSizeDimensions = (value: number) => {
-        const ranges = [
+    public static getSizeDimensions = (value: number, dimension: "512" | "640" = "512") => {
+        let ranges = [
             {value: -1, width: 640, height: 384},
             {value: 0, width: 512, height: 512},
             {value: 1, width: 384, height: 640},
         ]
+        if (dimension === "640") {
+            ranges = [
+                {value: -1, width: 768, height: 512},
+                {value: 0, width: 640, height: 640},
+                {value: 1, width: 512, height: 768}
+            ]
+        }
         for (let i = 0; i < ranges.length - 1; i++) {
             if (value >= ranges[i].value && value < ranges[i + 1].value) {
               const currentRange = ranges[i]
@@ -872,9 +879,13 @@ export default class Functions {
         return {width: 0, height: 0}
     }
 
-    public static getSizeDimensionsReverse = (height: number) => {
+    public static getSizeDimensionsReverse = (height: number, dimension: "512" | "640" = "512") => {
         let oldMin = 384
         let oldMax = 640
+        if (dimension === "640") {
+            oldMin = 512
+            oldMax = 768
+        }
         let newMin = -1
         let newMax = 1
         const oldRange = oldMax - oldMin
@@ -887,6 +898,58 @@ export default class Functions {
         const index = arr.indexOf(value)
         if (index > -1) {
           arr.splice(index, 1)
+        }
+        return arr
+    }
+
+    public static novelAISampler = (sampler: string) => {
+        if (sampler === "k_euler_ancestral") {
+            return "euler a"
+        } else if (sampler === "k_euler") {
+            return "euler"
+        } else if (sampler === "k_dpmpp_2m") {
+            return "dpm++"
+        } else if (sampler === "ddim_v3") {
+            return "ddim"
+        }
+    }
+
+    public static parseNovelAIMeta = (meta: any) => {
+        let arr = [] as any
+        const comment = meta.find((o: any) => o.name === "Comment")
+        const source = meta.find((o: any) => o.name === "Source")
+        const models = {
+            "Stable Diffusion 3B3287AF": "nai-diffusion",
+            "Stable Diffusion F1022D28": "nai-diffusion-2",
+            "Stable Diffusion XL C1E1DE52": "nai-diffusion-3"
+        }
+        const json = JSON.parse(comment.value)
+        if (json.prompt) {
+            arr.push(`Prompt: ${json.prompt}`)
+        } 
+        if (json.uc) {
+            arr.push(`Negative Prompt: ${json.uc}`)
+        } 
+        if (json.width && json.height) {
+            arr.push(`Size: ${json.width}x${json.height}`)
+        }
+        arr.push(`Model: ${models[source.value]}`)
+        arr.push(`VAE: None`)
+        if (json.steps) {
+            arr.push(`Steps: ${json.steps}`)
+        } 
+        if (json.scale) {
+            arr.push(`CFG: ${json.scale}`)
+        } 
+        if (json.strength) {
+            arr.push(`Denoise: ${json.strength}`)
+        } 
+        if (json.sampler) {
+            arr.push(`Sampler: ${Functions.novelAISampler(json.sampler)}`)
+        } 
+        arr.push(`Clip Skip: 2`)
+        if (json.seed) {
+            arr.push(`Seed: ${json.seed}`)
         }
         return arr
     }
@@ -924,6 +987,10 @@ export default class Functions {
                 } else if (meta[i].name?.toLowerCase() === "seed") {
                     arr.push(`Seed: ${meta[i].value}`)
                 }
+            }
+            if (!arr.length) {
+                const novelAI = meta.find((o: any) => o.value === "NovelAI")
+                if (novelAI) arr = Functions.parseNovelAIMeta(meta)
             }
             retStr = arr.join("\n")
         } else if (inMime === "image/jpeg") {
@@ -1007,8 +1074,6 @@ export default class Functions {
             const bracketMatch = promptBit.match(/(^\[).*(\]$)/)?.[0]
             if (floatMatch) {
                 let middleBit = promptBit.match(/(?<=\().*(?=:)/)?.[0] || ""
-                //const weights = Functions.getPromptWeights(Number(floatMatch))
-                //if (middleBit.includes(" ")) middleBit = `(${middleBit})`
                 middleBit = `(${middleBit})`
                 newPromptArr.push(middleBit + floatMatch)
             } else if (parenMatch) {
@@ -1020,14 +1085,14 @@ export default class Functions {
             } else if (braceMatch) {
                 const count = Functions.countWrapping(promptBit, "{", "}")
                 let middleBit = Functions.deleteWrapping(promptBit, count, "{", "}")
-                if (middleBit.includes(" ")) middleBit = `(${middleBit})`
-                const weights = "+".repeat(count)
+                middleBit = `(${middleBit})`
+                const weights = (1 * (1.05**count)).toFixed(2)
                 newPromptArr.push(middleBit + weights)
             } else if (bracketMatch) {
                 const count = Functions.countWrapping(promptBit, "[", "]")
                 let middleBit = Functions.deleteWrapping(promptBit, count, "[", "]")
-                if (middleBit.includes(" ")) middleBit = `(${middleBit})`
-                const weights = "-".repeat(count)
+                middleBit = `(${middleBit})`
+                const weights = (1 / (1.05**count)).toFixed(2)
                 newPromptArr.push(middleBit + weights)
             } else {
                 newPromptArr.push(promptArr[i].trim())

@@ -210,7 +210,7 @@ def start_textual_inversion():
     validation_prompt = data["validation_prompt"]
     validation_epochs = data["validation_epochs"]
     lr_scheduler = data["learning_function"]
-    output = os.path.join(dirname, f"../outputs/textual inversion/{token}")
+    output = os.path.join(dirname, f"../outputs/models/textual inversion/{token}")
     pathlib.Path(output).mkdir(parents=True, exist_ok=True)
     model_name = os.path.join(dirname, f"../models/diffusion/{model_name}")
 
@@ -249,7 +249,7 @@ def start_hypernetwork():
     validation_prompt = data["validation_prompt"]
     validation_epochs = data["validation_epochs"]
     lr_scheduler = data["learning_function"]
-    output = os.path.join(dirname, f"../outputs/hypernetwork/{instance_prompt}")
+    output = os.path.join(dirname, f"../outputs/models/hypernetwork/{instance_prompt}")
     pathlib.Path(output).mkdir(parents=True, exist_ok=True)
     model_name = os.path.join(dirname, f"../models/diffusion/{model_name}")
 
@@ -288,7 +288,7 @@ def start_lora():
     validation_prompt = data["validation_prompt"]
     validation_epochs = data["validation_epochs"]
     lr_scheduler = data["learning_function"]
-    output = os.path.join(dirname, f"../outputs/lora/{instance_prompt}")
+    output = os.path.join(dirname, f"../outputs/models/lora/{instance_prompt}")
     pathlib.Path(output).mkdir(parents=True, exist_ok=True)
     model_name = os.path.join(dirname, f"../models/diffusion/{model_name}")
 
@@ -327,7 +327,7 @@ def start_dreambooth():
     validation_prompt = data["validation_prompt"]
     validation_epochs = data["validation_epochs"]
     lr_scheduler = data["learning_function"]
-    output = os.path.join(dirname, f"../outputs/dreambooth/{instance_prompt}")
+    output = os.path.join(dirname, f"../outputs/models/dreambooth/{instance_prompt}")
     pathlib.Path(output).mkdir(parents=True, exist_ok=True)
     model_name = os.path.join(dirname, f"../models/diffusion/{model_name}")
 
@@ -366,7 +366,7 @@ def start_checkpoint():
     validation_prompt = data["validation_prompt"]
     validation_epochs = data["validation_epochs"]
     lr_scheduler = data["learning_function"]
-    output = os.path.join(dirname, f"../outputs/checkpoint/{instance_prompt}")
+    output = os.path.join(dirname, f"../outputs/models/checkpoint/{instance_prompt}")
     pathlib.Path(output).mkdir(parents=True, exist_ok=True)
     model_name = os.path.join(dirname, f"../models/diffusion/{model_name}")
 
@@ -386,12 +386,12 @@ def merge_checkpoints(models, alpha, interpolation):
     for i, model in enumerate(models):
         if i != 0: name += "+"
         name += pathlib.Path(model).stem
-    output_dir = os.path.join(dirname, f"../outputs/merged")
+    output_dir = os.path.join(dirname, f"../outputs/models/merged")
     pathlib.Path(output_dir).mkdir(parents=True, exist_ok=True)
     output = os.path.join(output_dir, f"{name}.ckpt")
     merge(models, output, alpha=alpha, interp=interpolation)
     socketio.emit("train complete")
-    show_in_folder(f"outputs/merged/{name}.ckpt", "")
+    show_in_folder(f"outputs/models/merged/{name}.ckpt", "")
     return "done"
 
 @app.route("/merge", methods=["POST"])

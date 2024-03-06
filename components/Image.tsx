@@ -2,7 +2,7 @@ import React, {useContext, useEffect, useState, useRef} from "react"
 import {useHistory} from "react-router-dom"
 import {HashLink as Link} from "react-router-hash-link"
 import favicon from "../assets/icons/favicon.png"
-import {EnableDragContext, MobileContext, SiteHueContext, SiteSaturationContext, SiteLightnessContext, ImagesContext, UpdateImagesContext, PromptContext, NegativePromptContext, DeletionContext,
+import {EnableDragContext, MobileContext, SiteHueContext, SiteSaturationContext, SiteLightnessContext, UpdateImagesContext, PromptContext, NegativePromptContext, DeletionContext,
 StepsContext, CFGContext, ModelNameContext, SizeContext, SamplerContext, DenoiseContext, InterrogateTextContext, UpdateSavedContext, ClipSkipContext, PreviewImageContext, TabContext,
 SeedContext, VAENameContext, ImageBrightnessContext, ImageContrastContext} from "../Context"
 import functions from "../structures/Functions"
@@ -84,28 +84,20 @@ const Image: React.FunctionComponent<ImageHistoryImageProps> = (props) => {
             const meta = imagesMeta.readMeta(Buffer.from(arrayBuffer), inMime)
             for (let i = 0; i < meta.length; i++) {
                 if (meta[i].name?.toLowerCase() === "prompt") {
-                    //setPrompt(meta[i].value)
                     arr.push(`Prompt: ${meta[i].value}`)
                 } else if (meta[i].name?.toLowerCase() === "negative prompt") {
                     arr.push(`Negative Prompt: ${meta[i].value}`)
                 } else if (meta[i].name?.toLowerCase() === "size") {
-                    //const height = meta[i].value.split("x")[1]
-                    //setSize(functions.getSizeDimensionsReverse(Number(height)))
                     arr.push(`Size: ${meta[i].value}`)
                 } else if (meta[i].name?.toLowerCase() === "model") {
-                    //setModelName(meta[i].value)
                     arr.push(`Model: ${meta[i].value}`)
                 } else if (meta[i].name?.toLowerCase() === "vae") {
-                    //setVAEName(meta[i].value)
                     arr.push(`VAE: ${meta[i].value}`)
                 } else if (meta[i].name?.toLowerCase() === "steps") {
-                    //setSteps(meta[i].value)
                     arr.push(`Steps: ${meta[i].value}`)
                 } else if (meta[i].name?.toLowerCase() === "cfg") {
-                    //setCFG(meta[i].value)
                     arr.push(`CFG: ${meta[i].value}`)
                 } else if (meta[i].name?.toLowerCase() === "denoise") {
-                    //setDenoise(meta[i].value)
                     arr.push(`Denoise: ${meta[i].value}`)
                 } else if (meta[i].name?.toLowerCase() === "sampler") {
                     arr.push(`Sampler: ${meta[i].value}`)
@@ -125,15 +117,6 @@ const Image: React.FunctionComponent<ImageHistoryImageProps> = (props) => {
                     str +=  meta[i].value.replaceAll("UNICODE", "").replaceAll(/\u0000/g, "")
                 }
             }
-            /*const {prompt, negativePrompt, size, model, vae, denoise, steps, cfg, sampler, clipSkip} = functions.extractMetaValues(str)
-            if (prompt) setPrompt(prompt)
-            if (size) setSize(functions.getSizeDimensionsReverse(Number(size.split("x")[1])))
-            if (model) setModelName(model)
-            if (vae) setVAEName(vae)
-            if (denoise) setDenoise(Number(denoise))
-            if (steps) setSteps(Number(steps))
-            if (cfg) setCFG(Number(cfg))
-            if (clipSkip) setClipSkip(Number(clipSkip))*/
             setInterrogateText(str)
         } else {
             const form = new FormData()
@@ -142,15 +125,6 @@ const Image: React.FunctionComponent<ImageHistoryImageProps> = (props) => {
             form.append("image", file)
             const exif = await axios.post("get-exif", form).then((r) => r.data)
             const str = exif.replaceAll("UNICODE", "").replaceAll(/\u0000/g, "")
-            /*const {prompt, negativePrompt, size, model, vae, denoise, steps, cfg, sampler, clipSkip} = functions.extractMetaValues(str)
-            if (prompt) setPrompt(prompt)
-            if (size) setSize(functions.getSizeDimensionsReverse(Number(size.split("x")[1])))
-            if (model) setModelName(model)
-            if (vae) setVAEName(vae)
-            if (denoise) setDenoise(Number(denoise))
-            if (steps) setSteps(Number(steps))
-            if (cfg) setCFG(Number(cfg))
-            if (clipSkip) setClipSkip(Number(clipSkip))*/
             setInterrogateText(str)
         }
         setTab("generate")

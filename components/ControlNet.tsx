@@ -141,6 +141,10 @@ const ControlNet: React.FunctionComponent = (props) => {
             return (
                 <div className="control-image-options-container">
                     <div className="control-option-row">
+                        <span className="control-option-text">Reference Image?</span>
+                        <img className="control-checkbox" src={controlReferenceImage ? checkboxChecked : checkbox} onClick={() => setControlReferenceImage((prev: boolean) => !prev)} style={{filter: getFilter2()}}/>
+                    </div>
+                    <div className="control-option-row">
                         <span className="control-option-text">Invert?</span>
                         <img className="control-checkbox" src={controlInvert ? checkboxChecked : checkbox} onClick={() => setControlInvert((prev: boolean) => !prev)} style={{filter: getFilter2()}}/>
                     </div>

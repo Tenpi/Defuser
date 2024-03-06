@@ -3,7 +3,7 @@ import {useHistory} from "react-router-dom"
 import {HashLink as Link} from "react-router-hash-link"
 import favicon from "../assets/icons/favicon.png"
 import {EnableDragContext, MobileContext, SiteHueContext, SiteSaturationContext, SiteLightnessContext, ModelNameContext, ModelNamesContext,
-VAENameContext, VAENamesContext, TabContext} from "../Context"
+VAENameContext, VAENamesContext, TabContext, GeneratorContext} from "../Context"
 import functions from "../structures/Functions"
 import {Dropdown, DropdownButton} from "react-bootstrap"
 import checkpoint from "../assets/icons/checkpoint.png"
@@ -29,6 +29,7 @@ const CheckpointBar: React.FunctionComponent = (props) => {
     const {vaeName, setVAEName} = useContext(VAENameContext)
     const {vaeNames, setVAENames} = useContext(VAENamesContext)
     const {tab, setTab} = useContext(TabContext)
+    const {generator, setGenerator} = useContext(GeneratorContext)
     const ref = useRef<HTMLCanvasElement>(null)
     const history = useHistory()
 
@@ -41,8 +42,6 @@ const CheckpointBar: React.FunctionComponent = (props) => {
         if (savedModelName) setModelName(savedModelName)
         const savedVAEName = localStorage.getItem("vaeName")
         if (savedVAEName) setVAEName(savedVAEName)
-        updateModelNames(savedModelName === null)
-        updateVAENames(savedVAEName === null)
     }, [])
 
     useEffect(() => {
@@ -51,10 +50,26 @@ const CheckpointBar: React.FunctionComponent = (props) => {
     }, [modelName, vaeName])
 
     const updateModelNames = async (first?: boolean) => {
-        const modelNames = await axios.get("/diffusion-models").then((r) => r.data)
-        setModelNames(modelNames)
-        if (first) setModelName(modelNames[0])
+        if (generator === "novel ai") {
+            const modelNames = ["nai-diffusion-3", "nai-diffusion-2", "nai-diffusion"]
+            setModelNames(modelNames)
+            if (first) setModelName(modelNames[0])
+            if (!modelNames.includes(modelName)) setModelName(modelNames[0])
+        } else {
+            const modelNames = await axios.get("/diffusion-models").then((r) => r.data)
+            setModelNames(modelNames)
+            if (first) setModelName(modelNames[0])
+            if (!modelNames.includes(modelName)) setModelName(modelNames[0])
+        }
     }
+
+    useEffect(() => {
+        if (!modelName && !vaeName) return
+        if (generator) {
+            updateModelNames()
+            updateVAENames()
+        }
+    }, [generator, modelName, vaeName])
 
     const modelsJSX = () => {
         let jsx = [] as any
@@ -65,9 +80,17 @@ const CheckpointBar: React.FunctionComponent = (props) => {
     }
 
     const updateVAENames = async (first?: boolean) => {
-        const vaeNames = await axios.get("/vae-models").then((r) => r.data)
-        setVAENames(vaeNames)
-        if (first) setVAEName(vaeNames[0])
+        if (generator === "novel ai") {
+            const vaeNames = ["None"]
+            setVAENames(vaeNames)
+            if (first) setVAEName(vaeNames[0])
+            if (!vaeNames.includes(vaeName)) setVAEName(vaeNames[0])
+        } else {
+            const vaeNames = await axios.get("/vae-models").then((r) => r.data)
+            setVAENames(vaeNames)
+            if (first) setVAEName(vaeNames[0])
+            if (!vaeNames.includes(vaeName)) setVAEName(vaeNames[0])
+        }
     }
 
     const vaesJSX = () => {

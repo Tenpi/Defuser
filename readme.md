@@ -32,6 +32,7 @@ models is supported. It aims to be simple and fast to use.
 - Simplify and clean a rough sketch.
 - Shade a sketch from different lighting directions.
 - Colorize a sketch using reference image.
+- Change the generation source (local, Novel AI)
 
 ### Requirements
 

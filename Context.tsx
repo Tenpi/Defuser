@@ -111,6 +111,11 @@ export const SimplifyImageInputContext = React.createContext<any>(null)
 export const AIImageInputContext = React.createContext<any>(null)
 export const ColorizeSketchInputContext = React.createContext<any>(null)
 export const ColorizeStyleInputContext = React.createContext<any>(null)
+export const GeneratorContext = React.createContext<any>(null)
+export const NovelAITokenContext = React.createContext<any>(null)
+export const NovelAIImagesContext = React.createContext<any>(null)
+export const NovelAINSFWImagesContext = React.createContext<any>(null)
+export const NovelAIImageInputImagesContext = React.createContext<any>(null)
 
 const Context: React.FunctionComponent = (props: any) => {
     const [theme, setTheme] = useState("light")
@@ -199,7 +204,7 @@ const Context: React.FunctionComponent = (props: any) => {
     const [learningFunction, setLearningFunction] = useState("constant")
     const [trainRenderImage, setTrainRenderImage] = useState("")
     const [trainName, setTrainName] = useState("")
-    const [saucenaoAPIKey, setSaucenaoAPIKey] = useState("0458b69644c4fbab43f7c7b96724c98539303814")
+    const [saucenaoAPIKey, setSaucenaoAPIKey] = useState("")
     const [randomPromptMode, setRandomPromptMode] = useState("1girl")
     const [stepAnimation, setStepAnimation] = useState("")
     const [miscTab, setMiscTab] = useState("train")
@@ -211,9 +216,11 @@ const Context: React.FunctionComponent = (props: any) => {
     const [aiImageInput, setAIImageInput] = useState("")
     const [colorizeSketchInput, setColorizeSketchInput] = useState("")
     const [colorizeStyleInput, setColorizeStyleInput] = useState("")
+    const [novelAIToken, setNovelAIToken] = useState("")
 
     return (
         <>  
+            <NovelAITokenContext.Provider value={{novelAIToken, setNovelAIToken}}>
             <ColorizeStyleInputContext.Provider value={{colorizeStyleInput, setColorizeStyleInput}}>
             <ColorizeSketchInputContext.Provider value={{colorizeSketchInput, setColorizeSketchInput}}>
             <AIImageInputContext.Provider value={{aiImageInput, setAIImageInput}}>
@@ -411,6 +418,7 @@ const Context: React.FunctionComponent = (props: any) => {
             </AIImageInputContext.Provider>
             </ColorizeSketchInputContext.Provider>
             </ColorizeStyleInputContext.Provider>
+            </NovelAITokenContext.Provider>
         </>
     )
 }

@@ -128,7 +128,7 @@ def control_image():
         output_image = image
 
     if upscale_image:
-        dir_path = os.path.join(dirname, "../outputs/image")
+        dir_path = os.path.join(dirname, "../outputs/local/image")
         out_path = os.path.join(dir_path, f"image{next_index(dir_path)}.png")
         output_image.save(out_path)
         socketio.emit("image upscaling")
@@ -142,7 +142,7 @@ def control_image():
                 white_to_alpha(out_path)
             else:
                 black_to_alpha(out_path)
-        socketio.emit("image complete", {"image": f"/outputs/image/{os.path.basename(out_path)}"})
+        socketio.emit("image complete", {"image": f"/outputs/local/image/{os.path.basename(out_path)}"})
         return "done"
     else:
         img_io = BytesIO()

@@ -3,7 +3,7 @@ import {useHistory} from "react-router-dom"
 import {HashLink as Link} from "react-router-hash-link"
 import favicon from "../assets/icons/favicon.png"
 import {EnableDragContext, MobileContext, SiteHueContext, SiteSaturationContext, SiteLightnessContext, StepsContext,
-CFGContext, SizeContext, DenoiseContext, SamplerContext, SeedContext, InterrogateTextContext, ClipSkipContext} from "../Context"
+CFGContext, SizeContext, DenoiseContext, SamplerContext, SeedContext, InterrogateTextContext, ClipSkipContext, GeneratorContext} from "../Context"
 import functions from "../structures/Functions"
 import {Dropdown, DropdownButton} from "react-bootstrap"
 import stepsIcon from "../assets/icons/steps.png"
@@ -30,6 +30,7 @@ const OptionsBar: React.FunctionComponent = (props) => {
     const {sampler, setSampler} = useContext(SamplerContext)
     const {clipSkip, setClipSkip} = useContext(ClipSkipContext)
     const {interrogateText, setInterrogateText} = useContext(InterrogateTextContext)
+    const {generator, setGenerator} = useContext(GeneratorContext)
     const ref = useRef<HTMLCanvasElement>(null)
     const history = useHistory()
 
@@ -74,6 +75,44 @@ const OptionsBar: React.FunctionComponent = (props) => {
         return sampler.toUpperCase()
     }
 
+    const getSizeDim = () => {
+        if (generator === "novel ai") return "640"
+        return "512"
+    }
+
+    const getSamplerJSX = () => {
+        if (generator === "novel ai") {
+            return (<>
+                <Dropdown.Item active={sampler === "euler a"} onClick={() => setSampler("euler a")}>Euler A</Dropdown.Item>
+                <Dropdown.Item active={sampler === "euler"} onClick={() => setSampler("euler")}>Euler</Dropdown.Item>
+                <Dropdown.Item active={sampler === "dpm++"} onClick={() => setSampler("dpm++")}>DPM++</Dropdown.Item>
+                <Dropdown.Item active={sampler === "ddim"} onClick={() => setSampler("ddim")}>DDIM</Dropdown.Item>
+                </>
+            )
+        } else {
+            return (<>
+                <Dropdown.Item active={sampler === "euler a"} onClick={() => setSampler("euler a")}>Euler A</Dropdown.Item>
+                <Dropdown.Item active={sampler === "euler"} onClick={() => setSampler("euler")}>Euler</Dropdown.Item>
+                <Dropdown.Item active={sampler === "dpm++"} onClick={() => setSampler("dpm++")}>DPM++</Dropdown.Item>
+                <Dropdown.Item active={sampler === "ddim"} onClick={() => setSampler("ddim")}>DDIM</Dropdown.Item>
+                <Dropdown.Item active={sampler === "ddpm"} onClick={() => setSampler("ddpm")}>DDPM</Dropdown.Item>
+                <Dropdown.Item active={sampler === "unipc"} onClick={() => setSampler("unipc")}>UniPC</Dropdown.Item>
+                <Dropdown.Item active={sampler === "deis"} onClick={() => setSampler("deis")}>DEIS</Dropdown.Item>
+                <Dropdown.Item active={sampler === "heun"} onClick={() => setSampler("heun")}>HEUN</Dropdown.Item>
+                </>
+            )
+        }
+    }
+
+    useEffect(() => {
+        if (generator === "novel ai") {
+            if (sampler === "ddpm") setSampler("euler a")
+            if (sampler === "unipc") setSampler("euler a")
+            if (sampler === "deis") setSampler("euler a")
+            if (sampler === "heun") setSampler("euler a")
+        }
+    }, [generator])
+
     return (
         <div className="options-bar" onMouseEnter={() => setEnableDrag(false)}>
             <div className="options-bar-img-input">
@@ -97,7 +136,7 @@ const OptionsBar: React.FunctionComponent = (props) => {
                     <span className="options-option-text">Size</span>
                     <img className="options-option-icon" src={sizeIcon} style={{filter: getFilter()}}/>
                     <Slider className="options-slider-small" trackClassName="options-slider-track" thumbClassName="options-slider-thumb" onChange={(value) => setSize(value)} min={-1} max={1} step={0.125} value={size}/>
-                    <span className="options-option-text-value">{functions.getSizeDimensions(size).width}x{functions.getSizeDimensions(size).height}</span>
+                    <span className="options-option-text-value">{functions.getSizeDimensions(size, getSizeDim()).width}x{functions.getSizeDimensions(size, getSizeDim()).height}</span>
                 </div>
                 <div className="options-bar-option-row">
                     <span className="options-option-text">Denoise</span>
@@ -117,14 +156,7 @@ const OptionsBar: React.FunctionComponent = (props) => {
                     <input className="options-option-input" spellCheck={false} value={seed} onChange={(event) => setSeed(event.target.value)} style={{width: "150px"}}></input>
                     <span className="options-option-text" style={{marginRight: "10px"}}>Sampler</span>
                     <DropdownButton title={getSampler()} drop="down" className="checkpoint-selector">
-                        <Dropdown.Item active={sampler === "euler a"} onClick={() => setSampler("euler a")}>Euler A</Dropdown.Item>
-                        <Dropdown.Item active={sampler === "euler"} onClick={() => setSampler("euler")}>Euler</Dropdown.Item>
-                        <Dropdown.Item active={sampler === "dpm++"} onClick={() => setSampler("dpm++")}>DPM++</Dropdown.Item>
-                        <Dropdown.Item active={sampler === "ddim"} onClick={() => setSampler("ddim")}>DDIM</Dropdown.Item>
-                        <Dropdown.Item active={sampler === "ddpm"} onClick={() => setSampler("ddpm")}>DDPM</Dropdown.Item>
-                        <Dropdown.Item active={sampler === "unipc"} onClick={() => setSampler("unipc")}>UniPC</Dropdown.Item>
-                        <Dropdown.Item active={sampler === "deis"} onClick={() => setSampler("deis")}>DEIS</Dropdown.Item>
-                        <Dropdown.Item active={sampler === "heun"} onClick={() => setSampler("heun")}>HEUN</Dropdown.Item>
+                        {getSamplerJSX()}
                     </DropdownButton>
                 </div>
             </div>

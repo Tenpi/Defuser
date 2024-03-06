@@ -7,9 +7,14 @@ import struct
 import json
 import torchvision
 import itertools
-from PIL import Image
+from PIL import Image, PngImagePlugin
 import cv2
 import numpy as np
+import random
+import platform
+import piexif
+import piexif.helper
+import subprocess
 
 dirname = os.path.dirname(__file__)
 
@@ -86,10 +91,10 @@ def is_nsfw(prompt):
             return True
     return False
 
-def get_normalized_dimensions(img):
+def get_normalized_dimensions(img, dim=512):
     greaterValue = img.width if img.width > img.height else img.height
     heightBigger = True if img.height > img.width else False
-    ratio = greaterValue / 512
+    ratio = greaterValue / dim
     width = math.floor(img.width / ratio)
     height = math.floor(img.height / ratio)
     if heightBigger:
@@ -211,3 +216,53 @@ def pil_to_cv2(pil_image):
 def cv2_to_pil(cv2_image):
     cv2_image = cv2.cvtColor(cv2_image, cv2.COLOR_BGR2RGB)
     return Image.fromarray(cv2_image.astype(np.uint8))
+
+def get_seed(seed):
+    if not seed or seed == -1:
+        return int(random.randrange(4294967294))
+    return int(seed)
+
+def append_info(image: str, info: dict):
+    ext = pathlib.Path(image).suffix
+    img = Image.open(image)
+    if ext == ".png":
+        pnginfo = PngImagePlugin.PngInfo()
+        for key, value in (info).items():
+            pnginfo.add_text(key, str(value))
+        img.save(image, pnginfo=pnginfo)
+    else:
+        info_list = list()
+        for key, value in (info).items():
+            info_list.append(f"{key}: {str(value)}")
+        exif = piexif.dump({
+            "Exif": {piexif.ExifIFD.UserComment: piexif.helper.UserComment.dump("\n".join(info_list), encoding="unicode")}
+        })
+        piexif.insert(exif, image)
+
+def upscale(image: str, upscaler: str, video: bool = False):
+    if upscaler == "waifu2x":
+        program = os.path.join(dirname, "../models/upscaler/waifu2x-ncnn-vulkan")
+        if platform.system() == "Windows":
+            program = os.path.join(dirname, "../models/upscaler/waifu2x-ncnn-vulkan.exe")
+        if platform.system() == "Darwin":
+            program = os.path.join(dirname, "../models/upscaler/waifu2x-ncnn-vulkan.app")
+        format = pathlib.Path(image).suffix.replace(".", "")
+        subprocess.call([program, "-i", image, "-o", image, "-s", "4", "-f", format])
+    elif upscaler == "real-esrgan":
+        program = os.path.join(dirname, "../models/upscaler/realesrgan-ncnn-vulkan")
+        if platform.system() == "Windows":
+            program = os.path.join(dirname, "../models/upscaler/realesrgan-ncnn-vulkan.exe")
+        if platform.system() == "Darwin":
+            program = os.path.join(dirname, "../models/upscaler/realesrgan-ncnn-vulkan.app")
+        models = os.path.join(dirname, "../models/upscaler/models")
+        network = "realesr-animevideov3" if video else "realesrgan-x4plus-anime"
+        format = pathlib.Path(image).suffix.replace(".", "")
+        subprocess.call([program, "-i", image, "-o", image, "-s", "4", "-f", format, "-m", models, "-n", network])
+    elif upscaler == "real-cugan":
+        program = os.path.join(dirname, "../models/upscaler/realcugan-ncnn-vulkan")
+        if platform.system() == "Windows":
+            program = os.path.join(dirname, "../models/upscaler/realcugan-ncnn-vulkan.exe")
+        if platform.system() == "Darwin":
+            program = os.path.join(dirname, "../models/upscaler/realcugan-ncnn-vulkan.app")
+        format = pathlib.Path(image).suffix.replace(".", "")
+        subprocess.call([program, "-i", image, "-o", image, "-s", "4", "-f", format])

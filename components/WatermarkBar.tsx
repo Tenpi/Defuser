@@ -4,7 +4,7 @@ import {HashLink as Link} from "react-router-hash-link"
 import path from "path"
 import {EnableDragContext, MobileContext, ImageInputContext, ImageNameContext, ImagesContext, ReverseSortContext, AIWatermarkBrightnessContext,
 AIWatermarkHueContext, AIWatermarkInvertContext, AIWatermarkMarginXContext, AIWatermarkMarginYContext, AIWatermarkOpacityContext, AIWatermarkPositionContext,
-AIWatermarkSaturationContext, AIWatermarkScaleContext, AIWatermarkTypeContext} from "../Context"
+AIWatermarkSaturationContext, AIWatermarkScaleContext, AIWatermarkTypeContext, GeneratorContext, NovelAIImagesContext} from "../Context"
 import functions from "../structures/Functions"
 import Slider from "react-slider"
 import fileType from "magic-bytes.js"
@@ -36,6 +36,8 @@ const WatermarkBar: React.FunctionComponent = (props) => {
     const {aiWatermarkMarginY, setAIWatermarkMarginY} = useContext(AIWatermarkMarginYContext)
     const {aiWatermarkScale, setAIWatermarkScale} = useContext(AIWatermarkScaleContext)
     const {images, setImages} = useContext(ImagesContext)
+    const {novelAIImages, setNovelAIImages} = useContext(NovelAIImagesContext)
+    const {generator, setGenerator} = useContext(GeneratorContext)
     const {reverseSort, setReverseSort} = useContext(ReverseSortContext)
     const {imageName, setImageName} = useContext(ImageNameContext)
     const [gifData, setGIFData] = useState(null) as any
@@ -136,8 +138,17 @@ const WatermarkBar: React.FunctionComponent = (props) => {
         return canvas.toDataURL(outputType ? outputType : "image/png")
     }
 
+    const getImgSrc = () => {
+        if (imageInput) return imageInput
+        if (generator === "novel ai") {
+            return reverseSort ? novelAIImages[novelAIImages.length - 1] : novelAIImages[0]
+        } else {
+            return reverseSort ? images[images.length - 1] : images[0]
+        }
+    }
+
     const loadImg = () => {
-        let imageSrc = imageInput ? imageInput : (reverseSort ? images[images.length - 1] : images[0])
+        let imageSrc = getImgSrc()
         if (!imageSrc) imageSrc = imgPlaceHolder
         const imgElement = document.createElement("img")
         imgElement.src = imageSrc
@@ -172,7 +183,7 @@ const WatermarkBar: React.FunctionComponent = (props) => {
 
     useEffect(() => {
         loadImg()
-    }, [imageInput, images, reverseSort])
+    }, [imageInput, images, novelAIImages, reverseSort, generator])
 
     useEffect(() => {
         draw(0)

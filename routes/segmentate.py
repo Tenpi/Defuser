@@ -508,10 +508,10 @@ def segmentate():
     mask = get_mask(segmentate_model, img, use_amp=False, s=1024)
     img = np.concatenate((mask * img + 1 - mask, mask * 255), axis=2).astype(np.uint8)
     img = cv2.cvtColor(img, cv2.COLOR_RGBA2BGRA)
-    dir_path = os.path.join(dirname, "../outputs/image")
+    dir_path = os.path.join(dirname, "../outputs/local/image")
     out_path = os.path.join(dir_path, f"image{next_index(dir_path)}.png")
     cv2.imwrite(out_path, img)
     compressed = Image.open(out_path)
     compressed.save(out_path, quality=90, optimize=True)
-    socketio.emit("image complete", {"image": f"/outputs/image/{os.path.basename(out_path)}"})
+    socketio.emit("image complete", {"image": f"/outputs/local/image/{os.path.basename(out_path)}"})
     return "done"

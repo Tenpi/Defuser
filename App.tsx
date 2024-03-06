@@ -1,7 +1,8 @@
 import React, {useEffect, useState, useContext, useReducer} from "react"
 import {Switch, Route, Redirect, useHistory, useLocation} from "react-router-dom"
 import Context, {EnableDragContext, MobileContext, SocketContext, ImagesContext, UpdateImagesContext, TextualInversionsContext,
-HypernetworksContext, LorasContext, ReverseSortContext, NSFWImagesContext, ImageInputImagesContext} from "./Context"
+HypernetworksContext, LorasContext, ReverseSortContext, NSFWImagesContext, ImageInputImagesContext, NovelAIImagesContext,
+NovelAINSFWImagesContext, NovelAIImageInputImagesContext, GeneratorContext} from "./Context"
 import axios from "axios"
 import {io} from "socket.io-client"
 import functions from "./structures/Functions"
@@ -19,11 +20,15 @@ const App: React.FunctionComponent = (props) => {
     const [images, setImages] = useState([])
     const [nsfwImages, setNSFWImages] = useState([])
     const [imageInputImages, setImageInputImages] = useState([])
+    const [novelAIImages, setNovelAIImages] = useState([])
+    const [novelAINSFWImages, setNovelAINSFWImages] = useState([])
+    const [novelAIImageInputImages, setNovelAIImageInputImages] = useState([])
     const [updateImages, setUpdateImages] = useState(true)
     const [textualInversions, setTextualInversions] = useState([])
     const [hypernetworks, setHypernetworks] = useState([])
     const [loras, setLoras] = useState([])
     const [reverseSort, setReverseSort] = useState(false)
+    const [generator, setGenerator] = useState("local")
 
     useEffect(() => {
         functions.preventDragging()
@@ -85,6 +90,12 @@ const App: React.FunctionComponent = (props) => {
         setNSFWImages(nsfwImages)
         let imageInputImages = await axios.get("/all-image-outputs").then((r) => r.data)
         setImageInputImages(imageInputImages)
+        let novelAIImages = await axios.get("/all-novelai-outputs").then((r) => r.data)
+        setNovelAIImages(novelAIImages)
+        let novelAINSFWImages = await axios.get("/all-novelai-nsfw-outputs").then((r) => r.data)
+        setNovelAINSFWImages(novelAINSFWImages)
+        let novelAIImageInputImages = await axios.get("/all-novelai-image-outputs").then((r) => r.data)
+        setNovelAIImageInputImages(novelAIImageInputImages)
     }
 
     useEffect(() => {
@@ -109,6 +120,10 @@ const App: React.FunctionComponent = (props) => {
 
     return (
         <div className={`app ${!loaded ? "stop-transitions" : ""}`}>
+            <GeneratorContext.Provider value={{generator, setGenerator}}>
+            <NovelAIImageInputImagesContext.Provider value={{novelAIImageInputImages, setNovelAIImageInputImages}}>
+            <NovelAINSFWImagesContext.Provider value={{novelAINSFWImages, setNovelAINSFWImages}}>
+            <NovelAIImagesContext.Provider value={{novelAIImages, setNovelAIImages}}>
             <ImageInputImagesContext.Provider value={{imageInputImages, setImageInputImages}}>
             <NSFWImagesContext.Provider value={{nsfwImages, setNSFWImages}}>
             <ReverseSortContext.Provider value={{reverseSort, setReverseSort}}>
@@ -137,6 +152,10 @@ const App: React.FunctionComponent = (props) => {
             </ReverseSortContext.Provider>
             </NSFWImagesContext.Provider>
             </ImageInputImagesContext.Provider>
+            </NovelAIImagesContext.Provider>
+            </NovelAINSFWImagesContext.Provider>
+            </NovelAIImageInputImagesContext.Provider>
+            </GeneratorContext.Provider>
         </div>
     )
 }
