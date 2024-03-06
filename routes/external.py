@@ -61,8 +61,8 @@ def request_novelai(action="generate", prompt="", negative_prompt="", model="nai
             "noise": 0,
             "ucPreset": 0,
             "qualityToggle": True,
-            "sm": True,
-            "sm_dyn": True,
+            "sm": False,
+            "sm_dyn": False,
             "decrisper": True,
             "dynamic_thresholding": True,
             "controlnet_strength": control_scale,
@@ -81,6 +81,10 @@ def request_novelai(action="generate", prompt="", negative_prompt="", model="nai
 
     if sampler == "dpm++":
         payload["parameters"]["noise_schedule"] = "exponential"
+
+    if model == "nai-diffusion-3":
+        payload["parameters"]["sm"] = True
+        payload["parameters"]["sm_dyn"] = True
 
     if image is not None:
         payload["parameters"]["image"] = pil_to_base64(image)
