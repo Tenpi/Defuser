@@ -194,6 +194,12 @@ const Image: React.FunctionComponent<ImageHistoryImageProps> = (props) => {
         }
     }
 
+    const getMaxHeight = () => {
+        if (generator === "novel ai") return "420px"
+        if (generator === "holara ai") return "420px"
+        return "465px"
+    }
+
     if (props.small) {
         return (
             <div className="image-img-container-small" onMouseEnter={() => setHover(true)} onMouseLeave={() => setHover(false)} onClick={handleClick}>
@@ -220,7 +226,7 @@ const Image: React.FunctionComponent<ImageHistoryImageProps> = (props) => {
                 <img className="image-img-button" onMouseEnter={() => setDeleteHover(true)} onClick={deleteImage} draggable={false}
                 onMouseLeave={() => setDeleteHover(false)} src={deleteHover ? deleteIconHover : deleteIcon} style={{filter: getFilter(), cursor: hover ? "pointer" : "default"}}/>
             </div>
-            <img className="image-img" src={props.img} draggable={false} style={{filter: `brightness(${imageBrightness + 100}%) contrast(${imageContrast + 100}%)`}}/>
+            <img className="image-img" src={props.img} draggable={false} style={{filter: `brightness(${imageBrightness + 100}%) contrast(${imageContrast + 100}%)`, maxHeight: getMaxHeight()}}/>
         </div>
     )
 }

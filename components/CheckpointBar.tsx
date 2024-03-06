@@ -51,7 +51,7 @@ const CheckpointBar: React.FunctionComponent = (props) => {
 
     const updateModelNames = async (first?: boolean) => {
         if (generator === "novel ai") {
-            const modelNames = ["nai-diffusion-3", "nai-diffusion-2", "nai-diffusion"]
+            const modelNames = ["nai-diffusion-3", "nai-diffusion-2", "nai-diffusion", "safe-diffusion"]
             setModelNames(modelNames)
             if (first) setModelName(modelNames[0])
             if (!modelNames.includes(modelName)) setModelName(modelNames[0])

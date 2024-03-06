@@ -928,6 +928,7 @@ export default class Functions {
         const comment = meta.find((o: any) => o.name === "Comment")
         const source = meta.find((o: any) => o.name === "Source")
         const models = {
+            "Stable Diffusion F4D50568": "safe-diffusion",
             "Stable Diffusion 3B3287AF": "nai-diffusion",
             "Stable Diffusion F1022D28": "nai-diffusion-2",
             "Stable Diffusion XL C1E1DE52": "nai-diffusion-3"
@@ -1279,7 +1280,7 @@ export default class Functions {
     }
 
     public static isNovelAIModel = (model: string) => {
-        const modelNames = ["nai-diffusion-3", "nai-diffusion-2", "nai-diffusion"]
+        const modelNames = ["nai-diffusion-3", "nai-diffusion-2", "nai-diffusion", "safe-diffusion"]
         return modelNames.includes(model)
     }
 
