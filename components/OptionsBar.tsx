@@ -86,6 +86,7 @@ const OptionsBar: React.FunctionComponent = (props) => {
             return (<>
                 <Dropdown.Item active={sampler === "euler a"} onClick={() => setSampler("euler a")}>Euler A</Dropdown.Item>
                 <Dropdown.Item active={sampler === "euler"} onClick={() => setSampler("euler")}>Euler</Dropdown.Item>
+                <Dropdown.Item active={sampler === "dpm++ a"} onClick={() => setSampler("dpm++ a")}>DPM++ A</Dropdown.Item>
                 <Dropdown.Item active={sampler === "dpm++"} onClick={() => setSampler("dpm++")}>DPM++</Dropdown.Item>
                 <Dropdown.Item active={sampler === "ddim"} onClick={() => setSampler("ddim")}>DDIM</Dropdown.Item>
                 </>

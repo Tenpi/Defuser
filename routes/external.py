@@ -34,6 +34,8 @@ def novelai_sampler(sampler):
         return "k_euler_ancestral"
     elif sampler == "euler":
         return "k_euler"
+    elif sampler == "dpm++ a":
+        return "k_dpmpp_2s_ancestral"
     elif sampler == "dpm++":
         return "k_dpmpp_2m"
     elif sampler == "ddim":
@@ -52,16 +54,16 @@ def request_novelai(action="generate", prompt="", negative_prompt="", model="nai
             "height": height,
             "scale": cfg,
             "sampler": novelai_sampler(sampler),
-            "noise_schedule": "exponential",
+            "noise_schedule": "native",
             "steps": steps,
             "n_samples": 1,
             "strength": denoise,
             "noise": 0,
             "ucPreset": 0,
             "qualityToggle": True,
-            "sm": False,
-            "sm_dyn": False,
-            "dynamic_thresholding": False,
+            "sm": True,
+            "sm_dyn": True,
+            "dynamic_thresholding": True,
             "controlnet_strength": control_scale,
             "legacy": False,
             "legacy_v3_extend": False,
@@ -75,6 +77,9 @@ def request_novelai(action="generate", prompt="", negative_prompt="", model="nai
             "negative_prompt": negative_prompt
         }
     }
+
+    if sampler == "dpm++":
+        payload["parameters"]["noise_schedule"] = "exponential"
 
     if image is not None:
         payload["parameters"]["image"] = pil_to_base64(image)
