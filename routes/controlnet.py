@@ -4,7 +4,7 @@ from io import BytesIO
 from .generate import upscale
 import os
 import torch
-from .functions import next_index
+from .functions import next_index, get_models_dir
 from PIL import Image
 from controlnet_aux import CannyDetector, MidasDetector, LineartDetector, LineartAnimeDetector, HEDdetector
 from .lineart_manga import LineartMangaDetector
@@ -62,16 +62,17 @@ def load_control_models():
     global hed
     global device
     global dtype
+    return
     if not midas:
-        midas = MidasDetector.from_pretrained(os.path.join(dirname, "../models/controlnet/annotator"), filename="midas.pt").to(device)
+        midas = MidasDetector.from_pretrained(os.path.join(get_models_dir(), "controlnet/annotator"), filename="midas.pt").to(device)
     if not lineart:
-        lineart = LineartDetector.from_pretrained(os.path.join(dirname, "../models/controlnet/annotator"), filename="lineart.pt", coarse_filename="lineart2.pt").to(device)
+        lineart = LineartDetector.from_pretrained(os.path.join(get_models_dir(), "controlnet/annotator"), filename="lineart.pt", coarse_filename="lineart2.pt").to(device)
     if not lineart_anime:
-        lineart_anime = LineartAnimeDetector.from_pretrained(os.path.join(dirname, "../models/controlnet/annotator"), filename="lineart_anime.pt").to(device)
+        lineart_anime = LineartAnimeDetector.from_pretrained(os.path.join(get_models_dir(), "controlnet/annotator"), filename="lineart_anime.pt").to(device)
     if not lineart_manga:
         lineart_manga = LineartMangaDetector()
     if not hed:
-        hed = HEDdetector.from_pretrained(os.path.join(dirname, "../models/controlnet/annotator"), filename="hed.pt").to(device)
+        hed = HEDdetector.from_pretrained(os.path.join(get_models_dir(), "controlnet/annotator"), filename="hed.pt").to(device)
 
 @app.route("/control-image", methods=["POST"])
 def control_image():
@@ -102,15 +103,15 @@ def control_image():
         output_image = canny(image)
     elif processor == "depth":
         if not midas:
-            midas = MidasDetector.from_pretrained(os.path.join(dirname, "../models/controlnet/annotator"), filename="midas.pt").to(device)
+            midas = MidasDetector.from_pretrained(os.path.join(get_models_dir(), "controlnet/annotator"), filename="midas.pt").to(device)
         output_image = midas(image)
     elif processor == "lineart":
         if not lineart:
-            lineart = LineartDetector.from_pretrained(os.path.join(dirname, "../models/controlnet/annotator"), filename="lineart.pt", coarse_filename="lineart2.pt").to(device)
+            lineart = LineartDetector.from_pretrained(os.path.join(get_models_dir(), "controlnet/annotator"), filename="lineart.pt", coarse_filename="lineart2.pt").to(device)
         output_image = lineart(image, coarse=False)
     elif processor == "lineart anime":
         if not lineart_anime:
-            lineart_anime = LineartAnimeDetector.from_pretrained(os.path.join(dirname, "../models/controlnet/annotator"), filename="lineart_anime.pt").to(device)
+            lineart_anime = LineartAnimeDetector.from_pretrained(os.path.join(get_models_dir(), "controlnet/annotator"), filename="lineart_anime.pt").to(device)
         output_image = lineart_anime(image)
     elif processor == "lineart manga":
         if not lineart_manga:
@@ -118,11 +119,11 @@ def control_image():
         output_image = lineart_manga(image)
     elif processor == "scribble":
         if not hed:
-            hed = HEDdetector.from_pretrained(os.path.join(dirname, "../models/controlnet/annotator"), filename="hed.pt").to(device)
+            hed = HEDdetector.from_pretrained(os.path.join(get_models_dir(), "controlnet/annotator"), filename="hed.pt").to(device)
         output_image = hed(image, scribble=True)
     elif processor == "softedge":
         if not hed:
-            hed = HEDdetector.from_pretrained(os.path.join(dirname, "../models/controlnet/annotator"), filename="hed.pt").to(device)
+            hed = HEDdetector.from_pretrained(os.path.join(get_models_dir(), "controlnet/annotator"), filename="hed.pt").to(device)
         output_image = hed(image, scribble=False)
     elif processor == "reference":
         output_image = image

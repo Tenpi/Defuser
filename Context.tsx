@@ -122,6 +122,7 @@ export const HolaraAINSFWImagesContext = React.createContext<any>(null)
 export const HolaraAIImageInputImagesContext = React.createContext<any>(null)
 export const SavedPromptsNovelAIContext = React.createContext<any>(null)
 export const SavedPromptsHolaraAIContext = React.createContext<any>(null)
+export const ModelDirContext = React.createContext<any>(null)
 
 const Context: React.FunctionComponent = (props: any) => {
     const [theme, setTheme] = useState("light")

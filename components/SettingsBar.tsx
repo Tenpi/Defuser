@@ -4,7 +4,7 @@ import {HashLink as Link} from "react-router-hash-link"
 import favicon from "../assets/icons/favicon.png"
 import {EnableDragContext, MobileContext, SiteHueContext, SiteSaturationContext, SiteLightnessContext, NegativePromptContext, ProcessingContext,
 InterrogatorNameContext, DeletionContext, FormatContext, PrecisionContext, LoopModeContext, WatermarkContext, UpscalerContext, NSFWTabContext,
-InvisibleWatermarkContext, SauceNaoAPIKeyContext, RandomPromptModeContext, GeneratorContext, NovelAITokenContext, HolaraAICookieContext} from "../Context"
+InvisibleWatermarkContext, SauceNaoAPIKeyContext, RandomPromptModeContext, GeneratorContext, NovelAITokenContext, HolaraAICookieContext, ModelDirContext} from "../Context"
 import functions from "../structures/Functions"
 import {Dropdown, DropdownButton} from "react-bootstrap"
 import checkbox from "../assets/icons/checkbox2.png"
@@ -35,6 +35,7 @@ const SettingsBar: React.FunctionComponent = (props) => {
     const {generator, setGenerator} = useContext(GeneratorContext)
     const {novelAIToken, setNovelAIToken} = useContext(NovelAITokenContext)
     const {holaraAICookie, setHolaraAICookie} = useContext(HolaraAICookieContext)
+    const {modelDir, setModelDir} = useContext(ModelDirContext)
     const ref = useRef<HTMLCanvasElement>(null)
     const history = useHistory()
 
@@ -75,6 +76,8 @@ const SettingsBar: React.FunctionComponent = (props) => {
         if (savedNovelAIToken) setNovelAIToken(savedNovelAIToken)
         const savedHolaraAICookie = localStorage.getItem("holaraAICookie")
         if (savedHolaraAICookie) setHolaraAICookie(savedHolaraAICookie)
+        const savedModelDir = localStorage.getItem("modelDir")
+        if (savedModelDir) setModelDir(savedModelDir)
     }, [])
 
     useEffect(() => {
@@ -94,9 +97,10 @@ const SettingsBar: React.FunctionComponent = (props) => {
         localStorage.setItem("generator", String(generator))
         localStorage.setItem("novelAIToken", String(novelAIToken))
         localStorage.setItem("holaraAICookie", String(holaraAICookie))
+        localStorage.setItem("modelDir", String(modelDir))
     }, [negativePrompt, interrogatorName, processing, format, deletion, precision, loopMode, 
         upscaler, nsfwTab, invisibleWatermark, watermark, saucenaoAPIKey, randomPromptMode,
-        generator, novelAIToken, holaraAICookie])
+        generator, novelAIToken, holaraAICookie, modelDir])
 
     const resetNegativePrompt = () => {
         setNegativePrompt("")
@@ -143,6 +147,10 @@ const SettingsBar: React.FunctionComponent = (props) => {
                     <Dropdown.Item active={precision === "full"} onClick={() => setPrecision("full")}>Full</Dropdown.Item>
                     <Dropdown.Item active={precision === "half"} onClick={() => setPrecision("half")}>Half</Dropdown.Item>
                 </DropdownButton>
+            </div>
+            <div className="settings-bar-row">
+                <span className="settings-bar-text">Model Dir:</span>
+                <input className="settings-bar-input" spellCheck={false} value={modelDir} onChange={(event) => setModelDir(event.target.value)}/>
             </div>
             <div className="settings-bar-row">
                 <span className="settings-bar-text">Interrogator:</span>
@@ -216,13 +224,6 @@ const SettingsBar: React.FunctionComponent = (props) => {
                 <button className="settings-bar-button" onClick={() => setConvertPrompt(functions.convertPrompt(convertPrompt))}>Convert</button>
             </div>
             <div className="settings-bar-row">
-                <span className="settings-bar-text">Deletion:</span>
-                <DropdownButton title={deletion} drop="down" className="checkpoint-selector">
-                    <Dropdown.Item active={deletion === "trash"} onClick={() => setDeletion("trash")}>trash</Dropdown.Item>
-                    <Dropdown.Item active={deletion === "permanent"} onClick={() => setDeletion("permanent")}>permanent</Dropdown.Item>
-                </DropdownButton>
-            </div>
-            <div className="settings-bar-row">
                 <span className="settings-bar-text">SauceNao Key:</span>
                 <input className="settings-bar-input" spellCheck={false} value={saucenaoAPIKey} onChange={(event) => setSaucenaoAPIKey(event.target.value)}/>
             </div>
@@ -233,6 +234,13 @@ const SettingsBar: React.FunctionComponent = (props) => {
             <div className="settings-bar-row">
                 <span className="settings-bar-text">Holara AI Cookie:</span>
                 <input className="settings-bar-input" spellCheck={false} value={holaraAICookie} onChange={(event) => setHolaraAICookie(event.target.value)}/>
+            </div>
+            <div className="settings-bar-row">
+                <span className="settings-bar-text">Deletion:</span>
+                <DropdownButton title={deletion} drop="down" className="checkpoint-selector">
+                    <Dropdown.Item active={deletion === "trash"} onClick={() => setDeletion("trash")}>trash</Dropdown.Item>
+                    <Dropdown.Item active={deletion === "permanent"} onClick={() => setDeletion("permanent")}>permanent</Dropdown.Item>
+                </DropdownButton>
             </div>
         </div>
     )

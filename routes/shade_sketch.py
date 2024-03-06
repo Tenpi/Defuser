@@ -1,5 +1,5 @@
 import tensorflow.compat.v1 as tf
-from .functions import pil_to_cv2
+from .functions import pil_to_cv2, get_models_dir
 import numpy as np
 import cv2
 import os
@@ -43,19 +43,19 @@ def shade_sketch(input, output, direction="810", size=320, threshold=200, use_sm
     global norm_model
 
     if not smoother_model:
-        with tf.gfile.GFile(os.path.join(dirname, "../models/misc/linesmoother.pb"), "rb") as f:
+        with tf.gfile.GFile(os.path.join(get_models_dir(), "misc/linesmoother.pb"), "rb") as f:
             smoother_model = tf.GraphDef()
             smoother_model.ParseFromString(f.read())
     tf.import_graph_def(smoother_model)
 
     if not norm_model:
-        with tf.gfile.GFile(os.path.join(dirname, "../models/misc/linenorm.pb"), "rb") as f:
+        with tf.gfile.GFile(os.path.join(get_models_dir(), "misc/linenorm.pb"), "rb") as f:
             norm_model = tf.GraphDef()
             norm_model.ParseFromString(f.read())
     tf.import_graph_def(norm_model)
 
     if not shader_model:
-        with tf.gfile.GFile(os.path.join(dirname, "../models/misc/lineshader.pb"), "rb") as f:
+        with tf.gfile.GFile(os.path.join(get_models_dir(), "misc/lineshader.pb"), "rb") as f:
             shader_model = tf.GraphDef()
             shader_model.ParseFromString(f.read())
     tf.import_graph_def(shader_model)

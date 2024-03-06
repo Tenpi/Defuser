@@ -2,7 +2,7 @@ import os
 import torch
 import torch.nn as nn
 from torch.utils.data.dataset import Dataset
-from .functions import pil_to_cv2, cv2_to_pil
+from .functions import pil_to_cv2, cv2_to_pil, get_models_dir
 import numpy as np
 import cv2
 import PIL
@@ -181,7 +181,7 @@ class res_skip(nn.Module):
 class LineartMangaDetector():
     def __init__(self):
         self.model = res_skip()
-        state_dict = torch.load(os.path.join(dirname, "../models/controlnet/annotator/lineart_manga.pt"), map_location=device)
+        state_dict = torch.load(os.path.join(get_models_dir(), "controlnet/annotator/lineart_manga.pt"), map_location=device)
         self.model.load_state_dict(state_dict)
         self.model.to(device)
         self.model.eval()

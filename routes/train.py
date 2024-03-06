@@ -1,6 +1,6 @@
 import flask
 from __main__ import app, socketio
-from .functions import resize_box
+from .functions import resize_box, get_models_dir
 from .interrogate import interrogate
 from .textual_inversion import train_textual_inversion
 from .hypernetwork import train_hypernetwork
@@ -212,7 +212,7 @@ def start_textual_inversion():
     lr_scheduler = data["learning_function"]
     output = os.path.join(dirname, f"../outputs/models/textual inversion/{token}")
     pathlib.Path(output).mkdir(parents=True, exist_ok=True)
-    model_name = os.path.join(dirname, f"../models/diffusion/{model_name}")
+    model_name = os.path.join(get_models_dir(), f"diffusion/{model_name}")
 
     thread = threading.Thread(target=textual_inversion, args=(images, model_name, train_data, token, output, num_train_epochs, learning_rate, resolution, save_epochs, num_vectors, 
     gradient_accumulation_steps, validation_prompt, validation_epochs, lr_scheduler))
@@ -251,7 +251,7 @@ def start_hypernetwork():
     lr_scheduler = data["learning_function"]
     output = os.path.join(dirname, f"../outputs/models/hypernetwork/{instance_prompt}")
     pathlib.Path(output).mkdir(parents=True, exist_ok=True)
-    model_name = os.path.join(dirname, f"../models/diffusion/{model_name}")
+    model_name = os.path.join(get_models_dir(), f"diffusion/{model_name}")
 
     thread = threading.Thread(target=hypernetwork, args=(images, model_name, train_data, instance_prompt, output, num_train_epochs, learning_rate, text_encoder_lr, resolution, save_epochs, 
     gradient_accumulation_steps, validation_prompt, validation_epochs, lr_scheduler))
@@ -290,7 +290,7 @@ def start_lora():
     lr_scheduler = data["learning_function"]
     output = os.path.join(dirname, f"../outputs/models/lora/{instance_prompt}")
     pathlib.Path(output).mkdir(parents=True, exist_ok=True)
-    model_name = os.path.join(dirname, f"../models/diffusion/{model_name}")
+    model_name = os.path.join(get_models_dir(), f"diffusion/{model_name}")
 
     thread = threading.Thread(target=lora, args=(images, model_name, train_data, instance_prompt, output, num_train_epochs, learning_rate, text_encoder_lr, resolution, save_epochs, 
     gradient_accumulation_steps, validation_prompt, validation_epochs, lr_scheduler))
@@ -329,7 +329,7 @@ def start_dreambooth():
     lr_scheduler = data["learning_function"]
     output = os.path.join(dirname, f"../outputs/models/dreambooth/{instance_prompt}")
     pathlib.Path(output).mkdir(parents=True, exist_ok=True)
-    model_name = os.path.join(dirname, f"../models/diffusion/{model_name}")
+    model_name = os.path.join(get_models_dir(), f"diffusion/{model_name}")
 
     thread = threading.Thread(target=dreambooth, args=(images, model_name, train_data, instance_prompt, output, num_train_epochs, learning_rate, text_encoder_lr, resolution, save_epochs, 
     gradient_accumulation_steps, validation_prompt, validation_epochs, lr_scheduler))
@@ -368,7 +368,7 @@ def start_checkpoint():
     lr_scheduler = data["learning_function"]
     output = os.path.join(dirname, f"../outputs/models/checkpoint/{instance_prompt}")
     pathlib.Path(output).mkdir(parents=True, exist_ok=True)
-    model_name = os.path.join(dirname, f"../models/diffusion/{model_name}")
+    model_name = os.path.join(get_models_dir(), f"diffusion/{model_name}")
 
     thread = threading.Thread(target=checkpoint, args=(images, model_name, train_data, instance_prompt, output, num_train_epochs, learning_rate, text_encoder_lr, resolution, save_epochs, 
     gradient_accumulation_steps, validation_prompt, validation_epochs, lr_scheduler))
@@ -381,7 +381,7 @@ def merge_checkpoints(models, alpha, interpolation):
     global gen_thread 
     gen_thread = threading.get_ident()
     socketio.emit("train starting")
-    models = list(map(lambda model: os.path.join(dirname, f"../models/diffusion/{model}"), models))
+    models = list(map(lambda model: os.path.join(get_models_dir(), f"diffusion/{model}"), models))
     name = ""
     for i, model in enumerate(models):
         if i != 0: name += "+"

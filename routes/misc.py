@@ -2,7 +2,7 @@ import flask
 from __main__ import app, socketio
 from .classifier import train_classifier
 from .info import open_folder
-from .functions import clean_image, next_index
+from .functions import clean_image, next_index, get_models_dir
 from .simplify_sketch import SketchSimplificationModel
 from .shade_sketch import shade_sketch
 from .colorize_sketch import colorize_sketch
@@ -80,8 +80,8 @@ def ai_detector(image):
     socketio.emit("train starting")
     img = Image.open(BytesIO(base64.b64decode(image + "=="))).convert("RGB")
     img = clean_image(img)
-    feature_extractor = BeitFeatureExtractor.from_pretrained(os.path.join(dirname, "../models/detector"))
-    model = BeitForImageClassification.from_pretrained(os.path.join(dirname, "../models/detector"))
+    feature_extractor = BeitFeatureExtractor.from_pretrained(os.path.join(get_models_dir(), "detector"))
+    model = BeitForImageClassification.from_pretrained(os.path.join(get_models_dir(), "detector"))
     inputs = feature_extractor(images=img, return_tensors="pt")
     outputs = model(**inputs)
     logits = outputs.logits

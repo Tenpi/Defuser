@@ -3,7 +3,7 @@ import {Switch, Route, Redirect, useHistory, useLocation} from "react-router-dom
 import Context, {EnableDragContext, MobileContext, SocketContext, ImagesContext, UpdateImagesContext, TextualInversionsContext,
 HypernetworksContext, LorasContext, ReverseSortContext, NSFWImagesContext, ImageInputImagesContext, NovelAIImagesContext,
 NovelAINSFWImagesContext, NovelAIImageInputImagesContext, HolaraAIImagesContext, HolaraAINSFWImagesContext, HolaraAIImageInputImagesContext, 
-GeneratorContext, SavedPromptsContext, SavedPromptsNovelAIContext, SavedPromptsHolaraAIContext} from "./Context"
+GeneratorContext, SavedPromptsContext, SavedPromptsNovelAIContext, SavedPromptsHolaraAIContext, ModelDirContext} from "./Context"
 import axios from "axios"
 import {io} from "socket.io-client"
 import functions from "./structures/Functions"
@@ -36,6 +36,7 @@ const App: React.FunctionComponent = (props) => {
     const [savedPrompts, setSavedPrompts] = useState([])
     const [savedPromptsNovelAI, setSavedPromptsNovelAI] = useState([])
     const [savedPromptsHolaraAI, setSavedPromptsHolaraAI] = useState([])
+    const [modelDir, setModelDir] = useState("models")
 
     useEffect(() => {
         functions.preventDragging()
@@ -81,9 +82,9 @@ const App: React.FunctionComponent = (props) => {
             const vaeName = localStorage.getItem("vaeName")
             const clipSkip = localStorage.getItem("clipSkip")
             const processing = localStorage.getItem("processing")
-            socket.emit("load interrogate model", interrogatorName)
-            socket.emit("load diffusion model", modelName, vaeName, clipSkip, processing)
-            socket.emit("load control models")
+            //socket.emit("load interrogate model", interrogatorName)
+            //socket.emit("load diffusion model", modelName, vaeName, clipSkip, processing)
+            //socket.emit("load control models")
         })
         return () => {
             socket.disconnect()
@@ -147,14 +148,24 @@ const App: React.FunctionComponent = (props) => {
         setHypernetworks(hypernetworks)
         const loras = await axios.get("/lora-models").then((r) => r.data)
         setLoras(loras)
+        console.log(textualInversions)
+        console.log(hypernetworks)
+        console.log(loras)
     }
 
     useEffect(() => {
-        processNetworkUpdate()
-    }, [])
+        setTimeout(() => {
+            processNetworkUpdate()
+        }, 200)
+    }, [modelDir])
+
+    useEffect(() => {
+        axios.post("/update-model-dir", {model_dir: modelDir.trim()})
+    }, [modelDir])
 
     return (
         <div className={`app ${!loaded ? "stop-transitions" : ""}`}>
+            <ModelDirContext.Provider value={{modelDir, setModelDir}}>
             <SavedPromptsContext.Provider value={{savedPrompts, setSavedPrompts}}>
             <SavedPromptsHolaraAIContext.Provider value={{savedPromptsHolaraAI, setSavedPromptsHolaraAI}}>
             <SavedPromptsNovelAIContext.Provider value={{savedPromptsNovelAI, setSavedPromptsNovelAI}}>
@@ -203,6 +214,7 @@ const App: React.FunctionComponent = (props) => {
             </SavedPromptsNovelAIContext.Provider>
             </SavedPromptsHolaraAIContext.Provider>
             </SavedPromptsContext.Provider>
+            </ModelDirContext.Provider>
         </div>
     )
 }

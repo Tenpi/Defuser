@@ -71,8 +71,10 @@ const CheckpointBar: React.FunctionComponent = (props) => {
     useEffect(() => {
         if (!modelName && !vaeName) return
         if (generator) {
-            updateModelNames()
-            updateVAENames()
+            setTimeout(() => {
+                updateModelNames()
+                updateVAENames()
+            }, 200)
         }
     }, [generator, modelName, vaeName])
 

@@ -17,6 +17,7 @@ import piexif.helper
 import subprocess
 
 dirname = os.path.dirname(__file__)
+models_dir = "models"
 
 def get_number_from_filename(filename):
     num = re.search(r"\d+", filename)
@@ -72,12 +73,10 @@ def is_unwanted(filename):
     else:
         return False
 
-def is_dir(base, filename):
-    path = os.path.normpath(os.path.join(dirname, base, filename))
+def is_dir(path):
     return os.path.isdir(path)
 
-def is_file(base, filename):
-    path = os.path.normpath(os.path.join(dirname, base, filename))
+def is_file(path):
     return not os.path.isdir(path)
 
 def is_nsfw(prompt):
@@ -242,30 +241,40 @@ def append_info(image: str, info: dict):
         })
         piexif.insert(exif, image)
 
+def get_models_dir():
+    global models_dir
+    if not models_dir or models_dir == "models":
+        return os.path.join(dirname, "../models")
+    return models_dir
+
+def update_models_dir(new_dir):
+    global models_dir
+    models_dir = new_dir
+
 def upscale(image: str, upscaler: str, video: bool = False):
     if upscaler == "waifu2x":
-        program = os.path.join(dirname, "../models/upscaler/waifu2x-ncnn-vulkan")
+        program = os.path.join(get_models_dir(), "upscaler/waifu2x-ncnn-vulkan")
         if platform.system() == "Windows":
-            program = os.path.join(dirname, "../models/upscaler/waifu2x-ncnn-vulkan.exe")
+            program = os.path.join(get_models_dir(), "upscaler/waifu2x-ncnn-vulkan.exe")
         if platform.system() == "Darwin":
-            program = os.path.join(dirname, "../models/upscaler/waifu2x-ncnn-vulkan.app")
+            program = os.path.join(get_models_dir(), "upscaler/waifu2x-ncnn-vulkan.app")
         format = pathlib.Path(image).suffix.replace(".", "")
         subprocess.call([program, "-i", image, "-o", image, "-s", "4", "-f", format])
     elif upscaler == "real-esrgan":
-        program = os.path.join(dirname, "../models/upscaler/realesrgan-ncnn-vulkan")
+        program = os.path.join(get_models_dir(), "upscaler/realesrgan-ncnn-vulkan")
         if platform.system() == "Windows":
-            program = os.path.join(dirname, "../models/upscaler/realesrgan-ncnn-vulkan.exe")
+            program = os.path.join(get_models_dir(), "upscaler/realesrgan-ncnn-vulkan.exe")
         if platform.system() == "Darwin":
-            program = os.path.join(dirname, "../models/upscaler/realesrgan-ncnn-vulkan.app")
-        models = os.path.join(dirname, "../models/upscaler/models")
+            program = os.path.join(get_models_dir(), "upscaler/realesrgan-ncnn-vulkan.app")
+        models = os.path.join(get_models_dir(), "upscaler/models")
         network = "realesr-animevideov3" if video else "realesrgan-x4plus-anime"
         format = pathlib.Path(image).suffix.replace(".", "")
         subprocess.call([program, "-i", image, "-o", image, "-s", "4", "-f", format, "-m", models, "-n", network])
     elif upscaler == "real-cugan":
-        program = os.path.join(dirname, "../models/upscaler/realcugan-ncnn-vulkan")
+        program = os.path.join(get_models_dir(), "upscaler/realcugan-ncnn-vulkan")
         if platform.system() == "Windows":
-            program = os.path.join(dirname, "../models/upscaler/realcugan-ncnn-vulkan.exe")
+            program = os.path.join(get_models_dir(), "upscaler/realcugan-ncnn-vulkan.exe")
         if platform.system() == "Darwin":
-            program = os.path.join(dirname, "../models/upscaler/realcugan-ncnn-vulkan.app")
+            program = os.path.join(get_models_dir(), "upscaler/realcugan-ncnn-vulkan.app")
         format = pathlib.Path(image).suffix.replace(".", "")
         subprocess.call([program, "-i", image, "-o", image, "-s", "4", "-f", format])

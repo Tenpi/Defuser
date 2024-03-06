@@ -10,7 +10,7 @@ ControlImageContext, ControlProcessorContext, ControlScaleContext, ControlGuessM
 ControlInvertContext, StyleFidelityContext, ControlReferenceImageContext, HorizontalExpandContext, VerticalExpandContext, UpscalerContext,
 ExpandImageContext, ExpandMaskContext, StartedContext, SocketContext, LoopModeContext, SavedPromptsContext, WatermarkContext, NSFWTabContext,
 InvisibleWatermarkContext, SauceNaoAPIKeyContext, RandomPromptModeContext, GeneratorContext, NovelAITokenContext, HolaraAICookieContext,
-SavedPromptsNovelAIContext, SavedPromptsHolaraAIContext} from "../Context"
+SavedPromptsNovelAIContext, SavedPromptsHolaraAIContext, ModelDirContext} from "../Context"
 import functions from "../structures/Functions"
 import checkbox from "../assets/icons/checkbox2.png"
 import checkboxChecked from "../assets/icons/checkbox2-checked.png"
@@ -83,6 +83,7 @@ const GenerateBar: React.FunctionComponent = (props) => {
     const {holaraAICookie, setHolaraAICookie} = useContext(HolaraAICookieContext)
     const {savedPromptsNovelAI, setSavedPromptsNovelAI} = useContext(SavedPromptsNovelAIContext)
     const {savedPromptsHolaraAI, setSavedPromptsHolaraAI} = useContext(SavedPromptsHolaraAIContext)
+    const {modelDir, setModelDir} = useContext(ModelDirContext)
     const ref = useRef<HTMLCanvasElement>(null)
     const history = useHistory()
 
@@ -133,6 +134,8 @@ const GenerateBar: React.FunctionComponent = (props) => {
         if (savedPromptsNovelAI) setSavedPromptsNovelAI(JSON.parse(savedPromptsNovelAI))
         const savedPromptsHolaraAI = localStorage.getItem("savedPrompts-holara-ai")
         if (savedPromptsHolaraAI) setSavedPromptsHolaraAI(JSON.parse(savedPromptsHolaraAI))
+        const savedModelDir = localStorage.getItem("modelDir")
+        if (savedModelDir) setModelDir(savedModelDir)
     }, [])
 
     useEffect(() => {

@@ -1,6 +1,6 @@
 import flask
 from __main__ import app
-from .functions import get_number_from_filename, is_image, is_unwanted, is_dir, is_file
+from .functions import get_number_from_filename, is_image, is_unwanted, is_dir, is_file, get_models_dir, update_models_dir
 from .invisiblewatermark import decode_watermark, encode_watermark
 import os
 import platform
@@ -17,28 +17,32 @@ dirname = os.path.dirname(__file__)
 
 @app.route("/diffusion-models")
 def get_diffusion_models():
-    files = os.listdir(os.path.join(dirname, "../models/diffusion"))
+    dir = os.path.join(get_models_dir(), "diffusion")
+    if not os.path.exists(dir): return []
+    files = os.listdir(dir)
     return list(filter(lambda file: not is_unwanted(file) and not is_image(file), files))
 
 @app.route("/vae-models")
 def get_vae_models():
-    files = os.listdir(os.path.join(dirname, "../models/vae"))
+    dir = os.path.join(get_models_dir(), "vae")
+    if not os.path.exists(dir): return []
+    files = os.listdir(dir)
     return list(filter(lambda file: not is_unwanted(file) and not is_image(file), files))
 
 @app.route("/clip-model")
 def get_clip_model():
-    return os.path.join(dirname, "../models/clip")
+    return os.path.join(get_models_dir(), "clip")
 
 def crawl_model_folder(model_type: str, folder: str):
-    files = os.listdir(os.path.join(dirname, f"../models/{model_type}", folder))
+    files = os.listdir(os.path.join(get_models_dir(), model_type, folder))
     model_map = []
-    dirs = list(filter(lambda file: not is_unwanted(file) and is_dir(f"../models/{model_type}", file), files))
+    dirs = list(filter(lambda file: not is_unwanted(file) and is_dir(os.path.join(get_models_dir(), model_type, file)), files))
     for dir in dirs:
         stem = pathlib.Path(dir).stem
         dir_files = crawl_model_folder(model_type, os.path.join(folder, dir))
         model_map.append({"name": stem, "files": dir_files, "directory": True})
-    models = list(filter(lambda file: not is_unwanted(file) and is_file(f"../models/{model_type}", file) and not is_image(file), files))
-    images = list(filter(lambda file: not is_unwanted(file) and is_file(f"../models/{model_type}", file) and is_image(file), files))
+    models = list(filter(lambda file: not is_unwanted(file) and is_file(os.path.join(get_models_dir(), model_type, file)) and not is_image(file), files))
+    images = list(filter(lambda file: not is_unwanted(file) and is_file(os.path.join(get_models_dir(), model_type, file)) and is_image(file), files))
     for i in range(len(models)):
         stem = pathlib.Path(models[i]).stem
         model = os.path.join(f"models/{model_type}", folder, models[i])
@@ -54,15 +58,17 @@ def crawl_model_folder(model_type: str, folder: str):
     return model_map
 
 def get_model_files(model_type: str):
-    files = os.listdir(os.path.join(dirname, f"../models/{model_type}"))
+    dir = os.path.join(get_models_dir(), model_type)
+    if not os.path.exists(dir): return []
+    files = os.listdir(dir)
     model_map = []
-    dirs = list(filter(lambda file: not is_unwanted(file) and is_dir(f"../models/{model_type}", file), files))
+    dirs = list(filter(lambda file: not is_unwanted(file) and is_dir(os.path.join(get_models_dir(), model_type, file)), files))
     for dir in dirs:
         stem = pathlib.Path(dir).stem
         dir_files = crawl_model_folder(model_type, dir)
         model_map.append({"name": stem, "files": dir_files, "directory": True})
-    models = list(filter(lambda file: not is_unwanted(file) and is_file(f"../models/{model_type}", file) and not is_image(file), files))
-    images = list(filter(lambda file: not is_unwanted(file) and is_file(f"../models/{model_type}", file) and is_image(file), files))
+    models = list(filter(lambda file: not is_unwanted(file) and is_file(os.path.join(get_models_dir(), model_type, file)) and not is_image(file), files))
+    images = list(filter(lambda file: not is_unwanted(file) and is_file(os.path.join(get_models_dir(), model_type, file)) and is_image(file), files))
     for i in range(len(models)):
         stem = pathlib.Path(models[i]).stem
         model = os.path.join(f"models/{model_type}", models[i])
@@ -404,3 +410,10 @@ def saved_holara_prompts():
     with open(location) as f:
         data = f.read().split("\n")
     return data
+
+@app.route("/update-model-dir", methods=["POST"])
+def update_model_dir():
+    data = flask.request.json
+    model_dir = data["model_dir"]
+    update_models_dir(model_dir)
+    return "done"

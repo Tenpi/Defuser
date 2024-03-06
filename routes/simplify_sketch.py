@@ -3,6 +3,7 @@ import torch.nn as nn
 from PIL import Image
 from torchvision import transforms
 from torchvision.utils import save_image
+from .functions import get_models_dir
 import torch
 import os
 
@@ -59,7 +60,7 @@ class SketchSimplificationModel():
             nn.Conv2d(24, 1, (3, 3), (1, 1), (1, 1)),
             nn.Sigmoid(),
         )
-        state_dict = torch.load(os.path.join(dirname, "../models/misc/simplify.pth"), map_location=device)
+        state_dict = torch.load(os.path.join(get_models_dir(), "misc/simplify.pth"), map_location=device)
         self.model.load_state_dict(state_dict)
         self.model.to(device)
         self.model.eval()

@@ -23,6 +23,7 @@ models/controlnet/softedge/*
 models/segmentator/*
 models/promptgen/*
 models/detector/*
+models/upscaler/*
 models/vae/*
 models/misc/*
 outputs/local
@@ -50,5 +51,6 @@ dialog/random.pt
 !models/interrogator/wdtagger/readme.txt
 !models/detector/readme.txt
 !models/promptgen/readme.txt
+!models/upscaler/readme.txt
 !models/misc/readme.txt
 !outputs/readme.txt

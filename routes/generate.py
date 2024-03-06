@@ -3,7 +3,7 @@ import flask
 from __main__ import app, socketio
 import os
 import torch
-from .functions import next_index, is_nsfw, get_normalized_dimensions, is_image, get_number_from_filename, get_seed, append_info, upscale
+from .functions import next_index, is_nsfw, get_normalized_dimensions, is_image, get_number_from_filename, get_seed, append_info, upscale, get_models_dir
 from .invisiblewatermark import encode_watermark
 from .info import get_diffusion_models, get_vae_models, get_clip_model
 from diffusers import StableDiffusionPipeline, StableDiffusionImg2ImgPipeline, StableDiffusionInpaintPipeline, StableDiffusionXLPipeline, StableDiffusionXLImg2ImgPipeline, StableDiffusionXLInpaintPipeline, StableDiffusionControlNetImg2ImgPipeline, \
@@ -45,7 +45,7 @@ motion_adapter = None
 
 def get_motion_adapter():
     global motion_adapter
-    motion_model = os.path.join(dirname, "../models/animatediff")
+    motion_model = os.path.join(get_models_dir(), "animatediff")
     motion_adapter = MotionAdapter.from_pretrained(motion_model, local_files_only=True)
     return motion_adapter
 
@@ -54,28 +54,28 @@ def get_controlnet(processor: str = "none"):
     global control_processor
     if not controlnet or control_processor != processor:
         if processor == "canny":
-            control_model = os.path.join(dirname, "../models/controlnet/canny")
+            control_model = os.path.join(get_models_dir(), "controlnet/canny")
             controlnet = ControlNetModel.from_pretrained(control_model, local_files_only=True)
         elif processor == "depth":
-            control_model = os.path.join(dirname, "../models/controlnet/depth")
+            control_model = os.path.join(get_models_dir(), "controlnet/depth")
             controlnet = ControlNetModel.from_pretrained(control_model, local_files_only=True)
         if processor == "lineart":
-            control_model = os.path.join(dirname, "../models/controlnet/lineart")
+            control_model = os.path.join(get_models_dir(), "controlnet/lineart")
             controlnet = ControlNetModel.from_pretrained(control_model, local_files_only=True)
         if processor == "lineart anime":
-            control_model = os.path.join(dirname, "../models/controlnet/lineart anime")
+            control_model = os.path.join(get_models_dir(), "controlnet/lineart anime")
             controlnet = ControlNetModel.from_pretrained(control_model, local_files_only=True)
         if processor == "lineart manga":
-            control_model = os.path.join(dirname, "../models/controlnet/lineart anime")
+            control_model = os.path.join(get_models_dir(), "controlnet/lineart anime")
             controlnet = ControlNetModel.from_pretrained(control_model, local_files_only=True)
         if processor == "scribble":
-            control_model = os.path.join(dirname, "../models/controlnet/scribble")
+            control_model = os.path.join(get_models_dir(), "controlnet/scribble")
             controlnet = ControlNetModel.from_pretrained(control_model, local_files_only=True)
         if processor == "softedge":
-            control_model = os.path.join(dirname, "../models/controlnet/softedge")
+            control_model = os.path.join(get_models_dir(), "controlnet/softedge")
             controlnet = ControlNetModel.from_pretrained(control_model, local_files_only=True)
         if processor == "reference":
-            control_model = os.path.join(dirname, "../models/controlnet/canny")
+            control_model = os.path.join(get_models_dir(), "controlnet/canny")
             controlnet = ControlNetModel.from_pretrained(control_model, local_files_only=True)
         control_processor = processor
     return controlnet
@@ -94,7 +94,7 @@ def get_generator(model_name: str = "", vae: str = "", mode: str = "text", clip_
     if not model_name:
         model_name = get_diffusion_models()[0]
     if not generator or generator_name != model_name or generator_mode != mode:
-        model = os.path.join(dirname, "../models/diffusion", model_name)
+        model = os.path.join(get_models_dir(), "diffusion", model_name)
         if generator_name != model_name:
             update_model = True
 
@@ -282,7 +282,7 @@ def get_generator(model_name: str = "", vae: str = "", mode: str = "text", clip_
     if not vae_name or vae_name != vae or update_model:
         if not vae:
             vae = get_vae_models()[0]
-        vae_model = os.path.join(dirname, "../models/vae", vae)
+        vae_model = os.path.join(get_models_dir(), "vae", vae)
         if os.path.isdir(vae_model):
             generator.vae = AutoencoderKL.from_pretrained(vae_model, local_files_only=True)
         else:
@@ -299,7 +299,8 @@ def get_generator(model_name: str = "", vae: str = "", mode: str = "text", clip_
 @socketio.on("load diffusion model")
 def load_diffusion_model(model_name, vae_name, clip_skip, processing):
     global generator
-    #generator = get_generator(model_name, vae_name, "text", int(clip_skip), processing == "cpu")
+    return
+    generator = get_generator(model_name, vae_name, "text", int(clip_skip), processing == "cpu")
     return "done"
 
 @app.route("/update-infinite", methods=["POST"])
@@ -449,7 +450,7 @@ def generate(request_data, request_files):
 
     for textual_inversion in textual_inversions:
         textual_inversion_name = textual_inversion["name"]
-        textual_inversion_path = os.path.join(dirname, f'../{textual_inversion["model"]}')
+        textual_inversion_path = os.path.join(get_models_dir(), textual_inversion["model"].replace("models/", ""))
         try:
             generator.load_textual_inversion(textual_inversion_path, token=textual_inversion_name)
         except ValueError:
@@ -458,7 +459,7 @@ def generate(request_data, request_files):
     has_hypernet = False
     for hypernetwork in hypernetworks:
         hypernet_scale = float(hypernetwork["weight"])
-        hypernet_path = os.path.join(dirname, f'../{hypernetwork["model"]}')
+        hypernet_path = os.path.join(get_models_dir(), hypernetwork["model"].replace("models/", ""))
         has_hypernet = True
         try:
             hypernet = load_hypernet(hypernet_path, hypernet_scale, device)
@@ -477,12 +478,12 @@ def generate(request_data, request_files):
         weight_name = os.path.basename(lora["model"])
         lora_name = lora["name"]
         #cross_attention_kwargs["scale"] = lora_scale
-        lora = os.path.join(dirname, f'../{lora["model"]}')
+        lora_path = os.path.join(get_models_dir(), lora["model"].replace("models/", ""))
         has_lora = True
         try:
             adapters.append(lora_name)
             adapter_weights.append(lora_scale)
-            generator.load_lora_weights(lora, weight_name=weight_name, adapter_name=lora_name)
+            generator.load_lora_weights(lora_path, weight_name=weight_name, adapter_name=lora_name)
         except ValueError:
             continue
     generator.set_adapters(adapters, adapter_weights=adapter_weights)

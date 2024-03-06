@@ -1,6 +1,6 @@
 import flask               
 from __main__ import app, socketio
-from .functions import next_index
+from .functions import next_index, get_models_dir
 import torch
 import os
 import cv2
@@ -500,7 +500,7 @@ def segmentate():
     socketio.emit("image starting")
 
     if not segmentate_model:
-        segmentate_model = AnimeSegmentation.try_load("isnet_is", os.path.join(dirname, "../models/segmentator/anime-segmentation.ckpt"), device, img_size=1024)
+        segmentate_model = AnimeSegmentation.try_load("isnet_is", os.path.join(get_models_dir(), "segmentator/anime-segmentation.ckpt"), device, img_size=1024)
         segmentate_model.eval()
         segmentate_model.to(device)
     img = np.array(Image.open(file)) 

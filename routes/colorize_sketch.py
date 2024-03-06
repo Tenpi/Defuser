@@ -7,6 +7,7 @@ from torchvision import transforms
 from collections import namedtuple
 import numpy as np
 import array
+from .functions import get_models_dir
 
 topk = 4
 Norm = nn.BatchNorm2d
@@ -474,7 +475,7 @@ def get_topk(color_info, k):
 def colorize_sketch(sketch, style, output):
     global colorize_model
     if not colorize_model:
-        checkpoint = torch.load(os.path.join(dirname, "../models/misc/colorize.pth"), map_location=device)
+        checkpoint = torch.load(os.path.join(get_models_dir(), "misc/colorize.pth"), map_location=device)
         colorize_model = DeepUNetPaintGenerator()
         colorize_model.load_state_dict(checkpoint["model_state"])
         colorize_model = colorize_model.to(device)
