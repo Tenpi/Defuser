@@ -34,6 +34,11 @@ models is supported. It aims to be simple and fast to use.
 - Colorize a sketch using reference image.
 - Change the generation source (local, Novel AI, Holara AI)
 
+### Supported Architectures
+- Stable Diffusion 1
+- Stable Diffusion 2
+- Stable Diffusion XL
+
 ### Requirements
 
 Node.js: https://nodejs.org/en \

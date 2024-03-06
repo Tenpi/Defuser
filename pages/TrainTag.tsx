@@ -2,13 +2,15 @@ import React, {useContext, useEffect, useState, useRef} from "react"
 import {useHistory} from "react-router-dom"
 import {EnableDragContext, MobileContext, SiteHueContext, SiteSaturationContext, SiteLightnessContext, 
 TrainTabContext, FolderLocationContext, InterrogatorNameContext, SocketContext, TrainStartedContext, TrainProgressContext,
-TrainProgressTextContext, TrainCompletedContext, TrainImagesContext} from "../Context"
+TrainProgressTextContext, TrainCompletedContext, TrainImagesContext, ReverseSortContext} from "../Context"
 import {ProgressBar} from "react-bootstrap"
 import functions from "../structures/Functions"
 import folder from "../assets/icons/folder.png"
 import TrainImage from "../components/TrainImage"
 import "./styles/traintag.less"
 import axios from "axios"
+
+let scrollLock = false
 
 const TrainTag: React.FunctionComponent = (props) => {
     const {enableDrag, setEnableDrag} = useContext(EnableDragContext)
@@ -25,6 +27,10 @@ const TrainTag: React.FunctionComponent = (props) => {
     const {trainProgressText, setTrainProgressText} = useContext(TrainProgressTextContext)
     const {trainStarted, setTrainStarted} = useContext(TrainStartedContext)
     const {trainCompleted, setTrainCompleted} = useContext(TrainCompletedContext)
+    const {reverseSort, setReverseSort} = useContext(ReverseSortContext)
+    const [append, setAppend] = useState("")
+    const [slice, setSlice] = useState([])
+    const [sliceIndex, setSliceIndex] = useState(0)
     const progressBarRef = useRef(null) as React.RefObject<HTMLDivElement>
     const ref = useRef<HTMLCanvasElement>(null)
     const history = useHistory()
@@ -32,6 +38,54 @@ const TrainTag: React.FunctionComponent = (props) => {
     const getFilter = () => {
         return `hue-rotate(${siteHue - 180}deg) saturate(${siteSaturation}%) brightness(${siteLightness + 50}%)`
     }
+
+    useEffect(() => {
+        const max = 100 + (sliceIndex * 100)
+        let slice = reverseSort ? trainImages.slice(Math.max(trainImages.length - max - 1, 0), trainImages.length - 1) : trainImages.slice(0, max)
+        setSlice(slice)
+    }, [trainImages, reverseSort, sliceIndex])
+
+    const handleScroll = (event: Event) => {
+        if(!slice.length) return
+        if (scrollLock) return
+        if (Math.abs(document.body.scrollHeight - (document.body.scrollTop + document.body.clientHeight)) <= 1) {
+            scrollLock = true
+            setSliceIndex((prev: number) => prev + 1)
+            setTimeout(() => {
+                scrollLock = false
+            }, 1000)
+        }
+    }
+
+    useEffect(() => {
+        document.body.addEventListener("scroll", handleScroll)
+        return () => {
+            document.body.removeEventListener("scroll", handleScroll)
+        }
+    }, [slice])
+
+    const imagesJSX = () => {
+        let jsx = [] as any
+        if (reverseSort) {
+            for (let i = slice.length - 1; i >= 0; i--) {
+                jsx.push(<TrainImage img={trainImages[i]}/>)
+            }
+        } else {
+            for (let i = 0; i < slice.length; i++) {
+                jsx.push(<TrainImage img={trainImages[i]}/>)
+            }
+        }
+        return jsx
+    }
+
+    useEffect(() => {
+        const savedAppend = localStorage.getItem("append")
+        if (savedAppend) setAppend(savedAppend)
+    }, [])
+
+    useEffect(() => {
+        localStorage.setItem("append", String(append))
+    }, [append])
 
     useEffect(() => {
         if (!socket) return
@@ -83,14 +137,6 @@ const TrainTag: React.FunctionComponent = (props) => {
         updateTrainImages()
     }, [folderLocation])
 
-    const imagesJSX = () => {
-        let jsx = [] as any
-        for (let i = 0; i < trainImages.length; i++) {
-            jsx.push(<TrainImage img={trainImages[i]}/>)
-        }
-        return jsx
-    }
-
     const getText = () => {
         if (trainCompleted) return "Completed"
         if (trainProgress >= 0) return trainProgressText
@@ -108,7 +154,7 @@ const TrainTag: React.FunctionComponent = (props) => {
     }
 
     const tag = async () => {
-        await axios.post("/tag", {images: trainImages.map((i: string) => i.replace("/retrieve?path=", "").split("&")[0]), model: interrogatorName})
+        await axios.post("/tag", {images: trainImages.map((i: string) => i.replace("/retrieve?path=", "").split("&")[0]), model: interrogatorName, append})
     }
 
     const interruptTag = async () => {
@@ -126,6 +172,14 @@ const TrainTag: React.FunctionComponent = (props) => {
                 <div className="train-tag-location" onDoubleClick={openImageLocation}>{folderLocation ? folderLocation : "None"}</div>
                 <button className="train-tag-button" onClick={() => trainStarted ? interruptTag() : tag()} style={{backgroundColor: trainStarted ? "var(--buttonBGStop)" : "var(--buttonBG)"}}>{trainStarted ? "Stop" : "Tag"}</button>
                 <button className="train-tag-button" onClick={() => deleteTags()}>Delete Tags</button>
+            </div>
+            <div className="train-tag-settings-container">
+                <div className="train-tag-settings-column">
+                    <div className="train-tag-settings-box">
+                        <span className="train-tag-settings-title">Append:</span>
+                        <input className="train-tag-settings-input" type="text" spellCheck={false} value={append} onChange={(event) => setAppend(event.target.value)}/>
+                    </div>
+                </div>
             </div>
             {trainStarted ? <div className="train-tag-progress">
                 <div className="render-progress-container" style={{filter: getFilter()}}>

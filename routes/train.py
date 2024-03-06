@@ -81,7 +81,7 @@ def interrupt_train():
         socketio.emit("train interrupt")
         return "done"
     
-def tag(images, model_name):
+def tag(images, model_name, append):
     global gen_thread 
     gen_thread = threading.get_ident()
     socketio.emit("train starting")
@@ -94,6 +94,8 @@ def tag(images, model_name):
                 new_tag_arr.append(tag.replace("_", " ").strip())
             else:
                 new_tag_arr.append(tag.strip())
+        if append:
+            new_tag_arr.insert(0, append)
         result = ", ".join(new_tag_arr)
         name, ext = os.path.splitext(image)
         dest = f"{name}.txt"
@@ -110,7 +112,8 @@ def start_tag():
     data = flask.request.json
     images = data["images"]
     model_name = data["model"]
-    thread = threading.Thread(target=tag, args=(images, model_name))
+    append = data["append"].strip()
+    thread = threading.Thread(target=tag, args=(images, model_name, append))
     thread.start()
     thread.join()
     gen_thread = None

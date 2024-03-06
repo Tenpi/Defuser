@@ -5,7 +5,7 @@ TrainTabContext, FolderLocationContext, SocketContext, TrainStartedContext, Trai
 TrainProgressTextContext, TrainCompletedContext, TrainImagesContext, ModelNameContext, EpochsContext,
 SaveEpochsContext, PreviewEpochsContext, PreviewPromptContext, LearningRateContext, GradientAccumulationStepsContext,
 ResolutionContext, LearningFunctionContext, ImageBrightnessContext, ImageContrastContext, PreviewImageContext,
-TrainRenderImageContext, TrainNameContext, LearningRateTEContext} from "../Context"
+TrainRenderImageContext, TrainNameContext, LearningRateTEContext, ReverseSortContext} from "../Context"
 import {ProgressBar, Dropdown, DropdownButton} from "react-bootstrap"
 import xIcon from "../assets/icons/x.png"
 import xIconHover from "../assets/icons/x-hover.png"
@@ -17,6 +17,7 @@ import axios from "axios"
 
 let timer = null as any
 let clicking = false
+let scrollLock = false
 
 const TrainLora: React.FunctionComponent = (props) => {
     const {enableDrag, setEnableDrag} = useContext(EnableDragContext)
@@ -47,6 +48,9 @@ const TrainLora: React.FunctionComponent = (props) => {
     const {trainRenderImage, setTrainRenderImage} = useContext(TrainRenderImageContext)
     const {trainName, setTrainName} = useContext(TrainNameContext)
     const {learningRateTE, setLearningRateTE} = useContext(LearningRateTEContext)
+    const {reverseSort, setReverseSort} = useContext(ReverseSortContext)
+    const [slice, setSlice] = useState([])
+    const [sliceIndex, setSliceIndex] = useState(0)
     const [hover, setHover] = useState(false)
     const [xHover, setXHover] = useState(false)
     const progressBarRef = useRef(null) as React.RefObject<HTMLDivElement>
@@ -55,6 +59,45 @@ const TrainLora: React.FunctionComponent = (props) => {
 
     const getFilter = () => {
         return `hue-rotate(${siteHue - 180}deg) saturate(${siteSaturation}%) brightness(${siteLightness + 50}%)`
+    }
+
+    useEffect(() => {
+        const max = 100 + (sliceIndex * 100)
+        let slice = reverseSort ? trainImages.slice(Math.max(trainImages.length - max - 1, 0), trainImages.length - 1) : trainImages.slice(0, max)
+        setSlice(slice)
+    }, [trainImages, reverseSort, sliceIndex])
+
+    const handleScroll = (event: Event) => {
+        if(!slice.length) return
+        if (scrollLock) return
+        if (Math.abs(document.body.scrollHeight - (document.body.scrollTop + document.body.clientHeight)) <= 1) {
+            scrollLock = true
+            setSliceIndex((prev: number) => prev + 1)
+            setTimeout(() => {
+                scrollLock = false
+            }, 1000)
+        }
+    }
+
+    useEffect(() => {
+        document.body.addEventListener("scroll", handleScroll)
+        return () => {
+            document.body.removeEventListener("scroll", handleScroll)
+        }
+    }, [slice])
+
+    const imagesJSX = () => {
+        let jsx = [] as any
+        if (reverseSort) {
+            for (let i = slice.length - 1; i >= 0; i--) {
+                jsx.push(<TrainImage img={trainImages[i]}/>)
+            }
+        } else {
+            for (let i = 0; i < slice.length; i++) {
+                jsx.push(<TrainImage img={trainImages[i]}/>)
+            }
+        }
+        return jsx
     }
 
     useEffect(() => {
@@ -126,14 +169,6 @@ const TrainLora: React.FunctionComponent = (props) => {
         }
         updateTrainImages()
     }, [folderLocation])
-
-    const imagesJSX = () => {
-        let jsx = [] as any
-        for (let i = 0; i < trainImages.length; i++) {
-            jsx.push(<TrainImage img={trainImages[i]}/>)
-        }
-        return jsx
-    }
 
     const getText = () => {
         if (trainCompleted) return "Completed"

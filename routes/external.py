@@ -63,6 +63,7 @@ def request_novelai(action="generate", prompt="", negative_prompt="", model="nai
             "qualityToggle": True,
             "sm": True,
             "sm_dyn": True,
+            "decrisper": True,
             "dynamic_thresholding": True,
             "controlnet_strength": control_scale,
             "legacy": False,

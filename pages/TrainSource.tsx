@@ -2,13 +2,15 @@ import React, {useContext, useEffect, useState, useRef} from "react"
 import {useHistory} from "react-router-dom"
 import {EnableDragContext, MobileContext, SiteHueContext, SiteSaturationContext, SiteLightnessContext, 
 TrainTabContext, FolderLocationContext, SocketContext, TrainStartedContext, TrainProgressContext,
-TrainProgressTextContext, TrainCompletedContext, TrainImagesContext, SauceNaoAPIKeyContext} from "../Context"
+TrainProgressTextContext, TrainCompletedContext, TrainImagesContext, SauceNaoAPIKeyContext, ReverseSortContext} from "../Context"
 import {ProgressBar} from "react-bootstrap"
 import functions from "../structures/Functions"
 import folder from "../assets/icons/folder.png"
 import TrainImage from "../components/TrainImage"
 import "./styles/traintag.less"
 import axios from "axios"
+
+let scrollLock = false
 
 const TrainSource: React.FunctionComponent = (props) => {
     const {enableDrag, setEnableDrag} = useContext(EnableDragContext)
@@ -25,12 +27,54 @@ const TrainSource: React.FunctionComponent = (props) => {
     const {trainStarted, setTrainStarted} = useContext(TrainStartedContext)
     const {trainCompleted, setTrainCompleted} = useContext(TrainCompletedContext)
     const {saucenaoAPIKey, setSaucenaoAPIKey} = useContext(SauceNaoAPIKeyContext)
+    const {reverseSort, setReverseSort} = useContext(ReverseSortContext)
+    const [slice, setSlice] = useState([])
+    const [sliceIndex, setSliceIndex] = useState(0)
     const progressBarRef = useRef(null) as React.RefObject<HTMLDivElement>
     const ref = useRef<HTMLCanvasElement>(null)
     const history = useHistory()
 
     const getFilter = () => {
         return `hue-rotate(${siteHue - 180}deg) saturate(${siteSaturation}%) brightness(${siteLightness + 50}%)`
+    }
+
+    useEffect(() => {
+        const max = 100 + (sliceIndex * 100)
+        let slice = reverseSort ? trainImages.slice(Math.max(trainImages.length - max - 1, 0), trainImages.length - 1) : trainImages.slice(0, max)
+        setSlice(slice)
+    }, [trainImages, reverseSort, sliceIndex])
+
+    const handleScroll = (event: Event) => {
+        if(!slice.length) return
+        if (scrollLock) return
+        if (Math.abs(document.body.scrollHeight - (document.body.scrollTop + document.body.clientHeight)) <= 1) {
+            scrollLock = true
+            setSliceIndex((prev: number) => prev + 1)
+            setTimeout(() => {
+                scrollLock = false
+            }, 1000)
+        }
+    }
+
+    useEffect(() => {
+        document.body.addEventListener("scroll", handleScroll)
+        return () => {
+            document.body.removeEventListener("scroll", handleScroll)
+        }
+    }, [slice])
+
+    const imagesJSX = () => {
+        let jsx = [] as any
+        if (reverseSort) {
+            for (let i = slice.length - 1; i >= 0; i--) {
+                jsx.push(<TrainImage img={trainImages[i]}/>)
+            }
+        } else {
+            for (let i = 0; i < slice.length; i++) {
+                jsx.push(<TrainImage img={trainImages[i]}/>)
+            }
+        }
+        return jsx
     }
 
     useEffect(() => {
@@ -82,14 +126,6 @@ const TrainSource: React.FunctionComponent = (props) => {
         }
         updateTrainImages()
     }, [folderLocation])
-
-    const imagesJSX = () => {
-        let jsx = [] as any
-        for (let i = 0; i < trainImages.length; i++) {
-            jsx.push(<TrainImage img={trainImages[i]}/>)
-        }
-        return jsx
-    }
 
     const getText = () => {
         if (trainCompleted) return "Completed"
