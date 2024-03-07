@@ -193,7 +193,7 @@ def start_colorize_sketch():
     gen_thread = None
     return "done"
 
-def run_layer_divide(input_image, divide_mode, loops, clusters, cluster_threshold, blur_size, layer_mode, area):
+def run_layer_divide(input_image, divide_mode, loops, clusters, cluster_threshold, blur_size, layer_mode, area, downscale):
     global gen_thread 
     gen_thread = threading.get_ident()
     socketio.emit("train starting")
@@ -201,6 +201,8 @@ def run_layer_divide(input_image, divide_mode, loops, clusters, cluster_threshol
     output_dir = os.path.join(dirname, f"../outputs/local/psd")
     pathlib.Path(output_dir).mkdir(parents=True, exist_ok=True)
 
+    if downscale and int(downscale) > 0:
+        input_image.thumbnail((int(downscale), int(downscale)))
     output = layer_divide(input_image, output_dir, divide_mode, loops, clusters, cluster_threshold, blur_size, layer_mode, area)
     socketio.emit("train complete")
     show_in_folder("", output)
@@ -218,7 +220,8 @@ def start_layer_divide():
     cluster_threshold = int(data["cluster_threshold"])
     blur_size = int(data["blur_size"])
     area = int(data["area"])
-    thread = threading.Thread(target=run_layer_divide, args=(input_image, divide_mode, loops, clusters, cluster_threshold, blur_size, layer_mode, area))
+    downscale = data["downscale"]
+    thread = threading.Thread(target=run_layer_divide, args=(input_image, divide_mode, loops, clusters, cluster_threshold, blur_size, layer_mode, area, downscale))
     thread.start()
     thread.join()
     gen_thread = None

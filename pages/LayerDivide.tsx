@@ -33,6 +33,7 @@ const LayerDivide: React.FunctionComponent = (props) => {
     const [area, setArea] = useState(20000)
     const [divideMode, setDivideMode] = useState("color_base_mode")
     const [layerMode, setLayerMode] = useState("composite")
+    const [downscale, setDownscale] = useState("")
     const progressBarRef = useRef(null) as React.RefObject<HTMLDivElement>
     const ref = useRef<HTMLCanvasElement>(null)
     const history = useHistory()
@@ -58,6 +59,8 @@ const LayerDivide: React.FunctionComponent = (props) => {
         if (savedLayerMode) setLayerMode(savedLayerMode)
         const savedArea = localStorage.getItem("area")
         if (savedArea) setArea(Number(savedArea))
+        const savedDownscale = localStorage.getItem("downscale")
+        if (savedDownscale) setDownscale(savedDownscale)
     }, [])
 
     useEffect(() => {
@@ -69,11 +72,12 @@ const LayerDivide: React.FunctionComponent = (props) => {
             localStorage.setItem("divideMode", String(divideMode))
             localStorage.setItem("layerMode", String(layerMode))
             localStorage.setItem("area", String(area))
+            localStorage.setItem("downscale", String(downscale))
             localStorage.setItem("layerDivideInput", String(layerDivideInput))
         } catch {
             // ignore
         }
-    }, [layerDivideInput, loops, clusters, clusterThreshold, blurSize, divideMode, layerMode, area])
+    }, [layerDivideInput, loops, clusters, clusterThreshold, blurSize, divideMode, layerMode, area, downscale])
 
     useEffect(() => {
         if (!socket) return
@@ -178,6 +182,7 @@ const LayerDivide: React.FunctionComponent = (props) => {
         json.divide_mode = divideMode
         json.layer_mode = layerMode
         json.area = area
+        json.downscale = downscale
         await axios.post("/layer-divide", json)
     }
 
@@ -198,6 +203,7 @@ const LayerDivide: React.FunctionComponent = (props) => {
         } else {
             setArea(20000)
         }
+        setDownscale("")
     }
 
     return (
@@ -214,6 +220,12 @@ const LayerDivide: React.FunctionComponent = (props) => {
                         <img className="options-bar-img" src={imgPlaceHolder} style={{filter: getFilter()}} draggable={false}/>}
                     </label>
                     <input id="img" type="file" onChange={(event) => loadImage(event)}/>
+                </div>
+                <div className="shade-sketch-box" style={{border: "none"}}>
+                    <div className="shade-sketch-box-row">
+                        <span className="train-tag-settings-title">Downscale:</span>
+                        <input className="train-tag-settings-input" type="text" spellCheck={false} value={downscale} onChange={(event) => setDownscale(event.target.value)} style={{width: "70px"}}/>
+                    </div>
                 </div>
                 <div className="shade-sketch-box">
                     <div className="shade-sketch-box-row">
