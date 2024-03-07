@@ -11,17 +11,48 @@
     flex-wrap: wrap;
 }
 
+.view-image-container {
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-left: 10px;
+    margin-right: 10px;
+    margin-bottom: 10px;
+}
+
 .view-image {
     width: auto;
     height: auto;
     max-width: 300px;
     max-height: 200px;
-    margin-left: 10px;
-    margin-right: 10px;
-    margin-bottom: 10px;
     &:hover {
         cursor: pointer;
         filter: brightness(120%);
     }
 }
 
+.show-view-image-buttons {
+    opacity: 1 !important;
+    transition: all 0.3s;
+}
+
+.view-image-button-container {
+    opacity: 0;
+    position: absolute;
+    top: 3px;
+    right: 3px;
+    display: flex;
+    align-items: center;
+    transition: all 0.3s;
+    z-index: 5000;
+}
+
+.view-image-button {
+    width: auto;
+    height: 20px;
+    &:hover {
+        cursor: pointer;
+        filter: brightness(130%);
+    }
+}
