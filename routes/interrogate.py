@@ -23,7 +23,6 @@ blip_processor = None
 def load_interrogate_model(model_name):
     global deepbooru_model
     global wdtagger_model
-    return
     if model_name == "wdtagger":
         if not wdtagger_model:
             wdtagger_model = load_model(os.path.join(get_models_dir(), "interrogator/wdtagger/wdtagger"))
@@ -33,6 +32,16 @@ def load_interrogate_model(model_name):
         deepbooru_model.load_state_dict(torch.load(os.path.join(get_models_dir(), "interrogator/deepbooru/deepbooru.pt"), map_location="cpu"))
         deepbooru_model.eval()
         deepbooru_model.to(device)
+
+def unload_interrogate_models():
+    global deepbooru_model
+    global wdtagger_model
+    global blip_model
+    global blip_processor
+    deepbooru_model = None
+    wdtagger_model = None
+    blip_model = None
+    blip_processor = None
 
 def process_deepbooru_image(img, dim = 512):
     img = img.resize((dim, dim), resample=Image.BICUBIC)

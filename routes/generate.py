@@ -15,6 +15,8 @@ from .stable_diffusion_controlnet_reference import StableDiffusionControlNetRefe
 from .stable_diffusion_xl_reference import StableDiffusionXLReferencePipeline
 from .hypernet import load_hypernet, add_hypernet, clear_hypernets
 from .external import generate_novelai, generate_holara, update_ext_upscaling, update_ext_infinite
+from .controlnet import unload_control_models
+from .interrogate import unload_interrogate_models
 from compel import Compel, ReturnedEmbeddingsType, DiffusersTextualInversionManager
 from PIL import Image
 import pathlib
@@ -297,10 +299,33 @@ def get_generator(model_name: str = "", vae: str = "", mode: str = "text", clip_
     return generator
 
 @socketio.on("load diffusion model")
-def load_diffusion_model(model_name, vae_name, clip_skip, processing):
+def load_diffusion_model(model_name, vae_name, clip_skip, processing, generator_type):
     global generator
-    return
-    generator = get_generator(model_name, vae_name, "text", int(clip_skip), processing == "cpu")
+    #if generator_type == "local":
+        #generator = get_generator(model_name, vae_name, "text", int(clip_skip), processing == "cpu")
+    return "done"
+
+@app.route("/unload-models", methods=["POST"])
+def unload_models():
+    global generator
+    global generator_name
+    global vae_name
+    global safety_checker
+    global controlnet
+    global control_processor
+    global motion_adapter
+    generator = None
+    generator_name = None
+    vae_name = None
+    safety_checker = None
+    controlnet = None
+    control_processor = "none"
+    motion_adapter = None
+    unload_control_models()
+    unload_interrogate_models()
+    gc.collect()
+    torch.mps.empty_cache()
+    torch.cuda.empty_cache()
     return "done"
 
 @app.route("/update-infinite", methods=["POST"])

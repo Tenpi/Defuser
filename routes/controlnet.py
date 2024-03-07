@@ -54,7 +54,7 @@ def black_to_alpha(img_path):
     cv2.imwrite(img_path, image)
 
 @socketio.on("load control models")
-def load_control_models():
+def load_control_models(h):
     global midas
     global lineart
     global lineart_anime
@@ -62,9 +62,6 @@ def load_control_models():
     global hed
     global device
     global dtype
-    return
-    if not midas:
-        midas = MidasDetector.from_pretrained(os.path.join(get_models_dir(), "controlnet/annotator"), filename="midas.pt").to(device)
     if not lineart:
         lineart = LineartDetector.from_pretrained(os.path.join(get_models_dir(), "controlnet/annotator"), filename="lineart.pt", coarse_filename="lineart2.pt").to(device)
     if not lineart_anime:
@@ -73,6 +70,20 @@ def load_control_models():
         lineart_manga = LineartMangaDetector()
     if not hed:
         hed = HEDdetector.from_pretrained(os.path.join(get_models_dir(), "controlnet/annotator"), filename="hed.pt").to(device)
+    if not midas:
+        midas = MidasDetector.from_pretrained(os.path.join(get_models_dir(), "controlnet/annotator"), filename="midas.pt").to(device)
+
+def unload_control_models():
+    global midas
+    global lineart
+    global lineart_anime
+    global lineart_manga
+    global hed
+    midas = None
+    lineart = None
+    lineart_anime = None
+    lineart_manga = None
+    hed = None
 
 @app.route("/control-image", methods=["POST"])
 def control_image():

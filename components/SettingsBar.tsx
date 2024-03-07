@@ -124,6 +124,10 @@ const SettingsBar: React.FunctionComponent = (props) => {
         if (generator === "holara ai") return "Holara AI"
     }
 
+    const unloadModels = () => {
+        axios.post("/unload-models")
+    }
+
     return (
         <div className="settings-bar" onMouseEnter={() => setEnableDrag(false)}>
             <div className="settings-bar-row">
@@ -215,6 +219,13 @@ const SettingsBar: React.FunctionComponent = (props) => {
                 </DropdownButton>
             </div>
             <div className="settings-bar-row">
+                <span className="settings-bar-text">Deletion:</span>
+                <DropdownButton title={deletion} drop="down" className="checkpoint-selector">
+                    <Dropdown.Item active={deletion === "trash"} onClick={() => setDeletion("trash")}>trash</Dropdown.Item>
+                    <Dropdown.Item active={deletion === "permanent"} onClick={() => setDeletion("permanent")}>permanent</Dropdown.Item>
+                </DropdownButton>
+            </div>
+            <div className="settings-bar-row">
                 <span className="settings-bar-text">Negative Prompt:</span>
                 <textarea className="settings-bar-textarea" spellCheck={false} value={negativePrompt} onChange={(event) => setNegativePrompt(event.target.value)}></textarea>
             </div>
@@ -236,11 +247,7 @@ const SettingsBar: React.FunctionComponent = (props) => {
                 <input className="settings-bar-input" spellCheck={false} value={holaraAICookie} onChange={(event) => setHolaraAICookie(event.target.value)}/>
             </div>
             <div className="settings-bar-row">
-                <span className="settings-bar-text">Deletion:</span>
-                <DropdownButton title={deletion} drop="down" className="checkpoint-selector">
-                    <Dropdown.Item active={deletion === "trash"} onClick={() => setDeletion("trash")}>trash</Dropdown.Item>
-                    <Dropdown.Item active={deletion === "permanent"} onClick={() => setDeletion("permanent")}>permanent</Dropdown.Item>
-                </DropdownButton>
+                <button className="settings-bar-button" onClick={() => unloadModels()}>Unload Models</button>
             </div>
         </div>
     )

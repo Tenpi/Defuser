@@ -76,20 +76,27 @@ const App: React.FunctionComponent = (props) => {
         const socket = io()
         socket.on("connect", () => {
             setSocket(socket)
+        })
+        return () => {
+            socket.disconnect()
+        }
+    }, [])
+
+    useEffect(() => {
+        if (!socket) return
+        setTimeout(() => {
             let interrogatorName = localStorage.getItem("interrogatorName")
             if (!interrogatorName) interrogatorName = "wdtagger"
             const modelName = localStorage.getItem("modelName")
             const vaeName = localStorage.getItem("vaeName")
             const clipSkip = localStorage.getItem("clipSkip")
             const processing = localStorage.getItem("processing")
-            //socket.emit("load interrogate model", interrogatorName)
-            //socket.emit("load diffusion model", modelName, vaeName, clipSkip, processing)
-            //socket.emit("load control models")
-        })
-        return () => {
-            socket.disconnect()
-        }
-    }, [])
+            const generator = localStorage.getItem("generator")
+            socket.emit("load interrogate model", interrogatorName)
+            socket.emit("load diffusion model", modelName, vaeName, clipSkip, processing, generator)
+            socket.emit("load control models", "hi")
+        }, 200)
+    }, [socket])
 
     const initSaveData = async () => {
         let savedLocal = await axios.get("/saved-local-images").then((r) => r.data)
@@ -148,9 +155,6 @@ const App: React.FunctionComponent = (props) => {
         setHypernetworks(hypernetworks)
         const loras = await axios.get("/lora-models").then((r) => r.data)
         setLoras(loras)
-        console.log(textualInversions)
-        console.log(hypernetworks)
-        console.log(loras)
     }
 
     useEffect(() => {
