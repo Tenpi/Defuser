@@ -109,7 +109,6 @@ const Image: React.FunctionComponent<ImageHistoryImageProps> = (props) => {
                 } else if (meta[i].name?.toLowerCase() === "sampler") {
                     arr.push(`Sampler: ${meta[i].value}`)
                 } else if (meta[i].name?.toLowerCase() === "clip skip") {
-                    setClipSkip(meta[i].value)
                     arr.push(`Clip Skip: ${meta[i].value}`)
                 } else if (meta[i].name?.toLowerCase() === "seed") {
                     arr.push(`Seed: ${meta[i].value}`)
@@ -124,7 +123,32 @@ const Image: React.FunctionComponent<ImageHistoryImageProps> = (props) => {
                     str +=  meta[i].value.replaceAll("UNICODE", "").replaceAll(/\u0000/g, "")
                 }
             }
-            setInterrogateText(str)
+            const {prompt, negativePrompt, size, model, vae, denoise, steps, cfg, sampler, clipSkip, seed} = functions.extractMetaValues(str)
+            let arr = [] as any
+            if (prompt) {
+                arr.push(`Prompt: ${prompt}`)
+            } if (negativePrompt) {
+                arr.push(`Negative Prompt: ${negativePrompt}`)
+            } if (size) {
+                arr.push(`Size: ${size}`)
+            } if (model) {
+                arr.push(`Model: ${model}`)
+            } if (vae) {
+                arr.push(`VAE: ${vae}`)
+            } if (steps) {
+                arr.push(`Steps: ${steps}`)
+            } if (cfg) {
+                arr.push(`CFG: ${cfg}`)
+            } if (denoise) {
+                arr.push(`Denoise: ${denoise}`)
+            } if (sampler) {
+                arr.push(`Sampler: ${sampler}`)
+            } if (clipSkip) {
+                arr.push(`Clip Skip: ${clipSkip}`)
+            } if (seed) {
+                arr.push(`Seed: ${seed}`)
+            }
+            setInterrogateText(arr.join("\n"))
         } else {
             const form = new FormData()
             const blob = new Blob([new Uint8Array(arrayBuffer)])
@@ -132,7 +156,32 @@ const Image: React.FunctionComponent<ImageHistoryImageProps> = (props) => {
             form.append("image", file)
             const exif = await axios.post("get-exif", form).then((r) => r.data)
             const str = exif.replaceAll("UNICODE", "").replaceAll(/\u0000/g, "")
-            setInterrogateText(str)
+            const {prompt, negativePrompt, size, model, vae, denoise, steps, cfg, sampler, clipSkip, seed} = functions.extractMetaValues(str)
+            let arr = [] as any
+            if (prompt) {
+                arr.push(`Prompt: ${prompt}`)
+            } if (negativePrompt) {
+                arr.push(`Negative Prompt: ${negativePrompt}`)
+            } if (size) {
+                arr.push(`Size: ${size}`)
+            } if (model) {
+                arr.push(`Model: ${model}`)
+            } if (vae) {
+                arr.push(`VAE: ${vae}`)
+            } if (steps) {
+                arr.push(`Steps: ${steps}`)
+            } if (cfg) {
+                arr.push(`CFG: ${cfg}`)
+            } if (denoise) {
+                arr.push(`Denoise: ${denoise}`)
+            } if (sampler) {
+                arr.push(`Sampler: ${sampler}`)
+            } if (clipSkip) {
+                arr.push(`Clip Skip: ${clipSkip}`)
+            } if (seed) {
+                arr.push(`Seed: ${seed}`)
+            }
+            setInterrogateText(arr.join("\n"))
         }
         setTab("generate")
     }

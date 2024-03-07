@@ -936,25 +936,20 @@ export default class Functions {
         const json = JSON.parse(comment.value)
         if (json.prompt) {
             arr.push(`Prompt: ${json.prompt}`)
-        } 
-        if (json.uc) {
+        } if (json.uc) {
             arr.push(`Negative Prompt: ${json.uc}`)
-        } 
-        if (json.width && json.height) {
+        } if (json.width && json.height) {
             arr.push(`Size: ${json.width}x${json.height}`)
         }
         arr.push(`Model: ${models[source.value]}`)
         arr.push(`VAE: None`)
         if (json.steps) {
             arr.push(`Steps: ${json.steps}`)
-        } 
-        if (json.scale) {
+        } if (json.scale) {
             arr.push(`CFG: ${json.scale}`)
-        } 
-        if (json.strength) {
+        } if (json.strength) {
             arr.push(`Denoise: ${json.strength}`)
-        } 
-        if (json.sampler) {
+        } if (json.sampler) {
             arr.push(`Sampler: ${Functions.novelAISampler(json.sampler)}`)
         } 
         arr.push(`Clip Skip: 2`)
