@@ -62,6 +62,7 @@ def load_control_models(h):
     global hed
     global device
     global dtype
+    return
     if not lineart:
         lineart = LineartDetector.from_pretrained(os.path.join(get_models_dir(), "controlnet/annotator"), filename="lineart.pt", coarse_filename="lineart2.pt").to(device)
     if not lineart_anime:

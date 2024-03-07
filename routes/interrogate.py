@@ -23,6 +23,7 @@ blip_processor = None
 def load_interrogate_model(model_name):
     global deepbooru_model
     global wdtagger_model
+    return
     if model_name == "wdtagger":
         if not wdtagger_model:
             wdtagger_model = load_model(os.path.join(get_models_dir(), "interrogator/wdtagger/wdtagger"))
