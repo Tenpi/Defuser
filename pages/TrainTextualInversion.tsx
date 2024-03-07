@@ -249,7 +249,7 @@ const TrainTextualInversion: React.FunctionComponent = (props) => {
     }
 
     const openFolder = async () => {
-        await axios.post("/open-folder", {path: `outputs/textual inversion/${trainName}`})
+        await axios.post("/open-folder", {path: `outputs/models/textual inversion/${trainName}`})
     }
 
     const reset = () => {

@@ -240,7 +240,7 @@ const TrainLora: React.FunctionComponent = (props) => {
     }
 
     const openFolder = async () => {
-        await axios.post("/open-folder", {path: `outputs/lora/${trainName}`})
+        await axios.post("/open-folder", {path: `outputs/models/lora/${trainName}`})
     }
 
     const reset = () => {

@@ -111,6 +111,7 @@ export const SimplifyImageInputContext = React.createContext<any>(null)
 export const AIImageInputContext = React.createContext<any>(null)
 export const ColorizeSketchInputContext = React.createContext<any>(null)
 export const ColorizeStyleInputContext = React.createContext<any>(null)
+export const LayerDivideInputContext = React.createContext<any>(null)
 export const GeneratorContext = React.createContext<any>(null)
 export const NovelAITokenContext = React.createContext<any>(null)
 export const NovelAIImagesContext = React.createContext<any>(null)
@@ -224,9 +225,11 @@ const Context: React.FunctionComponent = (props: any) => {
     const [colorizeStyleInput, setColorizeStyleInput] = useState("")
     const [novelAIToken, setNovelAIToken] = useState("")
     const [holaraAICookie, setHolaraAICookie] = useState("")
+    const [layerDivideInput, setLayerDivideInput] = useState("")
 
     return (
         <>  
+            <LayerDivideInputContext.Provider value={{layerDivideInput, setLayerDivideInput}}>
             <HolaraAICookieContext.Provider value={{holaraAICookie, setHolaraAICookie}}>
             <NovelAITokenContext.Provider value={{novelAIToken, setNovelAIToken}}>
             <ColorizeStyleInputContext.Provider value={{colorizeStyleInput, setColorizeStyleInput}}>
@@ -426,6 +429,7 @@ const Context: React.FunctionComponent = (props: any) => {
             </ColorizeStyleInputContext.Provider>
             </NovelAITokenContext.Provider>
             </HolaraAICookieContext.Provider>
+            </LayerDivideInputContext.Provider>
         </>
     )
 }

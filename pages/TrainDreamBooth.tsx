@@ -236,7 +236,7 @@ const TrainDreamBooth: React.FunctionComponent = (props) => {
     }
 
     const openFolder = async () => {
-        await axios.post("/open-folder", {path: `outputs/dreambooth/${trainName}`})
+        await axios.post("/open-folder", {path: `outputs/models/dreambooth/${trainName}`})
     }
 
     const interruptTrain = async () => {

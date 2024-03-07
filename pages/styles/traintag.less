@@ -184,3 +184,61 @@
         color: white;
     }
 }
+
+.train-slider-row {
+    position: relative;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+}
+
+.train-slider-text {
+    font-family: "Subway Circle", sans-serif;
+    color: var(--text);
+    font-size: 28px;
+    cursor: text;
+    .stroke-black-thin();
+}
+
+.train-slider-text-value {
+    width: 40px;
+    font-family: "Subway Circle", sans-serif;
+    color: var(--text);
+    font-size: 28px;
+    cursor: text;
+    .stroke-black-thin();
+}
+
+.train-slider {
+    display: flex;
+    width: 300px;
+    height: 100%;
+    margin-left: 10px;
+    margin-right: 10px;
+    align-items: center;
+}
+
+.train-slider-track {
+    display: flex;
+    height: 6px;
+    background-color: var(--sliderBG);
+}
+
+.train-slider-track.train-slider-track-1 {
+    background-color: var(--sliderBG);
+}
+
+.train-slider-thumb {
+    opacity: 1;
+    display: flex;
+    margin-top: -1px;
+    height: 12px;
+    width: 12px;
+    background-color: var(--sliderButton);
+    &:active {
+        outline: none;
+    }
+    &:focus {
+        outline: none;
+    }
+}

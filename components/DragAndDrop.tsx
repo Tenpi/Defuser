@@ -2,7 +2,7 @@ import React, {useContext, useEffect, useRef, useState, useReducer} from "react"
 import {useHistory} from "react-router-dom"
 import {ImageInputContext, InterrogateTextContext, MaskImageContext, MaskDataContext, ExpandImageContext, ExpandMaskContext,
 HorizontalExpandContext, VerticalExpandContext, ShadeImageInputContext, SimplifyImageInputContext, AIImageInputContext, TabContext,
-MiscTabContext, ColorizeSketchInputContext, ColorizeStyleInputContext} from "../Context"
+MiscTabContext, ColorizeSketchInputContext, ColorizeStyleInputContext, LayerDivideInputContext} from "../Context"
 import {HashLink as Link} from "react-router-hash-link"
 import functions from "../structures/Functions"
 import path from "path"
@@ -28,6 +28,7 @@ const DragAndDrop: React.FunctionComponent = (props) => {
     const {shadeImageInput, setShadeImageInput} = useContext(ShadeImageInputContext)
     const {colorizeSketchInput, setColorizeSketchInput} = useContext(ColorizeSketchInputContext)
     const {colorizeStyleInput, setColorizeStyleInput} = useContext(ColorizeStyleInputContext)
+    const {layerDivideInput, setLayerDivideInput} = useContext(LayerDivideInputContext)
     const {tab, setTab} = useContext(TabContext)
     const {miscTab, setMiscTab} = useContext(MiscTabContext)
     const [uploadHover, setUploadHover] = useState(false)
@@ -113,6 +114,8 @@ const DragAndDrop: React.FunctionComponent = (props) => {
                                 } else {
                                     setColorizeSketchInput(link)   
                                 }
+                            } else if (miscTab === "layer divide") {
+                                setLayerDivideInput(link)
                             }
                         } else {
                             setImageInput(link)
@@ -139,6 +142,8 @@ const DragAndDrop: React.FunctionComponent = (props) => {
                 } else {
                     setColorizeSketchInput("")   
                 }
+            } else if (miscTab === "layer divide") {
+                setLayerDivideInput("")
             }
         } else {
             setImageInput("")

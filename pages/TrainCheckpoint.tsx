@@ -236,7 +236,7 @@ const TrainCheckpoint: React.FunctionComponent = (props) => {
     }
 
     const openFolder = async () => {
-        await axios.post("/open-folder", {path: `outputs/checkpoint/${trainName}`})
+        await axios.post("/open-folder", {path: `outputs/models/checkpoint/${trainName}`})
     }
 
     const interruptTrain = async () => {

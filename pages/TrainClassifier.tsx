@@ -136,7 +136,7 @@ const TrainClassifier: React.FunctionComponent = (props) => {
     }
 
     const openFolder = async () => {
-        await axios.post("/open-folder", {path: `outputs/classifier/${path.basename(classifyFolderLocation, path.extname(classifyFolderLocation))}`})
+        await axios.post("/open-folder", {path: `outputs/models/classifier/${path.basename(classifyFolderLocation, path.extname(classifyFolderLocation))}`})
     }
 
     const reset = () => {

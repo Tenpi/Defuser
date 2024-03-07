@@ -471,6 +471,9 @@ class AnimeSegmentation(pl.LightningModule):
 
 def get_mask(model, input_img, use_amp=True, s=640):
     input_img = (input_img / 255).astype(np.float32)
+    dim = input_img.shape[2]
+    if dim == 4:
+        input_img = input_img[..., :3]
     h, w = h0, w0 = input_img.shape[:-1]
     h, w = (s, int(s * w / h)) if h > w else (int(s * h / w), s)
     ph, pw = s - h, s - w
@@ -491,6 +494,14 @@ def get_mask(model, input_img, use_amp=True, s=640):
         pred = pred[ph // 2:ph // 2 + h, pw // 2:pw // 2 + w]
         pred = cv2.resize(pred, (w0, h0))[:, :, np.newaxis]
         return pred
+    
+def get_raw_mask(img):
+    global segmentate_model
+    if not segmentate_model:
+        segmentate_model = AnimeSegmentation.try_load("isnet_is", os.path.join(get_models_dir(), "segmentator/anime-segmentation.ckpt"), device, img_size=1024)
+        segmentate_model.eval()
+        segmentate_model.to(device)
+    return get_mask(segmentate_model, img, use_amp=False, s=1024)
 
 @app.route("/segmentate", methods=["POST"])
 def segmentate():

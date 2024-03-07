@@ -142,7 +142,7 @@ const TrainMerge: React.FunctionComponent = (props) => {
     }
 
     const openFolder = async () => {
-        await axios.post("/open-folder", {path: `outputs/merged`})
+        await axios.post("/open-folder", {path: `outputs/models/merged`})
     }
 
     const reset = () => {

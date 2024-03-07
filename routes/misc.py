@@ -1,11 +1,12 @@
 import flask
 from __main__ import app, socketio
 from .classifier import train_classifier
-from .info import open_folder
+from .info import open_folder, show_in_folder
 from .functions import clean_image, next_index, get_models_dir
 from .simplify_sketch import SketchSimplificationModel
 from .shade_sketch import shade_sketch
 from .colorize_sketch import colorize_sketch
+from .layer_divide import layer_divide
 from transformers import BeitFeatureExtractor, BeitForImageClassification
 from PIL import Image
 import os
@@ -187,6 +188,37 @@ def start_colorize_sketch():
     format = data["format"]
     if format == "gif": format = "jpg"
     thread = threading.Thread(target=run_colorize_sketch, args=(sketch, style, format))
+    thread.start()
+    thread.join()
+    gen_thread = None
+    return "done"
+
+def run_layer_divide(input_image, divide_mode, loops, clusters, cluster_threshold, blur_size, layer_mode, area):
+    global gen_thread 
+    gen_thread = threading.get_ident()
+    socketio.emit("train starting")
+    input_image = Image.open(BytesIO(base64.b64decode(input_image + "=="))).convert("RGB")
+    output_dir = os.path.join(dirname, f"../outputs/local/psd")
+    pathlib.Path(output_dir).mkdir(parents=True, exist_ok=True)
+
+    output = layer_divide(input_image, output_dir, divide_mode, loops, clusters, cluster_threshold, blur_size, layer_mode, area)
+    socketio.emit("train complete")
+    show_in_folder("", output)
+    return "done"
+
+@app.route("/layer-divide", methods=["POST"])
+def start_layer_divide():
+    global gen_thread
+    data = flask.request.json
+    input_image = data["image"]
+    divide_mode = data["divide_mode"]
+    layer_mode = data["layer_mode"]
+    loops = int(data["loops"])
+    clusters = int(data["clusters"])
+    cluster_threshold = int(data["cluster_threshold"])
+    blur_size = int(data["blur_size"])
+    area = int(data["area"])
+    thread = threading.Thread(target=run_layer_divide, args=(input_image, divide_mode, loops, clusters, cluster_threshold, blur_size, layer_mode, area))
     thread.start()
     thread.join()
     gen_thread = None
