@@ -1233,7 +1233,7 @@ def main(args):
     accelerator.end_training()
 
 def get_options(model_name, train_data, instance_prompt, output, max_train_steps, learning_rate, text_encoder_lr, resolution, save_steps, 
-    gradient_accumulation_steps, validation_prompt, validation_epochs, lr_scheduler):
+    gradient_accumulation_steps, validation_prompt, validation_epochs, lr_scheduler, rank):
     options = {}
     options["pretrained_model_name_or_path"] = model_name
     options["pretrained_vae_model_name_or_path"] = None
@@ -1276,8 +1276,8 @@ def get_options(model_name, train_data, instance_prompt, output, max_train_steps
     options["scale_lr"] = False
     options["lr_scheduler"] = lr_scheduler
     options["snr_gamma"] = 5
-    options["lr_warmup_steps"] = 0
-    options["lr_num_cycles"] = 1
+    options["lr_warmup_steps"] = round(max_train_steps * 0.05)
+    options["lr_num_cycles"] = 3
     options["lr_power"] = 1
     options["dataloader_num_workers"] = 0
     options["train_text_encoder_ti"] = False
@@ -1303,8 +1303,8 @@ def get_options(model_name, train_data, instance_prompt, output, max_train_steps
     options["local_rank"] = 16
     options["enable_xformers_memory_efficient_attention"] = False
     options["noise_offse"] = 0
-    options["rank"] = 32
-    options["alpha"] = 16
+    options["rank"] = rank
+    options["alpha"] = round(rank/2)
     options["cache_latents"] = True
     env_local_rank = int(os.environ.get("LOCAL_RANK", -1))
     if env_local_rank != -1 and env_local_rank != options["local_rank"]:
@@ -1317,7 +1317,7 @@ class DotDict(dict):
     __delattr__ = dict.__delitem__
 
 def train_lora(images, model_name, train_data, instance_prompt, output, num_train_epochs, learning_rate, text_encoder_lr, resolution, save_epochs, 
-    gradient_accumulation_steps, validation_prompt, validation_epochs, lr_scheduler):
+    gradient_accumulation_steps, validation_prompt, validation_epochs, lr_scheduler, rank):
 
     if not model_name: model_name = ""
     if not train_data: train_data = ""
@@ -1332,6 +1332,7 @@ def train_lora(images, model_name, train_data, instance_prompt, output, num_trai
     if not validation_prompt: validation_prompt = ""
     if not lr_scheduler: lr_scheduler = "constant"
     if not gradient_accumulation_steps: gradient_accumulation_steps = 1
+    if not rank: rank = 32
 
     steps_per_epoch = math.ceil(len(images) / gradient_accumulation_steps)
     max_train_steps = num_train_epochs * steps_per_epoch
@@ -1339,7 +1340,7 @@ def train_lora(images, model_name, train_data, instance_prompt, output, num_trai
     validation_steps = validation_epochs * steps_per_epoch
 
     options = get_options(model_name, train_data, instance_prompt, output, max_train_steps, learning_rate, text_encoder_lr, resolution, save_steps, 
-    gradient_accumulation_steps, validation_prompt, validation_epochs, lr_scheduler)
+    gradient_accumulation_steps, validation_prompt, validation_epochs, lr_scheduler, rank)
 
     options.sources = get_sources(train_data)
 

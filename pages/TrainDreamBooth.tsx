@@ -256,6 +256,11 @@ const TrainDreamBooth: React.FunctionComponent = (props) => {
         setLearningFunction("constant")
     }
 
+    const getLearningFunction = () => {
+        if (learningFunction === "cosine_with_restarts") return "cosine"
+        return learningFunction
+    }
+
     return (
         <div className="train-tag" onMouseEnter={() => setEnableDrag(false)}>
             <div className="train-tag-folder-container">
@@ -307,10 +312,10 @@ const TrainDreamBooth: React.FunctionComponent = (props) => {
                     </div>
                     <div className="train-tag-settings-box">
                         <span className="train-tag-settings-title">Learning Function:</span>
-                        <DropdownButton title={learningFunction} drop="down" className="checkpoint-selector">
+                        <DropdownButton title={getLearningFunction()} drop="down" className="checkpoint-selector">
                             <Dropdown.Item active={learningFunction === "constant"} onClick={() => setLearningFunction("constant")}>constant</Dropdown.Item>
                             <Dropdown.Item active={learningFunction === "linear"} onClick={() => setLearningFunction("linear")}>linear</Dropdown.Item>
-                            <Dropdown.Item active={learningFunction === "cosine"} onClick={() => setLearningFunction("cosine")}>cosine</Dropdown.Item>
+                            <Dropdown.Item active={learningFunction === "cosine_with_restarts"} onClick={() => setLearningFunction("cosine_with_restarts")}>cosine</Dropdown.Item>
                             <Dropdown.Item active={learningFunction === "quadratic"} onClick={() => setLearningFunction("quadratic")}>quadratic</Dropdown.Item>
                             <Dropdown.Item active={learningFunction === "cubic"} onClick={() => setLearningFunction("cubic")}>cubic</Dropdown.Item>
                             <Dropdown.Item active={learningFunction === "quartic"} onClick={() => setLearningFunction("quartic")}>quartic</Dropdown.Item>

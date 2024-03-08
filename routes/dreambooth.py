@@ -1220,7 +1220,7 @@ def get_options(model_name, train_data, instance_prompt, output, max_train_steps
     options["scale_lr"] = False
     options["lr_scheduler"] = lr_scheduler
     options["snr_gamma"] = 5
-    options["lr_warmup_steps"] = 0
+    options["lr_warmup_steps"] = round(max_train_steps * 0.05)
     options["lr_num_cycles"] = 1
     options["lr_power"] = 1
     options["dataloader_num_workers"] = 0

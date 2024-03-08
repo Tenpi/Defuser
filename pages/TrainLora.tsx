@@ -53,6 +53,7 @@ const TrainLora: React.FunctionComponent = (props) => {
     const [sliceIndex, setSliceIndex] = useState(0)
     const [hover, setHover] = useState(false)
     const [xHover, setXHover] = useState(false)
+    const [loraRank, setLoraRank] = useState("32")
     const progressBarRef = useRef(null) as React.RefObject<HTMLDivElement>
     const ref = useRef<HTMLCanvasElement>(null)
     const history = useHistory()
@@ -99,6 +100,15 @@ const TrainLora: React.FunctionComponent = (props) => {
         }
         return jsx
     }
+
+    useEffect(() => {
+        const savedRank = localStorage.getItem("loraRank")
+        if (savedRank) setLoraRank(savedRank)
+    }, [])
+
+    useEffect(() => {
+        localStorage.setItem("loraRank", String(loraRank))
+    }, [loraRank])
 
     useEffect(() => {
         if (!socket) return
@@ -228,6 +238,7 @@ const TrainLora: React.FunctionComponent = (props) => {
         json.validation_epochs = Number(previewEpochs)
         json.validation_prompt = previewPrompt
         json.learning_function = learningFunction
+        json.rank = Number(loraRank)
         await axios.post("/train-lora", json)
     }
 
@@ -254,6 +265,12 @@ const TrainLora: React.FunctionComponent = (props) => {
         setGradientAccumulationSteps("1")
         setResolution("256")
         setLearningFunction("constant")
+        setLoraRank("32")
+    }
+
+    const getLearningFunction = () => {
+        if (learningFunction === "cosine_with_restarts") return "cosine"
+        return learningFunction
     }
 
     return (
@@ -270,6 +287,10 @@ const TrainLora: React.FunctionComponent = (props) => {
                     <div className="train-tag-settings-box">
                         <span className="train-tag-settings-title">Name:</span>
                         <input className="train-tag-settings-input" type="text" spellCheck={false} value={trainName} onChange={(event) => setTrainName(event.target.value)}/>
+                    </div>
+                    <div className="train-tag-settings-box">
+                        <span className="train-tag-settings-title">Rank:</span>
+                        <input className="train-tag-settings-input" type="text" spellCheck={false} value={loraRank} onChange={(event) => setLoraRank(event.target.value)}/>
                     </div>
                     <div className="train-tag-settings-box">
                         <span className="train-tag-settings-title">Epochs:</span>
@@ -307,10 +328,10 @@ const TrainLora: React.FunctionComponent = (props) => {
                     </div>
                     <div className="train-tag-settings-box">
                         <span className="train-tag-settings-title">Learning Function:</span>
-                        <DropdownButton title={learningFunction} drop="down" className="checkpoint-selector">
+                        <DropdownButton title={getLearningFunction()} drop="down" className="checkpoint-selector">
                             <Dropdown.Item active={learningFunction === "constant"} onClick={() => setLearningFunction("constant")}>constant</Dropdown.Item>
                             <Dropdown.Item active={learningFunction === "linear"} onClick={() => setLearningFunction("linear")}>linear</Dropdown.Item>
-                            <Dropdown.Item active={learningFunction === "cosine"} onClick={() => setLearningFunction("cosine")}>cosine</Dropdown.Item>
+                            <Dropdown.Item active={learningFunction === "cosine_with_restarts"} onClick={() => setLearningFunction("cosine_with_restarts")}>cosine</Dropdown.Item>
                             <Dropdown.Item active={learningFunction === "quadratic"} onClick={() => setLearningFunction("quadratic")}>quadratic</Dropdown.Item>
                             <Dropdown.Item active={learningFunction === "cubic"} onClick={() => setLearningFunction("cubic")}>cubic</Dropdown.Item>
                             <Dropdown.Item active={learningFunction === "quartic"} onClick={() => setLearningFunction("quartic")}>quartic</Dropdown.Item>

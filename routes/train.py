@@ -266,12 +266,12 @@ def start_hypernetwork():
     return "done"
 
 def lora(images, model_name, train_data, instance_prompt, output, num_train_epochs, learning_rate, text_encoder_lr, resolution, save_epochs, 
-    gradient_accumulation_steps, validation_prompt, validation_epochs, lr_scheduler):
+    gradient_accumulation_steps, validation_prompt, validation_epochs, lr_scheduler, rank):
     global gen_thread 
     gen_thread = threading.get_ident()
     socketio.emit("train starting")
     train_lora(images, model_name, train_data, instance_prompt, output, num_train_epochs, learning_rate, text_encoder_lr, resolution, save_epochs, 
-    gradient_accumulation_steps, validation_prompt, validation_epochs, lr_scheduler)
+    gradient_accumulation_steps, validation_prompt, validation_epochs, lr_scheduler, rank)
     socketio.emit("train complete")
     show_in_folder("", f"{output}/{instance_prompt}.safetensors")
     return "done"
@@ -293,12 +293,13 @@ def start_lora():
     validation_prompt = data["validation_prompt"]
     validation_epochs = data["validation_epochs"]
     lr_scheduler = data["learning_function"]
+    rank = data["rank"]
     output = os.path.join(dirname, f"../outputs/models/lora/{instance_prompt}")
     pathlib.Path(output).mkdir(parents=True, exist_ok=True)
     model_name = os.path.join(get_models_dir(), f"diffusion/{model_name}")
 
     thread = threading.Thread(target=lora, args=(images, model_name, train_data, instance_prompt, output, num_train_epochs, learning_rate, text_encoder_lr, resolution, save_epochs, 
-    gradient_accumulation_steps, validation_prompt, validation_epochs, lr_scheduler))
+    gradient_accumulation_steps, validation_prompt, validation_epochs, lr_scheduler, rank))
     thread.start()
     thread.join()
     gen_thread = None

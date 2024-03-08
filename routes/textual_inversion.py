@@ -575,8 +575,8 @@ def get_options(model_name, train_data, initializer_token, output_dir, max_train
     options["learning_rate"] = learning_rate
     options["scale_lr"] =  False
     options["lr_scheduler"] = lr_scheduler
-    options["lr_warmup_steps"] = 0
-    options["lr_num_cycles"] = 1
+    options["lr_warmup_steps"] = round(max_train_steps * 0.05)
+    options["lr_num_cycles"] = 3
     options["dataloader_num_workers"] = 0
     options["adam_beta1"] = 0.9
     options["adam_beta2"] = 0.999
