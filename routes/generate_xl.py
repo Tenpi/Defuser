@@ -242,6 +242,7 @@ def generate_xl(data, request_files, get_controlnet=None, clear_step_frames=None
     watermark = data["watermark"] if "watermark" in data else False
     invisible_watermark = data["invisible_watermark"] if "invisible_watermark" in data else True
     nsfw_enabled = data["nsfw_tab"] if "nsfw_tab" in data else False
+    freeu = data["freeu"] if "freeu" in data else False
 
     input_image = None
     input_mask = None
@@ -268,6 +269,9 @@ def generate_xl(data, request_files, get_controlnet=None, clear_step_frames=None
     socketio.emit("image starting")
 
     generator = get_generator_xl(model_name, vae_name, mode, clip_skip, processing == "cpu", control_processor, get_controlnet)
+
+    if freeu:
+        generator.enable_freeu(s1=0.9, s2=0.2, b1=1.3, b2=1.4)
 
     if sampler == "euler a":
         generator.scheduler = EulerAncestralDiscreteScheduler.from_config(generator.scheduler.config)

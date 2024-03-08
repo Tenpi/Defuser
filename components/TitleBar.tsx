@@ -149,7 +149,7 @@ const TitleBar: React.FunctionComponent<Props> = (props) => {
             <div className="titlebar-logo-container" onClick={titleClick}>
                 <span className="titlebar-hover">
                     <div className="titlebar-text-container">
-                        <span className={`titlebar-text`}>Diffusers UI</span>
+                        <span className={`titlebar-text`}>Defuser</span>
                     </div>
                 </span>
             </div>

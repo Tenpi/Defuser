@@ -346,6 +346,7 @@ def generate(request_data, request_files):
     watermark = data["watermark"] if "watermark" in data else False
     invisible_watermark = data["invisible_watermark"] if "invisible_watermark" in data else True
     nsfw_enabled = data["nsfw_tab"] if "nsfw_tab" in data else False
+    freeu = data["freeu"] if "freeu" in data else False
 
     xl, cascade = analyze_checkpoint(model_name, device)
     if xl:
@@ -380,6 +381,9 @@ def generate(request_data, request_files):
     socketio.emit("image starting")
 
     generator = get_generator(model_name, vae_name, mode, clip_skip, processing == "cpu", control_processor)
+
+    if freeu:
+        generator.enable_freeu(s1=0.9, s2=0.2, b1=1.3, b2=1.4)
 
     if sampler == "euler a":
         generator.scheduler = EulerAncestralDiscreteScheduler.from_config(generator.scheduler.config)

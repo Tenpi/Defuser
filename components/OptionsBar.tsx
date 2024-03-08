@@ -3,7 +3,8 @@ import {useHistory} from "react-router-dom"
 import {HashLink as Link} from "react-router-hash-link"
 import favicon from "../assets/icons/favicon.png"
 import {EnableDragContext, MobileContext, SiteHueContext, SiteSaturationContext, SiteLightnessContext, StepsContext, ModelNameContext,
-CFGContext, SizeContext, DenoiseContext, SamplerContext, SeedContext, InterrogateTextContext, ClipSkipContext, GeneratorContext} from "../Context"
+CFGContext, SizeContext, DenoiseContext, SamplerContext, SeedContext, InterrogateTextContext, ClipSkipContext, GeneratorContext, 
+ModelNamesContext, XAdaptModelContext, FreeUContext} from "../Context"
 import functions from "../structures/Functions"
 import {Dropdown, DropdownButton} from "react-bootstrap"
 import stepsIcon from "../assets/icons/steps.png"
@@ -12,6 +13,8 @@ import sizeIcon from "../assets/icons/size.png"
 import denoiseIcon from "../assets/icons/denoise.png"
 import seedIcon from "../assets/icons/seed.png"
 import clipSkipIcon from "../assets/icons/clipskip.png"
+import checkbox from "../assets/icons/checkbox2.png"
+import checkboxChecked from "../assets/icons/checkbox2-checked.png"
 import Slider from "react-slider"
 import OptionsImage from "./OptionsImage"
 import "./styles/optionsbar.less"
@@ -32,6 +35,9 @@ const OptionsBar: React.FunctionComponent = (props) => {
     const {interrogateText, setInterrogateText} = useContext(InterrogateTextContext)
     const {generator, setGenerator} = useContext(GeneratorContext)
     const {modelName, setModelName} = useContext(ModelNameContext)
+    const {modelNames, setModelNames} = useContext(ModelNamesContext)
+    const {xAdaptModel, setXAdaptModel} = useContext(XAdaptModelContext)
+    const {freeU, setFreeU} = useContext(FreeUContext)
     const ref = useRef<HTMLCanvasElement>(null)
     const history = useHistory()
 
@@ -56,6 +62,10 @@ const OptionsBar: React.FunctionComponent = (props) => {
         if (savedClipSkip) setClipSkip(savedClipSkip)
         const savedInterrogateText = localStorage.getItem("interrogateText")
         if (savedInterrogateText) setInterrogateText(savedInterrogateText)
+        const savedFreeU = localStorage.getItem("freeU")
+        if (savedFreeU) setFreeU(savedFreeU === "true")
+        const savedXAdaptModel = localStorage.getItem("xAdaptModel")
+        if (savedXAdaptModel) setXAdaptModel(savedXAdaptModel)
     }, [])
 
     useEffect(() => {
@@ -67,7 +77,9 @@ const OptionsBar: React.FunctionComponent = (props) => {
         localStorage.setItem("sampler", String(sampler))
         localStorage.setItem("clipSkip", String(clipSkip))
         localStorage.setItem("interrogateText", String(interrogateText))
-    }, [steps, cfg, size, denoise, seed, sampler, clipSkip, interrogateText])
+        localStorage.setItem("xAdaptModel", String(xAdaptModel))
+        localStorage.setItem("freeU", String(freeU))
+    }, [steps, cfg, size, denoise, seed, sampler, clipSkip, interrogateText, xAdaptModel, freeU])
 
     const getSampler = () => {
         if (sampler === "euler a") return "Euler A"
@@ -119,6 +131,20 @@ const OptionsBar: React.FunctionComponent = (props) => {
         }
     }, [generator])
 
+    const getXAdaptJSX = () => {
+        let jsx = [] as any
+        const adapters = ["None", ...modelNames]
+        for (let i = 0; i < adapters.length; i++) {
+            jsx.push(<Dropdown.Item active={xAdaptModel === adapters[i]} onClick={() => setXAdaptModel(adapters[i])}>{adapters[i]}</Dropdown.Item>)
+        }
+        return jsx 
+    }
+
+    const showXAdapt = () => {
+        if (modelName.includes("XL")) return true
+        return false
+    }
+
     return (
         <div className="options-bar" onMouseEnter={() => setEnableDrag(false)}>
             <div className="options-bar-img-input">
@@ -164,6 +190,15 @@ const OptionsBar: React.FunctionComponent = (props) => {
                     <DropdownButton title={getSampler()} drop="down" className="checkpoint-selector">
                         {getSamplerJSX()}
                     </DropdownButton>
+                </div>
+                <div className="options-bar-option-row" style={{width: "91%", justifyContent: "flex-start"}}>
+                    <span className="options-option-text">FreeU</span>
+                    <img className="generate-bar-checkbox" src={freeU ? checkboxChecked : checkbox} style={{filter: getFilter(), marginLeft: "10px", marginRight: "10px"}} onClick={() => setFreeU((prev) => !prev)}/>
+                    {showXAdapt() ? <>
+                    <span className="options-option-text" style={{marginRight: "10px"}}>X-Adapt</span>
+                    <DropdownButton title={xAdaptModel} drop="down" className="checkpoint-selector">
+                        {getXAdaptJSX()}
+                    </DropdownButton></> : null}
                 </div>
             </div>
             <div className="options-bar-interrogator">

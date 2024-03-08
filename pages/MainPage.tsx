@@ -20,7 +20,7 @@ const MainPage: React.FunctionComponent = (props) => {
     const {tab, setTab} = useContext(TabContext)
 
     useEffect(() => {
-        document.title = "Diffusers UI"
+        document.title = "Defuser"
     }, [])
 
     useEffect(() => {

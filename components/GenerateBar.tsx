@@ -10,7 +10,7 @@ ControlImageContext, ControlProcessorContext, ControlScaleContext, ControlGuessM
 ControlInvertContext, StyleFidelityContext, ControlReferenceImageContext, HorizontalExpandContext, VerticalExpandContext, UpscalerContext,
 ExpandImageContext, ExpandMaskContext, StartedContext, SocketContext, LoopModeContext, SavedPromptsContext, WatermarkContext, NSFWTabContext,
 InvisibleWatermarkContext, SauceNaoAPIKeyContext, RandomPromptModeContext, GeneratorContext, NovelAITokenContext, HolaraAICookieContext,
-SavedPromptsNovelAIContext, SavedPromptsHolaraAIContext, ModelDirContext} from "../Context"
+SavedPromptsNovelAIContext, SavedPromptsHolaraAIContext, ModelDirContext, XAdaptModelContext, FreeUContext} from "../Context"
 import functions from "../structures/Functions"
 import checkbox from "../assets/icons/checkbox2.png"
 import checkboxChecked from "../assets/icons/checkbox2-checked.png"
@@ -83,6 +83,8 @@ const GenerateBar: React.FunctionComponent = (props) => {
     const {holaraAICookie, setHolaraAICookie} = useContext(HolaraAICookieContext)
     const {savedPromptsNovelAI, setSavedPromptsNovelAI} = useContext(SavedPromptsNovelAIContext)
     const {savedPromptsHolaraAI, setSavedPromptsHolaraAI} = useContext(SavedPromptsHolaraAIContext)
+    const {xAdaptModel, setXAdaptModel} = useContext(XAdaptModelContext)
+    const {freeU, setFreeU} = useContext(FreeUContext)
     const {modelDir, setModelDir} = useContext(ModelDirContext)
     const ref = useRef<HTMLCanvasElement>(null)
     const history = useHistory()
@@ -286,10 +288,12 @@ const GenerateBar: React.FunctionComponent = (props) => {
         const novelai_token = novelAIToken
         const holara_cookie = holaraAICookie
         const nsfw_tab = nsfwTab
+        const x_adapt_model = xAdaptModel
+        const freeu = freeU
         const json = {prompt, negative_prompt, steps, cfg, width, height, denoise, seed, sampler, amount, model_name, vae_name, 
         clip_skip, processing, format, textual_inversions, hypernetworks, loras, control_processor, control_scale, guess_mode,
         control_start, control_end, style_fidelity, control_reference_image, upscaler, nsfw_tab, watermark, invisible_watermark,
-        generator, novelai_token, holara_cookie}
+        generator, novelai_token, holara_cookie, x_adapt_model, freeu}
         if (expandImage) json.denoise = 1.0
         const form = new FormData()
         form.append("data", JSON.stringify(json))

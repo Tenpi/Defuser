@@ -1,5 +1,5 @@
 {
-  "name": "diffusers-ui",
+  "name": "defuser",
   "version": "0.0.1",
   "description": "Image generation UI for diffusers",
   "scripts": {
@@ -12,7 +12,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/Tenpi/Diffusers-UI"
+    "url": "https://github.com/Tenpi/Defuser"
   },
   "author": "Moepi",
   "license": "GPLv3",

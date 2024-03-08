@@ -125,6 +125,8 @@ export const HolaraAIImageInputImagesContext = React.createContext<any>(null)
 export const SavedPromptsNovelAIContext = React.createContext<any>(null)
 export const SavedPromptsHolaraAIContext = React.createContext<any>(null)
 export const ModelDirContext = React.createContext<any>(null)
+export const XAdaptModelContext = React.createContext<any>(null)
+export const FreeUContext = React.createContext<any>(null)
 
 const Context: React.FunctionComponent = (props: any) => {
     const [theme, setTheme] = useState("light")
@@ -228,9 +230,13 @@ const Context: React.FunctionComponent = (props: any) => {
     const [novelAIToken, setNovelAIToken] = useState("")
     const [holaraAICookie, setHolaraAICookie] = useState("")
     const [layerDivideInput, setLayerDivideInput] = useState("")
+    const [xAdaptModel, setXAdaptModel] = useState("None")
+    const [freeU, setFreeU] = useState(false)
 
     return (
         <>  
+            <FreeUContext.Provider value={{freeU, setFreeU}}>
+            <XAdaptModelContext.Provider value={{xAdaptModel, setXAdaptModel}}>
             <PreviewStepsContext.Provider value={{previewSteps, setPreviewSteps}}>
             <LayerDivideInputContext.Provider value={{layerDivideInput, setLayerDivideInput}}>
             <HolaraAICookieContext.Provider value={{holaraAICookie, setHolaraAICookie}}>
@@ -434,6 +440,8 @@ const Context: React.FunctionComponent = (props: any) => {
             </HolaraAICookieContext.Provider>
             </LayerDivideInputContext.Provider>
             </PreviewStepsContext.Provider>
+            </XAdaptModelContext.Provider>
+            </FreeUContext.Provider>
         </>
     )
 }
