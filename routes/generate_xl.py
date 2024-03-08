@@ -1,29 +1,19 @@
-import flask      
 from __main__ import app, socketio
 import os
 import torch
-from .functions import next_index, is_nsfw, get_normalized_dimensions, is_image, get_number_from_filename, get_seed, append_info, upscale, get_models_dir, analyze_checkpoint
+from .functions import next_index, is_nsfw, get_normalized_dimensions, get_seed, append_info, upscale, get_models_dir
 from .invisiblewatermark import encode_watermark
-from .info import get_diffusion_models, get_vae_models, get_clip_model
-from diffusers import StableDiffusionPipeline, StableDiffusionImg2ImgPipeline, StableDiffusionInpaintPipeline,StableDiffusionControlNetImg2ImgPipeline, \
-StableDiffusionControlNetInpaintPipeline, StableDiffusionControlNetPipeline, ControlNetModel, EulerAncestralDiscreteScheduler, EulerDiscreteScheduler, \
-DDPMScheduler, DDIMScheduler, UniPCMultistepScheduler, DEISMultistepScheduler, DPMSolverMultistepScheduler, HeunDiscreteScheduler, AutoencoderKL, MotionAdapter, AnimateDiffPipeline
-from diffusers.utils import export_to_gif
-from .stable_diffusion_controlnet_reference import StableDiffusionControlNetReferencePipeline
+from .info import get_diffusion_models, get_vae_models
+from diffusers import StableDiffusionXLPipeline, StableDiffusionXLImg2ImgPipeline, StableDiffusionXLInpaintPipeline, \
+StableDiffusionXLControlNetPipeline, StableDiffusionXLControlNetImg2ImgPipeline, StableDiffusionXLControlNetInpaintPipeline, \
+EulerAncestralDiscreteScheduler, EulerDiscreteScheduler, DDPMScheduler, DDIMScheduler, UniPCMultistepScheduler, DEISMultistepScheduler, DPMSolverMultistepScheduler, \
+HeunDiscreteScheduler, AutoencoderKL
+from .stable_diffusion_xl_reference import StableDiffusionXLReferencePipeline
 from .hypernet import load_hypernet, add_hypernet, clear_hypernets
-from .external import generate_novelai, generate_holara, update_ext_upscaling, update_ext_infinite
-from .generate_xl import generate_xl, unload_models_xl, update_upscaling_xl, update_infinite_xl, update_precision_xl
-from .generate_cascade import generate_cascade, unload_models_cascade, update_upscaling_cascade, update_infinite_cascade, update_precision_cascade
-from .controlnet import unload_control_models
-from .interrogate import unload_interrogate_models
 from compel import Compel, ReturnedEmbeddingsType, DiffusersTextualInversionManager
 from PIL import Image
-import pathlib
-import json
 from itertools import chain
-import inspect
-import ctypes
-import threading
+import pathlib
 import asyncio
 import gc
 
@@ -44,44 +34,17 @@ controlnet = None
 control_processor = "none"
 motion_adapter = None
 
-def get_motion_adapter():
-    global motion_adapter
-    motion_model = os.path.join(get_models_dir(), "animatediff")
-    motion_adapter = MotionAdapter.from_pretrained(motion_model, local_files_only=True)
-    return motion_adapter
-
-def get_controlnet(processor: str = "none"):
+def get_controlnet_xl(processor: str = "none", get_controlnet=None):
     global controlnet
     global control_processor
+    if get_controlnet is None: return controlnet
     if not controlnet or control_processor != processor:
-        if processor == "canny":
-            control_model = os.path.join(get_models_dir(), "controlnet/canny")
-            controlnet = ControlNetModel.from_pretrained(control_model, local_files_only=True)
-        elif processor == "depth":
-            control_model = os.path.join(get_models_dir(), "controlnet/depth")
-            controlnet = ControlNetModel.from_pretrained(control_model, local_files_only=True)
-        if processor == "lineart":
-            control_model = os.path.join(get_models_dir(), "controlnet/lineart")
-            controlnet = ControlNetModel.from_pretrained(control_model, local_files_only=True)
-        if processor == "lineart anime":
-            control_model = os.path.join(get_models_dir(), "controlnet/lineart anime")
-            controlnet = ControlNetModel.from_pretrained(control_model, local_files_only=True)
-        if processor == "lineart manga":
-            control_model = os.path.join(get_models_dir(), "controlnet/lineart anime")
-            controlnet = ControlNetModel.from_pretrained(control_model, local_files_only=True)
-        if processor == "scribble":
-            control_model = os.path.join(get_models_dir(), "controlnet/scribble")
-            controlnet = ControlNetModel.from_pretrained(control_model, local_files_only=True)
-        if processor == "softedge":
-            control_model = os.path.join(get_models_dir(), "controlnet/softedge")
-            controlnet = ControlNetModel.from_pretrained(control_model, local_files_only=True)
-        if processor == "reference":
-            control_model = os.path.join(get_models_dir(), "controlnet/canny")
-            controlnet = ControlNetModel.from_pretrained(control_model, local_files_only=True)
+        controlnet = get_controlnet(processor)
         control_processor = processor
     return controlnet
 
-def get_generator(model_name: str = "", vae: str = "", mode: str = "text", clip_skip: int = 2, cpu: bool = False, control_processor: str = "none"):
+def get_generator_xl(model_name: str = "", vae: str = "", mode: str = "text", clip_skip: int = 2, 
+                     cpu: bool = False, control_processor: str = "none", get_controlnet=None):
     global generator
     global generator_name
     global generator_mode
@@ -98,104 +61,90 @@ def get_generator(model_name: str = "", vae: str = "", mode: str = "text", clip_
         model = os.path.join(get_models_dir(), "diffusion", model_name)
         if generator_name != model_name:
             update_model = True
-        if generator is not None and not generator.vae:
+        if generator is not None and not generator.text_encoder_2:
             update_model = True
 
         if mode == "text":
             if update_model:
                 if os.path.isdir(model):
-                    generator = StableDiffusionPipeline.from_pretrained(model, local_files_only=True) 
+                    generator = StableDiffusionXLPipeline.from_pretrained(model, local_files_only=True)  
                 else:
-                    generator = StableDiffusionPipeline.from_single_file(model)
+                    generator = StableDiffusionXLPipeline.from_single_file(model)
             else:
-                generator = StableDiffusionPipeline(vae=generator.vae, text_encoder=generator.text_encoder, 
+                generator = StableDiffusionXLPipeline(vae=generator.vae, text_encoder=generator.text_encoder, 
                                                     tokenizer=generator.tokenizer, unet=generator.unet, 
                                                     scheduler=generator.scheduler, safety_checker=generator.safety_checker, 
-                                                    feature_extractor=generator.feature_extractor)
+                                                    text_encoder_2=generator.text_encoder_2, tokenizer_2=generator.tokenizer_2)
         elif mode == "image":
             if update_model:
                 if os.path.isdir(model):
-                    generator = StableDiffusionImg2ImgPipeline.from_pretrained(model, local_files_only=True)
+                    generator = StableDiffusionXLImg2ImgPipeline.from_pretrained(model, local_files_only=True)
                 else:
-                    generator = StableDiffusionImg2ImgPipeline.from_single_file(model)
+                    generator = StableDiffusionXLImg2ImgPipeline.from_single_file(model)
             else:
-                generator = StableDiffusionImg2ImgPipeline(vae=generator.vae, text_encoder=generator.text_encoder, 
+                generator = StableDiffusionXLImg2ImgPipeline(vae=generator.vae, text_encoder=generator.text_encoder, 
                                                     tokenizer=generator.tokenizer, unet=generator.unet, 
                                                     scheduler=generator.scheduler, safety_checker=generator.safety_checker, 
-                                                    feature_extractor=generator.feature_extractor)
+                                                    text_encoder_2=generator.text_encoder_2, tokenizer_2=generator.tokenizer_2)
         elif mode == "inpaint":
             if update_model:
                 if os.path.isdir(model):
-                    generator = StableDiffusionInpaintPipeline.from_pretrained(model, num_in_channels=4, local_files_only=True)
+                    generator = StableDiffusionXLInpaintPipeline.from_pretrained(model, num_in_channels=4, local_files_only=True)
                 else:
-                    generator = StableDiffusionInpaintPipeline.from_single_file(model, num_in_channels=4)
+                    generator = StableDiffusionXLInpaintPipeline.from_single_file(model, num_in_channels=4)
             else:
-                generator = StableDiffusionInpaintPipeline(vae=generator.vae, text_encoder=generator.text_encoder, 
+                generator = StableDiffusionXLInpaintPipeline(vae=generator.vae, text_encoder=generator.text_encoder, 
                                                     tokenizer=generator.tokenizer, unet=generator.unet, 
                                                     scheduler=generator.scheduler, safety_checker=generator.safety_checker, 
-                                                    feature_extractor=generator.feature_extractor)
+                                                    text_encoder_2=generator.text_encoder_2, tokenizer_2=generator.tokenizer_2)
         elif mode == "controlnet":
-            controlnet = get_controlnet(control_processor).to(device=processor, dtype=dtype)
+            controlnet = get_controlnet_xl(control_processor, get_controlnet).to(device=processor, dtype=dtype)
             if update_model:
                 if os.path.isdir(model):
-                    generator = StableDiffusionControlNetPipeline.from_pretrained(model, controlnet=controlnet, local_files_only=True)
+                    generator = StableDiffusionXLControlNetPipeline.from_pretrained(model, controlnet=controlnet, local_files_only=True)
                 else:
-                    generator = StableDiffusionControlNetPipeline.from_single_file(model, controlnet=controlnet)
+                    generator = StableDiffusionXLControlNetPipeline.from_single_file(model, controlnet=controlnet)
             else:
-                generator = StableDiffusionControlNetPipeline(controlnet=controlnet, vae=generator.vae, text_encoder=generator.text_encoder, 
+                generator = StableDiffusionXLControlNetPipeline(controlnet=controlnet, vae=generator.vae, text_encoder=generator.text_encoder, 
                                                     tokenizer=generator.tokenizer, unet=generator.unet, 
                                                     scheduler=generator.scheduler, safety_checker=generator.safety_checker, 
-                                                    feature_extractor=generator.feature_extractor)
+                                                    text_encoder_2=generator.text_encoder_2, tokenizer_2=generator.tokenizer_2)
         elif mode == "controlnet image":
-            controlnet = get_controlnet(control_processor).to(device=processor, dtype=dtype)
+            controlnet = get_controlnet_xl(control_processor, get_controlnet).to(device=processor, dtype=dtype)
             if update_model:
                 if os.path.isdir(model):
-                    generator = StableDiffusionControlNetImg2ImgPipeline.from_pretrained(model, controlnet=controlnet, local_files_only=True)
+                    generator = StableDiffusionXLControlNetImg2ImgPipeline.from_pretrained(model, controlnet=controlnet, local_files_only=True)
                 else:
-                    generator = StableDiffusionControlNetImg2ImgPipeline.from_single_file(model, controlnet=controlnet)
+                    generator = StableDiffusionXLControlNetImg2ImgPipeline.from_single_file(model, controlnet=controlnet)
             else:
-                generator = StableDiffusionControlNetImg2ImgPipeline(controlnet=controlnet, vae=generator.vae, text_encoder=generator.text_encoder, 
+                generator = StableDiffusionXLControlNetImg2ImgPipeline(controlnet=controlnet, vae=generator.vae, text_encoder=generator.text_encoder, 
                                                     tokenizer=generator.tokenizer, unet=generator.unet, 
                                                     scheduler=generator.scheduler, safety_checker=generator.safety_checker, 
-                                                    feature_extractor=generator.feature_extractor)
+                                                    text_encoder_2=generator.text_encoder_2, tokenizer_2=generator.tokenizer_2)
         elif mode == "controlnet inpaint":
-            controlnet = get_controlnet(control_processor).to(device=processor, dtype=dtype)
+            controlnet = get_controlnet_xl(control_processor, get_controlnet).to(device=processor, dtype=dtype)
             if update_model:
                 if os.path.isdir(model):
-                    generator = StableDiffusionControlNetInpaintPipeline.from_pretrained(model, num_in_channels=4, controlnet=controlnet, local_files_only=True)
+                    generator = StableDiffusionXLControlNetInpaintPipeline.from_pretrained(model, controlnet=controlnet, num_in_channels=4, local_files_only=True)
                 else:
-                    generator = StableDiffusionControlNetInpaintPipeline.from_single_file(model, num_in_channels=4, controlnet=controlnet)
+                    generator = StableDiffusionXLControlNetInpaintPipeline.from_single_file(model, num_in_channels=4, controlnet=controlnet)
             else:
-                generator = StableDiffusionControlNetInpaintPipeline(controlnet=controlnet, vae=generator.vae, text_encoder=generator.text_encoder, 
+                generator = StableDiffusionXLControlNetInpaintPipeline(controlnet=controlnet, vae=generator.vae, text_encoder=generator.text_encoder, 
                                                     tokenizer=generator.tokenizer, unet=generator.unet, 
                                                     scheduler=generator.scheduler, safety_checker=generator.safety_checker, 
-                                                    feature_extractor=generator.feature_extractor)
+                                                    text_encoder_2=generator.text_encoder_2, tokenizer_2=generator.tokenizer_2)
         elif mode == "controlnet reference":
-            controlnet = get_controlnet(control_processor).to(device=processor, dtype=dtype)
+            controlnet = get_controlnet_xl(control_processor, get_controlnet).to(device=processor, dtype=dtype)
             if update_model:
                 if os.path.isdir(model):
-                    generator = StableDiffusionControlNetReferencePipeline.from_pretrained(model, controlnet=controlnet, local_files_only=True)
+                    generator = StableDiffusionXLReferencePipeline.from_pretrained(model, local_files_only=True)
                 else:
-                    generator = StableDiffusionControlNetReferencePipeline.from_single_file(model, controlnet=controlnet)
+                    generator = StableDiffusionXLReferencePipeline.from_single_file(model)
             else:
-                generator = StableDiffusionControlNetReferencePipeline(controlnet=controlnet, vae=generator.vae, text_encoder=generator.text_encoder, 
+                generator = StableDiffusionXLReferencePipeline(vae=generator.vae, text_encoder=generator.text_encoder, 
                                                     tokenizer=generator.tokenizer, unet=generator.unet, 
                                                     scheduler=generator.scheduler, safety_checker=generator.safety_checker, 
-                                                    feature_extractor=generator.feature_extractor)
-        elif mode == "animatediff":
-            motion_adapter = get_motion_adapter().to(device=processor, dtype=dtype)
-            if update_model:
-                if os.path.isdir(model):
-                    generator = StableDiffusionPipeline.from_pretrained(model, local_files_only=True)
-                else:
-                    generator = StableDiffusionPipeline.from_single_file(model)
-                generator = AnimateDiffPipeline(motion_adapter=motion_adapter, vae=generator.vae, 
-                                                text_encoder=generator.text_encoder, tokenizer=generator.tokenizer, 
-                                                unet=generator.unet, scheduler=generator.scheduler)
-            else:
-                generator = AnimateDiffPipeline(motion_adapter=motion_adapter, vae=generator.vae, 
-                                                text_encoder=generator.text_encoder, tokenizer=generator.tokenizer, 
-                                                unet=generator.unet, scheduler=generator.scheduler)
+                                                    text_encoder_2=generator.text_encoder_2, tokenizer_2=generator.tokenizer_2)
         generator_name = model_name
         generator_mode = mode
     if not vae_name or vae_name != vae or update_model:
@@ -215,108 +164,55 @@ def get_generator(model_name: str = "", vae: str = "", mode: str = "text", clip_
     generator.safety_checker = None
     return generator
 
-@socketio.on("load diffusion model")
-def load_diffusion_model(model_name, vae_name, clip_skip, processing, generator_type):
+def load_diffusion_model_xl(model_name, vae_name, clip_skip, processing, generator_type):
     global generator
     #if generator_type == "local":
         #generator = get_generator(model_name, vae_name, "text", int(clip_skip), processing == "cpu")
-    #load_diffusion_model_xl(model_name, vae_name, clip_skip, processing, generator_type)
     return "done"
 
-@app.route("/unload-models", methods=["POST"])
-def unload_models():
+def unload_models_xl():
     global generator
     global generator_name
     global vae_name
     global safety_checker
     global controlnet
     global control_processor
-    global motion_adapter
     generator = None
     generator_name = None
     vae_name = None
     safety_checker = None
     controlnet = None
     control_processor = "none"
-    motion_adapter = None
-    unload_control_models()
-    unload_interrogate_models()
-    unload_models_xl()
-    unload_models_cascade()
-    gc.collect()
-    torch.mps.empty_cache()
-    torch.cuda.empty_cache()
     return "done"
 
-@app.route("/update-infinite", methods=["POST"])
-def update_infinite():
+def update_infinite_xl(value):
     global infinite
-    data = flask.request.json
-    infinite = data["infinite"]
-    update_ext_infinite(infinite)
-    update_infinite_xl(infinite)
-    update_infinite_cascade(infinite)
+    infinite = value
     return "done"
 
-@app.route("/update-upscaling", methods=["POST"])
-def update_upscaling():
+def update_upscaling_xl(value):
     global upscaling
-    data = flask.request.json
-    upscaling = data["upscaling"]
-    update_ext_upscaling(upscaling)
-    update_upscaling_xl(upscaling)
-    update_upscaling_cascade(upscaling)
+    upscaling = value
     return "done"
 
-@app.route("/update-precision", methods=["POST"])
-def update_precision():
+def update_precision_xl(value):
     global dtype
-    data = flask.request.json
-    precision = data["precision"]
+    precision = value
     if precision == "full":
         dtype = torch.float32
     elif precision == "half":
         dtype = torch.bfloat16
-    update_precision_xl(precision)
-    update_precision_cascade(precision)
     return "done"
 
-async def clear_step_frames():
-    step_dir = os.path.join(dirname, f"../outputs/local/steps")
-    images = os.listdir(step_dir)
-    images = list(filter(lambda file: is_image(file, False), images))
-    images = sorted(images, key=lambda x: get_number_from_filename(x), reverse=False)
-    images = list(map(lambda image: os.path.join(step_dir, image), images))
-    for image in images:
-        os.remove(image)
-
-async def generate_step_animation():
-    step_dir = os.path.join(dirname, f"../outputs/local/steps")
-    images = os.listdir(step_dir)
-    images = list(filter(lambda file: is_image(file, False), images))
-    images = sorted(images, key=lambda x: get_number_from_filename(x), reverse=False)
-    images = list(map(lambda image: os.path.join(step_dir, image), images))
-    frames = list(map(lambda image: Image.open(image).convert("RGB"), images))
-    gif_path = os.path.join(step_dir, "step.gif")
-    frames[0].save(gif_path, save_all=True, append_images=frames[1:], duration=100, loop=0)
-    socketio.emit("step animation complete", {"path": f"/outputs/local/steps/step.gif"})
-
-def generate(request_data, request_files):
-    global gen_thread
+def generate_xl(data, request_files, get_controlnet=None, clear_step_frames=None, generate_step_animation=None):
     global device
     global infinite
     global upscaling
-    gen_thread = threading.get_ident()
     mode = "text"
-    data = json.loads(request_data)
 
-    asyncio.run(clear_step_frames())
-    generator_type = data["generator"] if "generator" in data else "local"
-    if generator_type == "novel ai":
-        return generate_novelai(data, request_files)
-    elif generator_type == "holara ai":
-        return generate_holara(data, request_files)
-                
+    if clear_step_frames is not None:
+        asyncio.run(clear_step_frames())
+
     seed = get_seed(data["seed"]) if "seed" in data else get_seed(-1)
     amount = int(data["amount"]) if "amount" in data else 1
     steps = int(data["steps"]) if "steps" in data else 20
@@ -347,12 +243,6 @@ def generate(request_data, request_files):
     invisible_watermark = data["invisible_watermark"] if "invisible_watermark" in data else True
     nsfw_enabled = data["nsfw_tab"] if "nsfw_tab" in data else False
 
-    xl, cascade = analyze_checkpoint(model_name, device)
-    if xl:
-        return generate_xl(data, request_files, get_controlnet, clear_step_frames, generate_step_animation)
-    elif cascade:
-        return generate_cascade(data, request_files, clear_step_frames, generate_step_animation)
-
     input_image = None
     input_mask = None
     control_image = None
@@ -374,12 +264,10 @@ def generate(request_data, request_files):
                     mode = "controlnet image"
                 if control_processor == "reference":
                     mode = "controlnet reference"
-    if format == "gif":
-        mode = "animatediff"
 
     socketio.emit("image starting")
 
-    generator = get_generator(model_name, vae_name, mode, clip_skip, processing == "cpu", control_processor)
+    generator = get_generator_xl(model_name, vae_name, mode, clip_skip, processing == "cpu", control_processor, get_controlnet)
 
     if sampler == "euler a":
         generator.scheduler = EulerAncestralDiscreteScheduler.from_config(generator.scheduler.config)
@@ -459,10 +347,10 @@ def generate(request_data, request_files):
     if clip_skip > 1:
         returned_embeddings_type = ReturnedEmbeddingsType.PENULTIMATE_HIDDEN_STATES_NORMALIZED
 
-    compel = Compel(tokenizer=generator.tokenizer, text_encoder=generator.text_encoder, returned_embeddings_type=returned_embeddings_type,
-                    textual_inversion_manager=textual_inversion_manager, truncate_long_prompts=False)
-    conditioning = compel.build_conditioning_tensor(prompt)
-    negative_conditioning = compel.build_conditioning_tensor(negative_prompt)
+    compel = Compel(tokenizer=[generator.tokenizer, generator.tokenizer_2] , text_encoder=[generator.text_encoder, generator.text_encoder_2], requires_pooled=[False, True],
+                    returned_embeddings_type=returned_embeddings_type, textual_inversion_manager=textual_inversion_manager, truncate_long_prompts=True)
+    conditioning, pooled = compel.build_conditioning_tensor(prompt)
+    negative_conditioning, negative_pooled = compel.build_conditioning_tensor(negative_prompt)
     [conditioning, negative_conditioning] = compel.pad_conditioning_tensors_to_same_length([conditioning, negative_conditioning])
 
     def step_progress(self, step: int, timestep: int, call_dict: dict):
@@ -504,7 +392,9 @@ def generate(request_data, request_files):
                     return images
             image = generator(
                 prompt_embeds=conditioning,
+                pooled_prompt_embeds=pooled,
                 negative_prompt_embeds=negative_conditioning,
+                negative_pooled_prompt_embeds=negative_pooled,
                 width=width,
                 height=height,
                 num_inference_steps=steps,
@@ -519,7 +409,8 @@ def generate(request_data, request_files):
             pathlib.Path(dir_path).mkdir(parents=True, exist_ok=True)
             out_path = os.path.join(dir_path, f"image{next_index(dir_path)}.{format}")
             image.save(out_path)
-            asyncio.run(generate_step_animation())
+            if generate_step_animation is not None:
+                asyncio.run(generate_step_animation())
             if upscaling:
                 socketio.emit("image upscaling")
                 upscale(out_path, upscaler)
@@ -545,7 +436,9 @@ def generate(request_data, request_files):
                 image=input_image,
                 strength=denoise,
                 prompt_embeds=conditioning,
+                pooled_prompt_embeds=pooled,
                 negative_prompt_embeds=negative_conditioning,
+                negative_pooled_prompt_embeds=negative_pooled,
                 num_inference_steps=steps,
                 guidance_scale=cfg,
                 generator=torch.manual_seed(seed),
@@ -557,7 +450,8 @@ def generate(request_data, request_files):
             pathlib.Path(dir_path).mkdir(parents=True, exist_ok=True)
             out_path = os.path.join(dir_path, f"image{next_index(dir_path)}.{format}")
             image.save(out_path)
-            asyncio.run(generate_step_animation())
+            if generate_step_animation is not None:
+                asyncio.run(generate_step_animation())
             if upscaling:
                 socketio.emit("image upscaling")
                 upscale(out_path, upscaler)
@@ -588,7 +482,9 @@ def generate(request_data, request_files):
                 height=normalized["height"],
                 strength=denoise,
                 prompt_embeds=conditioning,
+                pooled_prompt_embeds=pooled,
                 negative_prompt_embeds=negative_conditioning,
+                negative_pooled_prompt_embeds=negative_pooled,
                 num_inference_steps=steps,
                 guidance_scale=cfg,
                 generator=torch.manual_seed(seed),
@@ -600,7 +496,8 @@ def generate(request_data, request_files):
             pathlib.Path(dir_path).mkdir(parents=True, exist_ok=True)
             out_path = os.path.join(dir_path, f"image{next_index(dir_path)}.{format}")
             image.save(out_path)
-            asyncio.run(generate_step_animation())
+            if generate_step_animation is not None:
+                asyncio.run(generate_step_animation())
             if upscaling:
                 socketio.emit("image upscaling")
                 upscale(out_path, upscaler)
@@ -626,7 +523,9 @@ def generate(request_data, request_files):
             image = generator(
                 image=control_image,
                 prompt_embeds=conditioning,
+                pooled_prompt_embeds=pooled,
                 negative_prompt_embeds=negative_conditioning,
+                negative_pooled_prompt_embeds=negative_pooled,
                 num_inference_steps=steps,
                 guidance_scale=cfg,
                 generator=torch.manual_seed(seed),
@@ -642,7 +541,8 @@ def generate(request_data, request_files):
             pathlib.Path(dir_path).mkdir(parents=True, exist_ok=True)
             out_path = os.path.join(dir_path, f"image{next_index(dir_path)}.{format}")
             image.save(out_path)
-            asyncio.run(generate_step_animation())
+            if generate_step_animation is not None:
+                asyncio.run(generate_step_animation())
             if upscaling:
                 socketio.emit("image upscaling")
                 upscale(out_path, upscaler)
@@ -670,7 +570,9 @@ def generate(request_data, request_files):
                 control_image=control_image,
                 strength=denoise,
                 prompt_embeds=conditioning,
+                pooled_prompt_embeds=pooled,
                 negative_prompt_embeds=negative_conditioning,
+                negative_pooled_prompt_embeds=negative_pooled,
                 num_inference_steps=steps,
                 guidance_scale=cfg,
                 generator=torch.manual_seed(seed),
@@ -687,7 +589,8 @@ def generate(request_data, request_files):
             pathlib.Path(dir_path).mkdir(parents=True, exist_ok=True)
             out_path = os.path.join(dir_path, f"image{next_index(dir_path)}.{format}")
             image.save(out_path)
-            asyncio.run(generate_step_animation())
+            if generate_step_animation is not None:
+                asyncio.run(generate_step_animation())
             if upscaling:
                 socketio.emit("image upscaling")
                 upscale(out_path, upscaler)
@@ -710,14 +613,16 @@ def generate(request_data, request_files):
                 folder = "image nsfw"
                 if not nsfw_enabled:
                     socketio.emit("image complete", {"image": "", "needs_watermark": False})
-                    return image
+                    return images
             image = generator(
                 image=input_image,
                 mask_image=input_mask,
                 control_image=control_image,
                 strength=denoise,
                 prompt_embeds=conditioning,
+                pooled_prompt_embeds=pooled,
                 negative_prompt_embeds=negative_conditioning,
+                negative_pooled_prompt_embeds=negative_pooled,
                 num_inference_steps=steps,
                 guidance_scale=cfg,
                 generator=torch.manual_seed(seed),
@@ -734,7 +639,8 @@ def generate(request_data, request_files):
             pathlib.Path(dir_path).mkdir(parents=True, exist_ok=True)
             out_path = os.path.join(dir_path, f"image{next_index(dir_path)}.{format}")
             image.save(out_path)
-            asyncio.run(generate_step_animation())
+            if generate_step_animation is not None:
+                asyncio.run(generate_step_animation())
             if upscaling:
                 socketio.emit("image upscaling")
                 upscale(out_path, upscaler)
@@ -759,17 +665,16 @@ def generate(request_data, request_files):
                     socketio.emit("image complete", {"image": "", "needs_watermark": False})
                     return images
             image = generator(
-                image=control_image,
                 ref_image=input_image,
                 prompt_embeds=conditioning,
+                pooled_prompt_embeds=pooled,
                 negative_prompt_embeds=negative_conditioning,
+                negative_pooled_prompt_embeds=negative_pooled,
                 num_inference_steps=steps,
                 guidance_scale=cfg,
                 generator=torch.manual_seed(seed),
                 callback=step_progress,
                 cross_attention_kwargs=cross_attention_kwargs,
-                controlnet_conditioning_scale=control_scale,
-                guess_mode=guess_mode,
                 style_fidelity=style_fidelity,
                 reference_attn=True,
                 reference_adain=True
@@ -778,7 +683,8 @@ def generate(request_data, request_files):
             pathlib.Path(dir_path).mkdir(parents=True, exist_ok=True)
             out_path = os.path.join(dir_path, f"image{next_index(dir_path)}.{format}")
             image.save(out_path)
-            asyncio.run(generate_step_animation())
+            if generate_step_animation is not None:
+                asyncio.run(generate_step_animation())
             if upscaling:
                 socketio.emit("image upscaling")
                 upscale(out_path, upscaler)
@@ -792,68 +698,9 @@ def generate(request_data, request_files):
             socketio.emit("image complete", {"image": f"/outputs/local/{folder}/{os.path.basename(out_path)}", "needs_watermark": watermark})
             images.append(out_path)
             seed += 1
-        elif mode == "animatediff":
-            folder = "text"
-            if is_nsfw(prompt):
-                folder = "text nsfw"
-                if not nsfw_enabled:
-                    socketio.emit("image complete", {"image": "", "needs_watermark": False})
-                    return images
-            # num_frames
-            frames = generator(
-                prompt_embeds=conditioning,
-                negative_prompt_embeds=negative_conditioning,
-                num_inference_steps=steps,
-                guidance_scale=cfg,
-                generator=torch.manual_seed(seed),
-                callback_on_step_end=step_progress,
-                cross_attention_kwargs=cross_attention_kwargs
-            ).frames[0]
-            dir_path = os.path.join(dirname, f"../outputs/local/{folder}")
-            pathlib.Path(dir_path).mkdir(parents=True, exist_ok=True)
-            out_path = os.path.join(dir_path, f"image{next_index(dir_path)}.{format}")
-            export_to_gif(frames, out_path)
-            socketio.emit("image complete", {"image": f"/outputs/local/{folder}/{os.path.basename(out_path)}", "needs_watermark": watermark})
-            images.append(out_path)
-            seed += 1
     gc.collect()
     torch.mps.empty_cache()
     torch.cuda.empty_cache()
     if infinite:
         socketio.emit("repeat generation")
     return images
-
-def _async_raise(tid, exctype):
-    '''Raises an exception in the threads with id tid'''
-    if not inspect.isclass(exctype):
-        raise TypeError("Only types can be raised (not instances)")
-    res = ctypes.pythonapi.PyThreadState_SetAsyncExc(ctypes.c_long(tid),
-                                                     ctypes.py_object(exctype))
-    if res == 0:
-        raise ValueError("invalid thread id")
-    elif res != 1:
-        ctypes.pythonapi.PyThreadState_SetAsyncExc(ctypes.c_long(tid), None)
-        raise SystemError("PyThreadState_SetAsyncExc failed")
-
-@app.route("/interrupt", methods=["POST"])
-def interrupt_generate():
-    global gen_thread
-    if gen_thread:
-        try:
-            _async_raise(gen_thread, ChildProcessError)
-        except ChildProcessError:
-            pass
-        gen_thread = None
-        socketio.emit("image interrupt")
-        return "done"
-
-@app.route("/generate", methods=["POST"])
-def start_generate():
-    global gen_thread
-    request_data = flask.request.form.get("data")
-    request_files = flask.request.files
-    thread = threading.Thread(target=generate, args=(request_data, request_files))
-    thread.start()
-    thread.join()
-    gen_thread = None
-    return "done"

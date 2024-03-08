@@ -84,16 +84,18 @@ const Render: React.FunctionComponent = (props) => {
             setStepAnimation("")
         }
         const stepProgress = (data: any) => {
-            const pixels = new Uint8Array(data.image)
-            const canvas = document.createElement("canvas")
-            canvas.width = data.width
-            canvas.height = data.height
-            const ctx = canvas.getContext("2d")
-            const newImageData = new ImageData(data.width, data.height)
-            newImageData.data.set(pixels)
-            ctx?.putImageData(newImageData, 0, 0)
-            const url = canvas.toDataURL()
-            setRenderImage(url)
+            if (data.image) {
+                const pixels = new Uint8Array(data.image)
+                const canvas = document.createElement("canvas")
+                canvas.width = data.width
+                canvas.height = data.height
+                const ctx = canvas.getContext("2d")
+                const newImageData = new ImageData(data.width, data.height)
+                newImageData.data.set(pixels)
+                ctx?.putImageData(newImageData, 0, 0)
+                const url = canvas.toDataURL()
+                setRenderImage(url)
+            }
             const progress = (100 / Number(data.total_step)) * Number(data.step)
             setStarted(true)
             setCompleted(false)

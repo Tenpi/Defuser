@@ -15,6 +15,8 @@ import platform
 import piexif
 import piexif.helper
 import subprocess
+import safetensors.torch
+import torch
 
 dirname = os.path.dirname(__file__)
 models_dir = "models"
@@ -278,3 +280,38 @@ def upscale(image: str, upscaler: str, video: bool = False):
             program = os.path.join(get_models_dir(), "upscaler/realcugan-ncnn-vulkan.app")
         format = pathlib.Path(image).suffix.replace(".", "")
         subprocess.call([program, "-i", image, "-o", image, "-s", "4", "-f", format])
+
+def analyze_checkpoint(checkpoint, device, in_depth=False):
+    v1 = False
+    v2 = False
+    xl = False
+    cascade = False
+
+    if "XL" in checkpoint:
+        xl = True
+    if "SC" in checkpoint:
+        cascade = True
+    if not in_depth:
+        return xl, cascade
+
+    state_dict = None
+    model_path = os.path.join(get_models_dir(), "diffusion", checkpoint)
+    if (checkpoint.endswith(".safetensors")):
+        state_dict = safetensors.torch.load_file(model_path, device=device)
+    else:
+        model = torch.load(model_path, map_location=device)
+        state_dict = model["state_dict"]
+
+    if "cond_stage_model.transformer.text_model.encoder.layers.1.self_attn.q_proj.weight" in state_dict:
+        v1 = True
+
+    if "cond_stage_model.model.transformer.resblocks.1.ln_1.weight" in state_dict:
+        v2 = True
+
+    if "conditioner.embedders.0.transformer.text_model.final_layer_norm.weight" in state_dict:
+        xl = True
+
+    if "down_blocks.0.0.channelwise.0.weight" in state_dict:
+        cascade = True
+
+    return xl, cascade

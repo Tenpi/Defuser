@@ -37,8 +37,9 @@ models is supported. It aims to be simple and fast to use.
 
 ### Supported Architectures
 - Stable Diffusion 1
-- Stable Diffusion 2
-- Stable Diffusion XL
+- Stable Diffusion 2 ("V2" in checkpoint name)
+- Stable Diffusion XL ("XL" in checkpoint name)
+- Stable Cascade ("SC" in checkpoint name)
 
 ### Requirements
 

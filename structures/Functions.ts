@@ -846,7 +846,7 @@ export default class Functions {
         return c
     }
 
-    public static getSizeDimensions = (value: number, dimension: "512" | "640" | "1024" = "512") => {
+    public static getSizeDimensions = (value: number, dimension: "512" | "640" | "768" | "1024" = "512") => {
         let ranges = [
             {value: -1, width: 640, height: 384},
             {value: 0, width: 512, height: 512},
@@ -857,6 +857,12 @@ export default class Functions {
                 {value: -1, width: 768, height: 512},
                 {value: 0, width: 640, height: 640},
                 {value: 1, width: 512, height: 768}
+            ]
+        } else if (dimension === "768") {
+            ranges = [
+                {value: -1, width: 960, height: 576},
+                {value: 0, width: 768, height: 768},
+                {value: 1, width: 576, height: 960}
             ]
         } else if (dimension === "1024") {
             ranges = [
@@ -885,12 +891,15 @@ export default class Functions {
         return {width: 0, height: 0}
     }
 
-    public static getSizeDimensionsReverse = (height: number, dimension: "512" | "640" | "1024" = "512") => {
+    public static getSizeDimensionsReverse = (height: number, dimension: "512" | "640" | "768" | "1024" = "512") => {
         let oldMin = 384
         let oldMax = 640
         if (dimension === "640") {
             oldMin = 512
             oldMax = 768
+        } else if (dimension === "768") {
+            oldMin = 576
+            oldMax = 960
         } else if (dimension === "1024") {
             oldMin = 896
             oldMax = 1280

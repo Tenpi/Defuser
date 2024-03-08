@@ -287,12 +287,12 @@ const TrainHypernetwork: React.FunctionComponent = (props) => {
                         <span className="train-tag-settings-title">Gradient Accumulation Steps:</span>
                         <input className="train-tag-settings-input" type="text" spellCheck={false} value={gradientAccumulationSteps} onChange={(event) => setGradientAccumulationSteps(event.target.value)}/>
                     </div>
+                </div>
+                <div className="train-tag-settings-column">
                     <div className="train-tag-settings-box">
                         <span className="train-tag-settings-title">Resolution:</span>
                         <input className="train-tag-settings-input" type="text" spellCheck={false} value={resolution} onChange={(event) => setResolution(event.target.value)}/>
                     </div>
-                </div>
-                <div className="train-tag-settings-column">
                     <div className="train-tag-settings-box">
                         <span className="train-tag-settings-title">Save Epochs:</span>
                         <input className="train-tag-settings-input" type="text" spellCheck={false} value={saveEpochs} onChange={(event) => setSaveEpochs(event.target.value)}/>

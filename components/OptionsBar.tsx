@@ -2,7 +2,7 @@ import React, {useContext, useEffect, useState, useRef} from "react"
 import {useHistory} from "react-router-dom"
 import {HashLink as Link} from "react-router-hash-link"
 import favicon from "../assets/icons/favicon.png"
-import {EnableDragContext, MobileContext, SiteHueContext, SiteSaturationContext, SiteLightnessContext, StepsContext,
+import {EnableDragContext, MobileContext, SiteHueContext, SiteSaturationContext, SiteLightnessContext, StepsContext, ModelNameContext,
 CFGContext, SizeContext, DenoiseContext, SamplerContext, SeedContext, InterrogateTextContext, ClipSkipContext, GeneratorContext} from "../Context"
 import functions from "../structures/Functions"
 import {Dropdown, DropdownButton} from "react-bootstrap"
@@ -31,6 +31,7 @@ const OptionsBar: React.FunctionComponent = (props) => {
     const {clipSkip, setClipSkip} = useContext(ClipSkipContext)
     const {interrogateText, setInterrogateText} = useContext(InterrogateTextContext)
     const {generator, setGenerator} = useContext(GeneratorContext)
+    const {modelName, setModelName} = useContext(ModelNameContext)
     const ref = useRef<HTMLCanvasElement>(null)
     const history = useHistory()
 
@@ -78,6 +79,9 @@ const OptionsBar: React.FunctionComponent = (props) => {
     const getSizeDim = () => {
         if (generator === "novel ai") return "640"
         if (generator === "holara ai") return "640"
+        if (modelName.includes("XL")) return "1024"
+        if (modelName.includes("SC")) return "1024"
+        if (modelName.includes("V2")) return "768"
         return "512"
     }
 
