@@ -3,7 +3,7 @@ import {Switch, Route, Redirect, useHistory, useLocation} from "react-router-dom
 import Context, {EnableDragContext, MobileContext, SocketContext, ImagesContext, UpdateImagesContext, TextualInversionsContext,
 HypernetworksContext, LorasContext, ReverseSortContext, NSFWImagesContext, ImageInputImagesContext, NovelAIImagesContext,
 NovelAINSFWImagesContext, NovelAIImageInputImagesContext, HolaraAIImagesContext, HolaraAINSFWImagesContext, HolaraAIImageInputImagesContext, 
-GeneratorContext, SavedPromptsContext, SavedPromptsNovelAIContext, SavedPromptsHolaraAIContext, ModelDirContext} from "./Context"
+GeneratorContext, SavedPromptsContext, SavedPromptsNovelAIContext, SavedPromptsHolaraAIContext, ModelDirContext, OutputDirContext} from "./Context"
 import axios from "axios"
 import {io} from "socket.io-client"
 import functions from "./structures/Functions"
@@ -37,6 +37,7 @@ const App: React.FunctionComponent = (props) => {
     const [savedPromptsNovelAI, setSavedPromptsNovelAI] = useState([])
     const [savedPromptsHolaraAI, setSavedPromptsHolaraAI] = useState([])
     const [modelDir, setModelDir] = useState("models")
+    const [outputDir, setOutputDir] = useState("outputs")
 
     useEffect(() => {
         functions.preventDragging()
@@ -94,7 +95,7 @@ const App: React.FunctionComponent = (props) => {
             const generator = localStorage.getItem("generator")
             socket.emit("load interrogate model", interrogatorName)
             socket.emit("load diffusion model", modelName, vaeName, clipSkip, processing, generator)
-            socket.emit("load control models", "hi")
+            socket.emit("load control models")
         }, 200)
     }, [socket])
 
@@ -167,8 +168,13 @@ const App: React.FunctionComponent = (props) => {
         axios.post("/update-model-dir", {model_dir: modelDir.trim()})
     }, [modelDir])
 
+    useEffect(() => {
+        axios.post("/update-output-dir", {output_dir: outputDir.trim()})
+    }, [outputDir])
+
     return (
         <div className={`app ${!loaded ? "stop-transitions" : ""}`}>
+            <OutputDirContext.Provider value={{outputDir, setOutputDir}}>
             <ModelDirContext.Provider value={{modelDir, setModelDir}}>
             <SavedPromptsContext.Provider value={{savedPrompts, setSavedPrompts}}>
             <SavedPromptsHolaraAIContext.Provider value={{savedPromptsHolaraAI, setSavedPromptsHolaraAI}}>
@@ -219,6 +225,7 @@ const App: React.FunctionComponent = (props) => {
             </SavedPromptsHolaraAIContext.Provider>
             </SavedPromptsContext.Provider>
             </ModelDirContext.Provider>
+            </OutputDirContext.Provider>
         </div>
     )
 }

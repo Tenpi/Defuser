@@ -4,7 +4,7 @@ from io import BytesIO
 from .generate import upscale
 import os
 import torch
-from .functions import next_index, get_models_dir
+from .functions import next_index, get_models_dir, get_outputs_dir
 from PIL import Image
 from controlnet_aux import CannyDetector, MidasDetector, LineartDetector, LineartAnimeDetector, HEDdetector
 from .lineart_manga import LineartMangaDetector
@@ -141,7 +141,7 @@ def control_image():
         output_image = image
 
     if upscale_image:
-        dir_path = os.path.join(dirname, "../outputs/local/image")
+        dir_path = os.path.join(get_outputs_dir(), "local/image")
         out_path = os.path.join(dir_path, f"image{next_index(dir_path)}.png")
         output_image.save(out_path)
         socketio.emit("image upscaling")

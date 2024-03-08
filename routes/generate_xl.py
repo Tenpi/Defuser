@@ -1,15 +1,16 @@
 from __main__ import app, socketio
 import os
 import torch
-from .functions import next_index, is_nsfw, get_normalized_dimensions, get_seed, append_info, upscale, get_models_dir
+from .functions import next_index, is_nsfw, get_normalized_dimensions, get_seed, append_info, upscale, get_models_dir, get_outputs_dir
 from .invisiblewatermark import encode_watermark
 from .info import get_diffusion_models, get_vae_models
-from diffusers import StableDiffusionXLPipeline, StableDiffusionXLImg2ImgPipeline, StableDiffusionXLInpaintPipeline, \
+from diffusers import StableDiffusionPipeline, StableDiffusionXLPipeline, StableDiffusionXLImg2ImgPipeline, StableDiffusionXLInpaintPipeline, \
 StableDiffusionXLControlNetPipeline, StableDiffusionXLControlNetImg2ImgPipeline, StableDiffusionXLControlNetInpaintPipeline, \
 EulerAncestralDiscreteScheduler, EulerDiscreteScheduler, DDPMScheduler, DDIMScheduler, UniPCMultistepScheduler, DEISMultistepScheduler, DPMSolverMultistepScheduler, \
 HeunDiscreteScheduler, AutoencoderKL
 from .stable_diffusion_xl_reference import StableDiffusionXLReferencePipeline
 from .hypernet import load_hypernet, add_hypernet, clear_hypernets
+from .x_adapter import load_adapter_lora, unload_adapter_loras, Adapter_XL, UNet2DConditionAdapterModel, StableDiffusionXLAdapterPipeline, StableDiffusionXLAdapterControlnetPipeline, StableDiffusionXLAdapterControlnetI2IPipeline
 from compel import Compel, ReturnedEmbeddingsType, DiffusersTextualInversionManager
 from PIL import Image
 from itertools import chain
@@ -23,6 +24,8 @@ device = "mps" if torch.backends.mps.is_available() else "cuda" if torch.cuda.is
 gen_thread = None
 generator = None
 generator_name = None
+generator_sd1 = None
+generator_sd1_name = None
 generator_mode = "text"
 generator_clip_skip = 2
 vae_name = None
@@ -32,7 +35,7 @@ safety_checker = None
 dtype = torch.float32
 controlnet = None
 control_processor = "none"
-motion_adapter = None
+x_adapter = None
 
 def get_controlnet_xl(processor: str = "none", get_controlnet=None):
     global controlnet
@@ -44,13 +47,16 @@ def get_controlnet_xl(processor: str = "none", get_controlnet=None):
     return controlnet
 
 def get_generator_xl(model_name: str = "", vae: str = "", mode: str = "text", clip_skip: int = 2, 
-                     cpu: bool = False, control_processor: str = "none", get_controlnet=None):
+                     cpu: bool = False, control_processor: str = "none", get_controlnet=None, x_adapt_model="None"):
     global generator
     global generator_name
+    global generator_sd1
+    global generator_sd1_name
     global generator_mode
     global generator_clip_skip
     global vae_name
     global safety_checker
+    global x_adapter
     global dtype
     global device
     processor = "cpu" if cpu else device
@@ -147,6 +153,78 @@ def get_generator_xl(model_name: str = "", vae: str = "", mode: str = "text", cl
                                                     text_encoder_2=generator.text_encoder_2, tokenizer_2=generator.tokenizer_2)
         generator_name = model_name
         generator_mode = mode
+    if x_adapt_model and x_adapt_model != "None":
+        if not generator_sd1 or generator_sd1_name != x_adapt_model:
+            model_sd1 = os.path.join(get_models_dir(), "diffusion", x_adapt_model)
+            if os.path.isdir(model_sd1):
+                generator_sd1 = StableDiffusionPipeline.from_pretrained(model_sd1, local_files_only=True)  
+            else:
+                generator_sd1 = StableDiffusionPipeline.from_single_file(model_sd1)
+
+        if not x_adapter:
+            x_adapter = Adapter_XL()
+            adapter_weights = torch.load(os.path.join(get_models_dir(), "misc/X_Adapter.bin"))
+            x_adapter.load_state_dict(adapter_weights)
+
+        unet_sd1_5 = UNet2DConditionAdapterModel.from_config(generator_sd1.unet.config)
+        unet_sd1_5.load_state_dict(generator_sd1.unet.state_dict().copy())
+        generator_sd1.unet = unet_sd1_5
+        unet = UNet2DConditionAdapterModel.from_config(generator.unet.config)
+        unet.load_state_dict(generator.unet.state_dict().copy())
+        generator.unet = unet
+        if mode == "text":
+            generator = StableDiffusionXLAdapterPipeline(
+                vae=generator.vae,
+                text_encoder=generator.text_encoder,
+                text_encoder_2=generator.text_encoder_2,
+                tokenizer=generator.tokenizer,
+                tokenizer_2=generator.tokenizer_2,
+                unet=generator.unet,
+                scheduler=generator.scheduler,
+                vae_sd1_5=generator_sd1.vae,
+                text_encoder_sd1_5=generator_sd1.text_encoder,
+                tokenizer_sd1_5=generator_sd1.tokenizer,
+                unet_sd1_5=generator_sd1.unet,
+                scheduler_sd1_5=generator_sd1.scheduler,
+                adapter=x_adapter
+            )
+        elif mode == "controlnet":
+            controlnet = get_controlnet_xl(control_processor, get_controlnet).to(device=processor, dtype=dtype)
+            generator = StableDiffusionXLAdapterControlnetPipeline(
+                vae=generator.vae,
+                text_encoder=generator.text_encoder,
+                text_encoder_2=generator.text_encoder_2,
+                tokenizer=generator.tokenizer,
+                tokenizer_2=generator.tokenizer_2,
+                unet=generator.unet,
+                scheduler=generator.scheduler,
+                vae_sd1_5=generator_sd1.vae,
+                text_encoder_sd1_5=generator_sd1.text_encoder,
+                tokenizer_sd1_5=generator_sd1.tokenizer,
+                unet_sd1_5=generator_sd1.unet,
+                scheduler_sd1_5=generator_sd1.scheduler,
+                adapter=x_adapter,
+                controlnet=controlnet
+            )
+        elif mode == "controlnet image":
+            controlnet = get_controlnet_xl(control_processor, get_controlnet).to(device=processor, dtype=dtype)
+            generator = StableDiffusionXLAdapterControlnetI2IPipeline(
+                vae=generator.vae,
+                text_encoder=generator.text_encoder,
+                text_encoder_2=generator.text_encoder_2,
+                tokenizer=generator.tokenizer,
+                tokenizer_2=generator.tokenizer_2,
+                unet=generator.unet,
+                scheduler=generator.scheduler,
+                vae_sd1_5=generator_sd1.vae,
+                text_encoder_sd1_5=generator_sd1.text_encoder,
+                tokenizer_sd1_5=generator_sd1.tokenizer,
+                unet_sd1_5=generator_sd1.unet,
+                scheduler_sd1_5=generator_sd1.scheduler,
+                adapter=x_adapter,
+                controlnet=controlnet
+            )
+        generator_sd1_name = x_adapt_model
     if not vae_name or vae_name != vae or update_model:
         if not vae:
             vae = get_vae_models()[0]
@@ -173,16 +251,22 @@ def load_diffusion_model_xl(model_name, vae_name, clip_skip, processing, generat
 def unload_models_xl():
     global generator
     global generator_name
+    global generator_sd1
+    global generator_sd1_name
     global vae_name
     global safety_checker
     global controlnet
     global control_processor
+    global x_adapter
     generator = None
     generator_name = None
+    generator_sd1 = None
+    generator_sd1_name = None
     vae_name = None
     safety_checker = None
     controlnet = None
     control_processor = "none"
+    x_adapter = None
     return "done"
 
 def update_infinite_xl(value):
@@ -208,6 +292,7 @@ def generate_xl(data, request_files, get_controlnet=None, clear_step_frames=None
     global device
     global infinite
     global upscaling
+    global generator_sd1
     mode = "text"
 
     if clear_step_frames is not None:
@@ -243,6 +328,7 @@ def generate_xl(data, request_files, get_controlnet=None, clear_step_frames=None
     invisible_watermark = data["invisible_watermark"] if "invisible_watermark" in data else True
     nsfw_enabled = data["nsfw_tab"] if "nsfw_tab" in data else False
     freeu = data["freeu"] if "freeu" in data else False
+    x_adapt_model = data["x_adapt_model"] if "x_adapt_model" in data else "None"
 
     input_image = None
     input_mask = None
@@ -268,27 +354,43 @@ def generate_xl(data, request_files, get_controlnet=None, clear_step_frames=None
 
     socketio.emit("image starting")
 
-    generator = get_generator_xl(model_name, vae_name, mode, clip_skip, processing == "cpu", control_processor, get_controlnet)
+    use_x_adapter = False
+    if x_adapt_model and x_adapt_model != "None":
+        use_x_adapter = True
+    generator = get_generator_xl(model_name, vae_name, mode, clip_skip, processing == "cpu", control_processor, get_controlnet, x_adapt_model)
 
     if freeu:
         generator.enable_freeu(s1=0.9, s2=0.2, b1=1.3, b2=1.4)
 
     if sampler == "euler a":
         generator.scheduler = EulerAncestralDiscreteScheduler.from_config(generator.scheduler.config)
+        if use_x_adapter: generator.scheduler_sd1_5 = EulerAncestralDiscreteScheduler.from_config(generator.scheduler_sd1_5.config)
     elif sampler == "euler":
         generator.scheduler = EulerDiscreteScheduler.from_config(generator.scheduler.config)
+        if use_x_adapter: generator.scheduler_sd1_5 = EulerDiscreteScheduler.from_config(generator.scheduler_sd1_5.config)
     elif sampler == "dpm++":
         generator.scheduler = DPMSolverMultistepScheduler.from_config(generator.scheduler.config)
+        if use_x_adapter: generator.scheduler_sd1_5 = DPMSolverMultistepScheduler.from_config(generator.scheduler_sd1_5.config)
     elif sampler == "ddim":
         generator.scheduler = DDIMScheduler.from_config(generator.scheduler.config)
+        if use_x_adapter: generator.scheduler_sd1_5 = DDIMScheduler.from_config(generator.scheduler_sd1_5.config)
     elif sampler == "ddpm":
         generator.scheduler = DDPMScheduler.from_config(generator.scheduler.config)
+        if use_x_adapter: generator.scheduler_sd1_5 = DDPMScheduler.from_config(generator.scheduler_sd1_5.config)
     elif sampler == "unipc":
         generator.scheduler = UniPCMultistepScheduler.from_config(generator.scheduler.config)
+        if use_x_adapter: generator.scheduler_sd1_5 = UniPCMultistepScheduler.from_config(generator.scheduler_sd1_5.config)
     elif sampler == "deis":
         generator.scheduler = DEISMultistepScheduler.from_config(generator.scheduler.config)
+        if use_x_adapter: generator.scheduler_sd1_5 = DEISMultistepScheduler.from_config(generator.scheduler_sd1_5.config)
     elif sampler == "heun":
         generator.scheduler = HeunDiscreteScheduler.from_config(generator.scheduler.config)
+        if use_x_adapter: generator.scheduler_sd1_5 = HeunDiscreteScheduler.from_config(generator.scheduler_sd1_5.config)
+    
+    if use_x_adapter:
+        generator.scheduler = DDPMScheduler.from_config(generator.scheduler.config)
+        generator.scheduler_sd1_5 = DDPMScheduler.from_config(generator.scheduler_sd1_5.config)
+        generator.scheduler_sd1_5.config.timestep_spacing = "leading"
 
     if mode == "animatediff":
         generator.scheduler.beta_schedule = "linear"
@@ -309,41 +411,55 @@ def generate_xl(data, request_files, get_controlnet=None, clear_step_frames=None
         has_hypernet = True
         try:
             hypernet = load_hypernet(hypernet_path, hypernet_scale, device)
-            add_hypernet(generator.unet, hypernet)
+            if use_x_adapter:
+                add_hypernet(generator.unet_sd1_5, hypernet)
+            else:
+                add_hypernet(generator.unet, hypernet)
         except ValueError:
             continue
     if not has_hypernet:
-        clear_hypernets(generator.unet)
+        if use_x_adapter:
+            clear_hypernets(generator.unet_sd1_5)
+        else:
+            clear_hypernets(generator.unet)
 
-    has_lora = False
-    generator.unfuse_lora()
-    adapters = []
-    adapter_weights = []
-    for lora in loras:
-        lora_scale = float(lora["weight"])
-        weight_name = os.path.basename(lora["model"])
-        lora_name = lora["name"]
-        #cross_attention_kwargs["scale"] = lora_scale
-        lora_path = os.path.join(get_models_dir(), lora["model"].replace("models/", ""))
-        has_lora = True
-        try:
-            adapters.append(lora_name)
-            adapter_weights.append(lora_scale)
-            generator.load_lora_weights(lora_path, weight_name=weight_name, adapter_name=lora_name)
-        except ValueError:
-            continue
-    generator.set_adapters(adapters, adapter_weights=adapter_weights)
-    generator.fuse_lora()
-    generator.enable_lora()
-    if not has_lora:
-        generator.unload_lora_weights()
-        generator.disable_lora()
-        cross_attention_kwargs.pop("scale", None)
+    if use_x_adapter:
+        unload_adapter_loras(generator)
+        for lora in loras:
+            lora_scale = float(lora["weight"])
+            lora_path = os.path.join(get_models_dir(), lora["model"].replace("models/", ""))
+            load_adapter_lora(generator, lora_path, lora_scale, device)
+    else:
+        has_lora = False
+        generator.unfuse_lora()
+        adapters = []
+        adapter_weights = []
+        for lora in loras:
+            lora_scale = float(lora["weight"])
+            weight_name = os.path.basename(lora["model"])
+            lora_name = lora["name"]
+            lora_path = os.path.join(get_models_dir(), lora["model"].replace("models/", ""))
+            has_lora = True
+            try:
+                adapters.append(lora_name)
+                adapter_weights.append(lora_scale)
+                generator.load_lora_weights(lora_path, weight_name=weight_name, adapter_name=lora_name)
+            except ValueError:
+                continue
+        generator.set_adapters(adapters, adapter_weights=adapter_weights)
+        generator.fuse_lora()
+        generator.enable_lora()
+        if not has_lora:
+            generator.unload_lora_weights()
+            generator.disable_lora()
+            cross_attention_kwargs.pop("scale", None)
     
     conditioning = None
     negative_conditioning = None
     pooled = None
     negative_pooled = None
+    conditioning_sd1 = None
+    negative_conditioning_sd1 = None
 
     textual_inversion_manager = DiffusersTextualInversionManager(generator)
 
@@ -356,6 +472,13 @@ def generate_xl(data, request_files, get_controlnet=None, clear_step_frames=None
     conditioning, pooled = compel.build_conditioning_tensor(prompt)
     negative_conditioning, negative_pooled = compel.build_conditioning_tensor(negative_prompt)
     [conditioning, negative_conditioning] = compel.pad_conditioning_tensors_to_same_length([conditioning, negative_conditioning])
+
+    if use_x_adapter:
+        compel_sd1 = Compel(tokenizer=generator.tokenizer_sd1_5, text_encoder=generator.text_encoder_sd1_5, returned_embeddings_type=returned_embeddings_type,
+                    textual_inversion_manager=textual_inversion_manager, truncate_long_prompts=False)
+        conditioning_sd1 = compel_sd1.build_conditioning_tensor(prompt)
+        negative_conditioning_sd1 = compel_sd1.build_conditioning_tensor(negative_prompt)
+        [conditioning_sd1, negative_conditioning_sd1] = compel_sd1.pad_conditioning_tensors_to_same_length([conditioning_sd1, negative_conditioning_sd1])
 
     def step_progress(self, step: int, timestep: int, call_dict: dict):
         latent = None
@@ -378,7 +501,7 @@ def generate_xl(data, request_files, get_controlnet=None, clear_step_frames=None
             if sampler == "heun":
                 total_steps = int(total_steps * 2)
             socketio.emit("step progress", {"step": step, "total_step": total_steps, "width": w, "height": h, "image": pixels})
-            step_dir = os.path.join(dirname, f"../outputs/local/steps")
+            step_dir = os.path.join(get_outputs_dir(), f"local/steps")
             pathlib.Path(step_dir).mkdir(parents=True, exist_ok=True)
             img_path = os.path.join(step_dir, f"step{step}.png")
             image.save(img_path)
@@ -394,22 +517,45 @@ def generate_xl(data, request_files, get_controlnet=None, clear_step_frames=None
                 if not nsfw_enabled:
                     socketio.emit("image complete", {"image": "", "needs_watermark": False})
                     return images
-            image = generator(
-                prompt_embeds=conditioning,
-                pooled_prompt_embeds=pooled,
-                negative_prompt_embeds=negative_conditioning,
-                negative_pooled_prompt_embeds=negative_pooled,
-                width=width,
-                height=height,
-                num_inference_steps=steps,
-                guidance_scale=cfg,
-                num_images_per_prompt=1,
-                generator=torch.manual_seed(seed),
-                clip_skip=clip_skip,
-                callback_on_step_end=step_progress,
-                cross_attention_kwargs=cross_attention_kwargs
-            ).images[0]
-            dir_path = os.path.join(dirname, f"../outputs/local/{folder}")
+            if use_x_adapter:
+                image = generator(
+                    prompt_embeds=conditioning,
+                    pooled_prompt_embeds=pooled,
+                    negative_prompt_embeds=negative_conditioning,
+                    negative_pooled_prompt_embeds=negative_pooled,
+                    width=width,
+                    height=height,
+                    num_inference_steps=steps,
+                    guidance_scale=cfg,
+                    num_images_per_prompt=1,
+                    generator=torch.manual_seed(seed),
+                    callback=step_progress,
+                    cross_attention_kwargs=cross_attention_kwargs,
+                    prompt_embeds_sd1_5=conditioning_sd1, 
+                    negative_prompt_embeds_sd1_5=negative_conditioning_sd1,
+                    width_sd1_5=round(width/2),
+                    height_sd1_5=round(height/2),
+                    adapter_guidance_start=0.7,
+                    adapter_condition_scale=1.0,
+                    adapter_type="de"
+                ).images[0]
+            else:
+                image = generator(
+                    prompt_embeds=conditioning,
+                    pooled_prompt_embeds=pooled,
+                    negative_prompt_embeds=negative_conditioning,
+                    negative_pooled_prompt_embeds=negative_pooled,
+                    width=width,
+                    height=height,
+                    num_inference_steps=steps,
+                    guidance_scale=cfg,
+                    num_images_per_prompt=1,
+                    generator=torch.manual_seed(seed),
+                    clip_skip=clip_skip,
+                    callback_on_step_end=step_progress,
+                    cross_attention_kwargs=cross_attention_kwargs
+                ).images[0]
+            dir_path = os.path.join(get_outputs_dir(), f"local/{folder}")
             pathlib.Path(dir_path).mkdir(parents=True, exist_ok=True)
             out_path = os.path.join(dir_path, f"image{next_index(dir_path)}.{format}")
             image.save(out_path)
@@ -450,7 +596,7 @@ def generate_xl(data, request_files, get_controlnet=None, clear_step_frames=None
                 callback_on_step_end=step_progress,
                 cross_attention_kwargs=cross_attention_kwargs
             ).images[0]
-            dir_path = os.path.join(dirname, f"../outputs/local/{folder}")
+            dir_path = os.path.join(get_outputs_dir(), f"local/{folder}")
             pathlib.Path(dir_path).mkdir(parents=True, exist_ok=True)
             out_path = os.path.join(dir_path, f"image{next_index(dir_path)}.{format}")
             image.save(out_path)
@@ -496,7 +642,7 @@ def generate_xl(data, request_files, get_controlnet=None, clear_step_frames=None
                 callback_on_step_end=step_progress,
                 cross_attention_kwargs=cross_attention_kwargs
             ).images[0]
-            dir_path = os.path.join(dirname, f"../outputs/local/{folder}")
+            dir_path = os.path.join(get_outputs_dir(), f"local/{folder}")
             pathlib.Path(dir_path).mkdir(parents=True, exist_ok=True)
             out_path = os.path.join(dir_path, f"image{next_index(dir_path)}.{format}")
             image.save(out_path)
@@ -524,24 +670,49 @@ def generate_xl(data, request_files, get_controlnet=None, clear_step_frames=None
                 if not nsfw_enabled:
                     socketio.emit("image complete", {"image": "", "needs_watermark": False})
                     return images
-            image = generator(
-                image=control_image,
-                prompt_embeds=conditioning,
-                pooled_prompt_embeds=pooled,
-                negative_prompt_embeds=negative_conditioning,
-                negative_pooled_prompt_embeds=negative_pooled,
-                num_inference_steps=steps,
-                guidance_scale=cfg,
-                generator=torch.manual_seed(seed),
-                clip_skip=clip_skip,
-                callback_on_step_end=step_progress,
-                cross_attention_kwargs=cross_attention_kwargs,
-                controlnet_conditioning_scale=control_scale,
-                guess_mode=guess_mode,
-                control_guidance_start=control_start,
-                control_guidance_end=control_end
-            ).images[0]
-            dir_path = os.path.join(dirname, f"../outputs/local/{folder}")
+            if use_x_adapter:
+                image = generator(
+                    image=control_image,
+                    prompt_embeds=conditioning,
+                    pooled_prompt_embeds=pooled,
+                    negative_prompt_embeds=negative_conditioning,
+                    negative_pooled_prompt_embeds=negative_pooled,
+                    num_inference_steps=steps,
+                    guidance_scale=cfg,
+                    generator=torch.manual_seed(seed),
+                    callback=step_progress,
+                    cross_attention_kwargs=cross_attention_kwargs,
+                    controlnet_conditioning_scale=control_scale,
+                    guess_mode=guess_mode,
+                    control_guidance_start=control_start,
+                    control_guidance_end=control_end,
+                    prompt_embeds_sd1_5=conditioning_sd1, 
+                    negative_prompt_embeds_sd1_5=negative_conditioning_sd1,
+                    width_sd1_5=round(width/2),
+                    height_sd1_5=round(height/2),
+                    adapter_guidance_start=0.7,
+                    adapter_condition_scale=1.0,
+                    adapter_type="de"
+                ).images[0]
+            else:
+                image = generator(
+                    image=control_image,
+                    prompt_embeds=conditioning,
+                    pooled_prompt_embeds=pooled,
+                    negative_prompt_embeds=negative_conditioning,
+                    negative_pooled_prompt_embeds=negative_pooled,
+                    num_inference_steps=steps,
+                    guidance_scale=cfg,
+                    generator=torch.manual_seed(seed),
+                    clip_skip=clip_skip,
+                    callback_on_step_end=step_progress,
+                    cross_attention_kwargs=cross_attention_kwargs,
+                    controlnet_conditioning_scale=control_scale,
+                    guess_mode=guess_mode,
+                    control_guidance_start=control_start,
+                    control_guidance_end=control_end
+                ).images[0]
+            dir_path = os.path.join(get_outputs_dir(), f"local/{folder}")
             pathlib.Path(dir_path).mkdir(parents=True, exist_ok=True)
             out_path = os.path.join(dir_path, f"image{next_index(dir_path)}.{format}")
             image.save(out_path)
@@ -569,27 +740,54 @@ def generate_xl(data, request_files, get_controlnet=None, clear_step_frames=None
                 if not nsfw_enabled:
                     socketio.emit("image complete", {"image": "", "needs_watermark": False})
                     return images
-            image = generator(
-                image=input_image,
-                control_image=control_image,
-                strength=denoise,
-                prompt_embeds=conditioning,
-                pooled_prompt_embeds=pooled,
-                negative_prompt_embeds=negative_conditioning,
-                negative_pooled_prompt_embeds=negative_pooled,
-                num_inference_steps=steps,
-                guidance_scale=cfg,
-                generator=torch.manual_seed(seed),
-                clip_skip=clip_skip,
-                callback_on_step_end=step_progress,
-                cross_attention_kwargs=cross_attention_kwargs,
-                controlnet_conditioning_scale=control_scale,
-                guess_mode=guess_mode,
-                control_guidance_start=control_start,
-                control_guidance_end=control_end
-            ).images[0]
+            if use_x_adapter:
+                image = generator(
+                    image=input_image,
+                    control_image=control_image,
+                    strength=denoise,
+                    prompt_embeds=conditioning,
+                    pooled_prompt_embeds=pooled,
+                    negative_prompt_embeds=negative_conditioning,
+                    negative_pooled_prompt_embeds=negative_pooled,
+                    num_inference_steps=steps,
+                    guidance_scale=cfg,
+                    generator=torch.manual_seed(seed),
+                    callback=step_progress,
+                    cross_attention_kwargs=cross_attention_kwargs,
+                    controlnet_conditioning_scale=control_scale,
+                    guess_mode=guess_mode,
+                    control_guidance_start=control_start,
+                    control_guidance_end=control_end,
+                    prompt_embeds_sd1_5=conditioning_sd1, 
+                    negative_prompt_embeds_sd1_5=negative_conditioning_sd1,
+                    width_sd1_5=round(width/2),
+                    height_sd1_5=round(height/2),
+                    adapter_guidance_start=0.7,
+                    adapter_condition_scale=1.0,
+                    adapter_type="de"
+                ).images[0]
+            else:
+                image = generator(
+                    image=input_image,
+                    control_image=control_image,
+                    strength=denoise,
+                    prompt_embeds=conditioning,
+                    pooled_prompt_embeds=pooled,
+                    negative_prompt_embeds=negative_conditioning,
+                    negative_pooled_prompt_embeds=negative_pooled,
+                    num_inference_steps=steps,
+                    guidance_scale=cfg,
+                    generator=torch.manual_seed(seed),
+                    clip_skip=clip_skip,
+                    callback_on_step_end=step_progress,
+                    cross_attention_kwargs=cross_attention_kwargs,
+                    controlnet_conditioning_scale=control_scale,
+                    guess_mode=guess_mode,
+                    control_guidance_start=control_start,
+                    control_guidance_end=control_end
+                ).images[0]
             folder = "image"
-            dir_path = os.path.join(dirname, f"../outputs/local/{folder}")
+            dir_path = os.path.join(get_outputs_dir(), f"local/{folder}")
             pathlib.Path(dir_path).mkdir(parents=True, exist_ok=True)
             out_path = os.path.join(dir_path, f"image{next_index(dir_path)}.{format}")
             image.save(out_path)
@@ -639,7 +837,7 @@ def generate_xl(data, request_files, get_controlnet=None, clear_step_frames=None
                 control_guidance_end=control_end
             ).images[0]
             folder = "image"
-            dir_path = os.path.join(dirname, f"../outputs/local/{folder}")
+            dir_path = os.path.join(get_outputs_dir(), f"local/{folder}")
             pathlib.Path(dir_path).mkdir(parents=True, exist_ok=True)
             out_path = os.path.join(dir_path, f"image{next_index(dir_path)}.{format}")
             image.save(out_path)
@@ -683,7 +881,7 @@ def generate_xl(data, request_files, get_controlnet=None, clear_step_frames=None
                 reference_attn=True,
                 reference_adain=True
             ).images[0]
-            dir_path = os.path.join(dirname, f"../outputs/local/{folder}")
+            dir_path = os.path.join(get_outputs_dir(), f"local/{folder}")
             pathlib.Path(dir_path).mkdir(parents=True, exist_ok=True)
             out_path = os.path.join(dir_path, f"image{next_index(dir_path)}.{format}")
             image.save(out_path)

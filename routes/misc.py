@@ -2,7 +2,7 @@ import flask
 from __main__ import app, socketio
 from .classifier import train_classifier
 from .info import open_folder, show_in_folder
-from .functions import clean_image, next_index, get_models_dir
+from .functions import clean_image, next_index, get_models_dir, get_outputs_dir
 from .simplify_sketch import SketchSimplificationModel
 from .shade_sketch import shade_sketch
 from .colorize_sketch import colorize_sketch
@@ -65,7 +65,7 @@ def start_image_classifier():
     gradient_accumulation_steps = data["gradient_accumulation_steps"]
     lr_scheduler_type = data["learning_function"]
     resolution = data["resolution"] 
-    output_dir = os.path.join(dirname, f"../outputs/models/classifier/{pathlib.Path(train_dir).stem}")
+    output_dir = os.path.join(get_outputs_dir(), f"models/classifier/{pathlib.Path(train_dir).stem}")
     pathlib.Path(output_dir).mkdir(parents=True, exist_ok=True)
 
     thread = threading.Thread(target=image_classifier, args=(train_dir, output_dir, num_train_epochs, learning_rate, 
@@ -112,7 +112,7 @@ def simplify_sketch(image, format):
     if not simplify_model:
         simplify_model = SketchSimplificationModel()
 
-    dir_path = os.path.join(dirname, f"../outputs/local/image")
+    dir_path = os.path.join(get_outputs_dir(), f"local/image")
     pathlib.Path(dir_path).mkdir(parents=True, exist_ok=True)
     out_path = os.path.join(dir_path, f"image{next_index(dir_path)}.{format}")
     simplify_model(img, out_path)
@@ -139,7 +139,7 @@ def run_shade_sketch(image, format, direction):
     gen_thread = threading.get_ident()
     socketio.emit("train starting")
     img = Image.open(BytesIO(base64.b64decode(image + "=="))).convert("RGB")
-    dir_path = os.path.join(dirname, f"../outputs/local/image")
+    dir_path = os.path.join(get_outputs_dir(), f"local/image")
     pathlib.Path(dir_path).mkdir(parents=True, exist_ok=True)
     
     out_path = os.path.join(dir_path, f"image{next_index(dir_path)}.{format}")
@@ -169,7 +169,7 @@ def run_colorize_sketch(sketch, style, format):
     socketio.emit("train starting")
     sketch_img = Image.open(BytesIO(base64.b64decode(sketch + "=="))).convert("RGB")
     style_img = Image.open(BytesIO(base64.b64decode(style + "=="))).convert("RGB")
-    dir_path = os.path.join(dirname, f"../outputs/local/image")
+    dir_path = os.path.join(get_outputs_dir(), f"local/image")
     pathlib.Path(dir_path).mkdir(parents=True, exist_ok=True)
     out_path = os.path.join(dir_path, f"image{next_index(dir_path)}.{format}")
 
@@ -198,7 +198,7 @@ def run_layer_divide(input_image, divide_mode, loops, clusters, cluster_threshol
     gen_thread = threading.get_ident()
     socketio.emit("train starting")
     input_image = Image.open(BytesIO(base64.b64decode(input_image + "=="))).convert("RGB")
-    output_dir = os.path.join(dirname, f"../outputs/local/psd")
+    output_dir = os.path.join(get_outputs_dir(), f"local/psd")
     pathlib.Path(output_dir).mkdir(parents=True, exist_ok=True)
 
     if downscale and int(downscale) > 0:

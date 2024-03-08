@@ -1,6 +1,6 @@
 import flask      
 from __main__ import app, socketio
-from .functions import is_nsfw, next_index, get_seed, upscale, append_info, get_normalized_dimensions
+from .functions import is_nsfw, next_index, get_seed, upscale, append_info, get_normalized_dimensions, get_outputs_dir
 from .invisiblewatermark import encode_watermark
 from PIL import Image
 import pathlib
@@ -203,7 +203,7 @@ def generate_novelai(data, request_files):
                                     sampler=sampler, steps=steps, denoise=denoise, image=input_image,
                                     mask=input_mask, control_scale=control_scale, control_processor=control_processor,
                                     controlnet_condition=control_image, reference_image=reference_image, novelai_token=novelai_token)
-            dir_path = os.path.join(dirname, f"../outputs/novel ai/{folder}")
+            dir_path = os.path.join(get_outputs_dir(), f"novel ai/{folder}")
             pathlib.Path(dir_path).mkdir(parents=True, exist_ok=True)
             out_path = os.path.join(dir_path, f"image{next_index(dir_path)}.{format}")
             extra_info = {}
@@ -236,7 +236,7 @@ def generate_novelai(data, request_files):
                                     sampler=sampler, steps=steps, denoise=denoise, image=input_image,
                                     mask=input_mask, control_scale=control_scale, control_processor=control_processor,
                                     controlnet_condition=control_image, reference_image=reference_image, novelai_token=novelai_token)
-            dir_path = os.path.join(dirname, f"../outputs/novel ai/{folder}")
+            dir_path = os.path.join(get_outputs_dir(), f"novel ai/{folder}")
             pathlib.Path(dir_path).mkdir(parents=True, exist_ok=True)
             out_path = os.path.join(dir_path, f"image{next_index(dir_path)}.{format}")
             extra_info = {}
@@ -374,7 +374,7 @@ def generate_holara(data, request_files):
                     return images
             image = request_holara(prompt=prompt, negative_prompt=negative_prompt, model=model_name, width=width, height=height, seed=seed,
                                    cfg=cfg, steps=steps, denoise=denoise, clip_skip=clip_skip, image=input_image, holara_cookie=holara_cookie)
-            dir_path = os.path.join(dirname, f"../outputs/holara ai/{folder}")
+            dir_path = os.path.join(get_outputs_dir(), f"holara ai/{folder}")
             pathlib.Path(dir_path).mkdir(parents=True, exist_ok=True)
             out_path = os.path.join(dir_path, f"image{next_index(dir_path)}.{format}")
             image.save(out_path)
@@ -399,7 +399,7 @@ def generate_holara(data, request_files):
                     return images
             image = request_holara(prompt=prompt, negative_prompt=negative_prompt, model=model_name, width=width, height=height, seed=seed,
                                    cfg=cfg, steps=steps, denoise=denoise, clip_skip=clip_skip, image=input_image, holara_cookie=holara_cookie)
-            dir_path = os.path.join(dirname, f"../outputs/holara ai/{folder}")
+            dir_path = os.path.join(get_outputs_dir(), f"holara ai/{folder}")
             pathlib.Path(dir_path).mkdir(parents=True, exist_ok=True)
             out_path = os.path.join(dir_path, f"image{next_index(dir_path)}.{format}")
             image.save(out_path)

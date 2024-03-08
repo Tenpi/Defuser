@@ -20,6 +20,7 @@ import torch
 
 dirname = os.path.dirname(__file__)
 models_dir = "models"
+outputs_dir = "outputs"
 
 def get_number_from_filename(filename):
     num = re.search(r"\d+", filename)
@@ -252,6 +253,16 @@ def get_models_dir():
 def update_models_dir(new_dir):
     global models_dir
     models_dir = new_dir
+
+def get_outputs_dir():
+    global outputs_dir
+    if not outputs_dir or outputs_dir == "outputs":
+        return os.path.join(dirname, "../outputs")
+    return outputs_dir
+
+def update_outputs_dir(new_dir):
+    global outputs_dir
+    outputs_dir = new_dir
 
 def upscale(image: str, upscaler: str, video: bool = False):
     if upscaler == "waifu2x":

@@ -4,7 +4,8 @@ import {HashLink as Link} from "react-router-hash-link"
 import favicon from "../assets/icons/favicon.png"
 import {EnableDragContext, MobileContext, SiteHueContext, SiteSaturationContext, SiteLightnessContext, NegativePromptContext, ProcessingContext,
 InterrogatorNameContext, DeletionContext, FormatContext, PrecisionContext, LoopModeContext, WatermarkContext, UpscalerContext, NSFWTabContext,
-InvisibleWatermarkContext, SauceNaoAPIKeyContext, RandomPromptModeContext, GeneratorContext, NovelAITokenContext, HolaraAICookieContext, ModelDirContext} from "../Context"
+InvisibleWatermarkContext, SauceNaoAPIKeyContext, RandomPromptModeContext, GeneratorContext, NovelAITokenContext, HolaraAICookieContext, 
+ModelDirContext, OutputDirContext} from "../Context"
 import functions from "../structures/Functions"
 import {Dropdown, DropdownButton} from "react-bootstrap"
 import checkbox from "../assets/icons/checkbox2.png"
@@ -36,6 +37,7 @@ const SettingsBar: React.FunctionComponent = (props) => {
     const {novelAIToken, setNovelAIToken} = useContext(NovelAITokenContext)
     const {holaraAICookie, setHolaraAICookie} = useContext(HolaraAICookieContext)
     const {modelDir, setModelDir} = useContext(ModelDirContext)
+    const {outputDir, setOutputDir} = useContext(OutputDirContext)
     const ref = useRef<HTMLCanvasElement>(null)
     const history = useHistory()
 
@@ -78,6 +80,8 @@ const SettingsBar: React.FunctionComponent = (props) => {
         if (savedHolaraAICookie) setHolaraAICookie(savedHolaraAICookie)
         const savedModelDir = localStorage.getItem("modelDir")
         if (savedModelDir) setModelDir(savedModelDir)
+        const savedOutputDir = localStorage.getItem("outputDir")
+        if (savedOutputDir) setOutputDir(savedOutputDir)
     }, [])
 
     useEffect(() => {
@@ -98,9 +102,10 @@ const SettingsBar: React.FunctionComponent = (props) => {
         localStorage.setItem("novelAIToken", String(novelAIToken))
         localStorage.setItem("holaraAICookie", String(holaraAICookie))
         localStorage.setItem("modelDir", String(modelDir))
+        localStorage.setItem("outputDir", String(outputDir))
     }, [negativePrompt, interrogatorName, processing, format, deletion, precision, loopMode, 
         upscaler, nsfwTab, invisibleWatermark, watermark, saucenaoAPIKey, randomPromptMode,
-        generator, novelAIToken, holaraAICookie, modelDir])
+        generator, novelAIToken, holaraAICookie, modelDir, outputDir])
 
     const resetNegativePrompt = () => {
         setNegativePrompt("")
@@ -155,6 +160,10 @@ const SettingsBar: React.FunctionComponent = (props) => {
             <div className="settings-bar-row">
                 <span className="settings-bar-text">Model Dir:</span>
                 <input className="settings-bar-input" spellCheck={false} value={modelDir} onChange={(event) => setModelDir(event.target.value)}/>
+            </div>
+            <div className="settings-bar-row">
+                <span className="settings-bar-text">Output Dir:</span>
+                <input className="settings-bar-input" spellCheck={false} value={outputDir} onChange={(event) => setOutputDir(event.target.value)}/>
             </div>
             <div className="settings-bar-row">
                 <span className="settings-bar-text">Interrogator:</span>

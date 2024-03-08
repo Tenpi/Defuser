@@ -1,6 +1,6 @@
 import flask
 from __main__ import app
-from .functions import get_number_from_filename, is_image, is_unwanted, is_dir, is_file, get_models_dir, update_models_dir
+from .functions import get_number_from_filename, is_image, is_unwanted, is_dir, is_file, get_models_dir, get_outputs_dir, update_models_dir
 from .invisiblewatermark import decode_watermark, encode_watermark
 import os
 import platform
@@ -96,7 +96,7 @@ def get_lora_models():
     return get_model_files("lora")
 
 def get_outputs(folder: str):
-    dir = os.path.join(dirname, f"../outputs/local/{folder}")
+    dir = os.path.join(get_outputs_dir(), f"local/{folder}")
     if not os.path.exists(dir): return []
     files = os.listdir(dir)
     files = list(filter(lambda file: not is_unwanted(file), files))
@@ -104,7 +104,7 @@ def get_outputs(folder: str):
     return list(map(lambda file: f"outputs/local/{folder}/{file}", files))
 
 def get_novelai_outputs(folder: str):
-    dir = os.path.join(dirname, f"../outputs/novel ai/{folder}")
+    dir = os.path.join(get_outputs_dir(), f"novel ai/{folder}")
     if not os.path.exists(dir): return []
     files = os.listdir(dir)
     files = list(filter(lambda file: not is_unwanted(file), files))
@@ -112,7 +112,7 @@ def get_novelai_outputs(folder: str):
     return list(map(lambda file: f"outputs/novel ai/{folder}/{file}", files))
 
 def get_holara_outputs(folder: str):
-    dir = os.path.join(dirname, f"../outputs/holara ai/{folder}")
+    dir = os.path.join(get_outputs_dir(), f"holara ai/{folder}")
     if not os.path.exists(dir): return []
     files = os.listdir(dir)
     files = list(filter(lambda file: not is_unwanted(file), files))
@@ -191,6 +191,10 @@ def show_in_folder_route():
     data = flask.request.json
     path = data["path"] if "path" in data else ""
     absolute = data["absolute"] if "absolute" in data else ""
+    if path.startswith("models/"):
+        absolute = os.path.join(get_models_dir(), path.replace("models/", ""))
+    if path.startswith("outputs/"):
+        absolute = os.path.join(get_outputs_dir(), path.replace("outputs/", ""))
     return show_in_folder(path, absolute.strip())
 
 @app.route("/open-folder", methods=["POST"])
@@ -198,6 +202,10 @@ def open_folder_route():
     data = flask.request.json
     path = data["path"] if "path" in data else ""
     absolute = data["absolute"] if "absolute" in data else ""
+    if path.startswith("models/"):
+        absolute = os.path.join(get_models_dir(), path.replace("models/", ""))
+    if path.startswith("outputs/"):
+        absolute = os.path.join(get_outputs_dir(), path.replace("outputs/", ""))
     return open_folder(path, absolute.strip())
 
 @app.route("/delete-file", methods=["POST"])
@@ -340,18 +348,18 @@ def save_images():
     data = flask.request.json
     saved = data["saved"]
     generator_type = data["generator"]
-    location = os.path.join(dirname, "../outputs/local/saved.json")
+    location = os.path.join(get_outputs_dir(), "local/saved.json")
     if generator_type == "novel ai":
-        location = os.path.join(dirname, "../outputs/novel ai/saved.json")
+        location = os.path.join(get_outputs_dir(), "novel ai/saved.json")
     if generator_type == "holara ai":
-        location = os.path.join(dirname, "../outputs/holara ai/saved.json")
+        location = os.path.join(get_outputs_dir(), "holara ai/saved.json")
     with open(location, "w") as f:
         json.dump(saved, f, indent=4)
     return "done"
 
 @app.route("/saved-local-images")
 def saved_local_images():
-    location = os.path.join(dirname, "../outputs/local/saved.json")
+    location = os.path.join(get_outputs_dir(), "local/saved.json")
     if not os.path.exists(location): return []
     with open(location) as f:
         data = json.load(f)
@@ -359,7 +367,7 @@ def saved_local_images():
 
 @app.route("/saved-novelai-images")
 def saved_novelai_images():
-    location = os.path.join(dirname, "../outputs/novel ai/saved.json")
+    location = os.path.join(get_outputs_dir(), "novel ai/saved.json")
     if not os.path.exists(location): return []
     with open(location) as f:
         data = json.load(f)
@@ -367,7 +375,7 @@ def saved_novelai_images():
 
 @app.route("/saved-holara-images")
 def saved_holara_images():
-    location = os.path.join(dirname, "../outputs/holara ai/saved.json")
+    location = os.path.join(get_outputs_dir(), "holara ai/saved.json")
     if not os.path.exists(location): return []
     with open(location) as f:
         data = json.load(f)
@@ -378,18 +386,18 @@ def save_prompts():
     data = flask.request.json
     prompts = data["prompts"]
     generator_type = data["generator"]
-    location = os.path.join(dirname, "../outputs/local/prompts.txt")
+    location = os.path.join(get_outputs_dir(), "local/prompts.txt")
     if generator_type == "novel ai":
-        location = os.path.join(dirname, "../outputs/novel ai/prompts.txt")
+        location = os.path.join(get_outputs_dir(), "novel ai/prompts.txt")
     if generator_type == "holara ai":
-        location = os.path.join(dirname, "../outputs/holara ai/prompts.txt")
+        location = os.path.join(get_outputs_dir(), "holara ai/prompts.txt")
     with open(location, "w") as f:
         f.write("\n".join(prompts))
     return "done"
 
 @app.route("/saved-local-prompts")
 def saved_local_prompts():
-    location = os.path.join(dirname, "../outputs/local/prompts.txt")
+    location = os.path.join(get_outputs_dir(), "local/prompts.txt")
     if not os.path.exists(location): return []
     with open(location) as f:
         data = f.read().split("\n")
@@ -397,7 +405,7 @@ def saved_local_prompts():
 
 @app.route("/saved-novelai-prompts")
 def saved_novelai_prompts():
-    location = os.path.join(dirname, "../outputs/novel ai/prompts.txt")
+    location = os.path.join(get_outputs_dir(), "novel ai/prompts.txt")
     if not os.path.exists(location): return []
     with open(location) as f:
         data = f.read().split("\n")
@@ -405,7 +413,7 @@ def saved_novelai_prompts():
 
 @app.route("/saved-holara-prompts")
 def saved_holara_prompts():
-    location = os.path.join(dirname, "../outputs/holara ai/prompts.txt")
+    location = os.path.join(get_outputs_dir(), "holara ai/prompts.txt")
     if not os.path.exists(location): return []
     with open(location) as f:
         data = f.read().split("\n")

@@ -1,7 +1,7 @@
 from __main__ import app, socketio
 import os
 import torch
-from .functions import next_index, is_nsfw, get_normalized_dimensions, get_seed, append_info, upscale, get_models_dir
+from .functions import next_index, is_nsfw, get_normalized_dimensions, get_seed, append_info, upscale, get_models_dir, get_outputs_dir
 from .invisiblewatermark import encode_watermark
 from .info import get_diffusion_models, get_vae_models
 from diffusers import StableCascadePriorPipeline, StableCascadeDecoderPipeline, DDPMWuerstchenScheduler, \
@@ -207,7 +207,7 @@ def generate_cascade(data, request_files, clear_step_frames=None, generate_step_
             if sampler == "heun":
                 total_steps = int(total_steps * 2)
             socketio.emit("step progress", {"step": step, "total_step": total_steps, "width": w, "height": h, "image": pixels})
-            step_dir = os.path.join(dirname, f"../outputs/local/steps")
+            step_dir = os.path.join(get_outputs_dir(), f"local/steps")
             pathlib.Path(step_dir).mkdir(parents=True, exist_ok=True)
             img_path = os.path.join(step_dir, f"step{step}.png")
             image.save(img_path)
@@ -248,7 +248,7 @@ def generate_cascade(data, request_files, clear_step_frames=None, generate_step_
             generator=torch.manual_seed(seed),
             callback_on_step_end=step_progress
         ).images[0]
-        dir_path = os.path.join(dirname, f"../outputs/local/{folder}")
+        dir_path = os.path.join(get_outputs_dir(), f"local/{folder}")
         pathlib.Path(dir_path).mkdir(parents=True, exist_ok=True)
         out_path = os.path.join(dir_path, f"image{next_index(dir_path)}.{format}")
         image.save(out_path)

@@ -2,7 +2,7 @@ import flask
 from __main__ import app, socketio
 import os
 import torch
-from .functions import next_index, is_nsfw, get_normalized_dimensions, is_image, get_number_from_filename, get_seed, append_info, upscale, get_models_dir, analyze_checkpoint
+from .functions import next_index, is_nsfw, get_normalized_dimensions, is_image, get_number_from_filename, get_seed, append_info, upscale, get_models_dir, get_outputs_dir, analyze_checkpoint
 from .invisiblewatermark import encode_watermark
 from .info import get_diffusion_models, get_vae_models, get_clip_model
 from diffusers import StableDiffusionPipeline, StableDiffusionImg2ImgPipeline, StableDiffusionInpaintPipeline,StableDiffusionControlNetImg2ImgPipeline, \
@@ -282,7 +282,7 @@ def update_precision():
     return "done"
 
 async def clear_step_frames():
-    step_dir = os.path.join(dirname, f"../outputs/local/steps")
+    step_dir = os.path.join(get_outputs_dir(), f"local/steps")
     images = os.listdir(step_dir)
     images = list(filter(lambda file: is_image(file, False), images))
     images = sorted(images, key=lambda x: get_number_from_filename(x), reverse=False)
@@ -291,7 +291,7 @@ async def clear_step_frames():
         os.remove(image)
 
 async def generate_step_animation():
-    step_dir = os.path.join(dirname, f"../outputs/local/steps")
+    step_dir = os.path.join(get_outputs_dir(), f"local/steps")
     images = os.listdir(step_dir)
     images = list(filter(lambda file: is_image(file, False), images))
     images = sorted(images, key=lambda x: get_number_from_filename(x), reverse=False)
@@ -490,7 +490,7 @@ def generate(request_data, request_files):
             if sampler == "heun":
                 total_steps = int(total_steps * 2)
             socketio.emit("step progress", {"step": step, "total_step": total_steps, "width": w, "height": h, "image": pixels})
-            step_dir = os.path.join(dirname, f"../outputs/local/steps")
+            step_dir = os.path.join(get_outputs_dir(), f"local/steps")
             pathlib.Path(step_dir).mkdir(parents=True, exist_ok=True)
             img_path = os.path.join(step_dir, f"step{step}.png")
             image.save(img_path)
@@ -519,7 +519,7 @@ def generate(request_data, request_files):
                 callback_on_step_end=step_progress,
                 cross_attention_kwargs=cross_attention_kwargs
             ).images[0]
-            dir_path = os.path.join(dirname, f"../outputs/local/{folder}")
+            dir_path = os.path.join(get_outputs_dir(), f"local/{folder}")
             pathlib.Path(dir_path).mkdir(parents=True, exist_ok=True)
             out_path = os.path.join(dir_path, f"image{next_index(dir_path)}.{format}")
             image.save(out_path)
@@ -557,7 +557,7 @@ def generate(request_data, request_files):
                 callback_on_step_end=step_progress,
                 cross_attention_kwargs=cross_attention_kwargs
             ).images[0]
-            dir_path = os.path.join(dirname, f"../outputs/local/{folder}")
+            dir_path = os.path.join(get_outputs_dir(), f"local/{folder}")
             pathlib.Path(dir_path).mkdir(parents=True, exist_ok=True)
             out_path = os.path.join(dir_path, f"image{next_index(dir_path)}.{format}")
             image.save(out_path)
@@ -600,7 +600,7 @@ def generate(request_data, request_files):
                 callback_on_step_end=step_progress,
                 cross_attention_kwargs=cross_attention_kwargs
             ).images[0]
-            dir_path = os.path.join(dirname, f"../outputs/local/{folder}")
+            dir_path = os.path.join(get_outputs_dir(), f"local/{folder}")
             pathlib.Path(dir_path).mkdir(parents=True, exist_ok=True)
             out_path = os.path.join(dir_path, f"image{next_index(dir_path)}.{format}")
             image.save(out_path)
@@ -642,7 +642,7 @@ def generate(request_data, request_files):
                 control_guidance_start=control_start,
                 control_guidance_end=control_end
             ).images[0]
-            dir_path = os.path.join(dirname, f"../outputs/local/{folder}")
+            dir_path = os.path.join(get_outputs_dir(), f"local/{folder}")
             pathlib.Path(dir_path).mkdir(parents=True, exist_ok=True)
             out_path = os.path.join(dir_path, f"image{next_index(dir_path)}.{format}")
             image.save(out_path)
@@ -687,7 +687,7 @@ def generate(request_data, request_files):
                 control_guidance_end=control_end
             ).images[0]
             folder = "image"
-            dir_path = os.path.join(dirname, f"../outputs/local/{folder}")
+            dir_path = os.path.join(get_outputs_dir(), f"local/{folder}")
             pathlib.Path(dir_path).mkdir(parents=True, exist_ok=True)
             out_path = os.path.join(dir_path, f"image{next_index(dir_path)}.{format}")
             image.save(out_path)
@@ -734,7 +734,7 @@ def generate(request_data, request_files):
                 control_guidance_end=control_end
             ).images[0]
             folder = "image"
-            dir_path = os.path.join(dirname, f"../outputs/local/{folder}")
+            dir_path = os.path.join(get_outputs_dir(), f"local/{folder}")
             pathlib.Path(dir_path).mkdir(parents=True, exist_ok=True)
             out_path = os.path.join(dir_path, f"image{next_index(dir_path)}.{format}")
             image.save(out_path)
@@ -778,7 +778,7 @@ def generate(request_data, request_files):
                 reference_attn=True,
                 reference_adain=True
             ).images[0]
-            dir_path = os.path.join(dirname, f"../outputs/local/{folder}")
+            dir_path = os.path.join(get_outputs_dir(), f"local/{folder}")
             pathlib.Path(dir_path).mkdir(parents=True, exist_ok=True)
             out_path = os.path.join(dir_path, f"image{next_index(dir_path)}.{format}")
             image.save(out_path)
@@ -813,7 +813,7 @@ def generate(request_data, request_files):
                 callback_on_step_end=step_progress,
                 cross_attention_kwargs=cross_attention_kwargs
             ).frames[0]
-            dir_path = os.path.join(dirname, f"../outputs/local/{folder}")
+            dir_path = os.path.join(get_outputs_dir(), f"local/{folder}")
             pathlib.Path(dir_path).mkdir(parents=True, exist_ok=True)
             out_path = os.path.join(dir_path, f"image{next_index(dir_path)}.{format}")
             export_to_gif(frames, out_path)

@@ -271,6 +271,10 @@ const SideBar: React.FunctionComponent = (props) => {
         }
     }
 
+    const openNetworkFolder = async (folder: string) => {
+        await axios.post("/open-folder", {path: `models/${folder}`})
+    }
+
     const networkJSX = () => {
         let containerJSX = null as any
         if (networkType === "textual inversion") containerJSX = modelJSX("textual inversion")
@@ -282,15 +286,18 @@ const SideBar: React.FunctionComponent = (props) => {
                     <button className={`sidebar-network-button 
                     ${networkType === "textual inversion" ? 
                     "sidebar-network-button-selected" : ""}`}
-                    onClick={() => setNetworkType("textual inversion")}>Textual Inversion</button>
+                    onClick={() => setNetworkType("textual inversion")}
+                    onDoubleClick={() => openNetworkFolder("textual inversion")}>Textual Inversion</button>
                     <button className={`sidebar-network-button 
                     ${networkType === "hypernetwork" ? 
                     "sidebar-network-button-selected" : ""}`}
-                    onClick={() => setNetworkType("hypernetwork")}>Hypernetwork</button>
+                    onClick={() => setNetworkType("hypernetwork")}
+                    onDoubleClick={() => openNetworkFolder("hypernetwork")}>Hypernetwork</button>
                     <button className={`sidebar-network-button 
                     ${networkType === "lora" ? 
                     "sidebar-network-button-selected" : ""}`}
-                    onClick={() => setNetworkType("lora")}>LoRA</button>
+                    onClick={() => setNetworkType("lora")}
+                    onDoubleClick={() => openNetworkFolder("lora")}>LoRA</button>
                 </div>
                 <div className="sidebar-networks">
                     {containerJSX}

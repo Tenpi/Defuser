@@ -125,6 +125,7 @@ export const HolaraAIImageInputImagesContext = React.createContext<any>(null)
 export const SavedPromptsNovelAIContext = React.createContext<any>(null)
 export const SavedPromptsHolaraAIContext = React.createContext<any>(null)
 export const ModelDirContext = React.createContext<any>(null)
+export const OutputDirContext = React.createContext<any>(null)
 export const XAdaptModelContext = React.createContext<any>(null)
 export const FreeUContext = React.createContext<any>(null)
 

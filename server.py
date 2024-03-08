@@ -1,6 +1,6 @@
 import flask                                      
 from flask_socketio import SocketIO, emit
-from routes.functions import get_models_dir
+from routes.functions import get_models_dir, get_outputs_dir
 import os
 
 app = flask.Flask(__name__, static_url_path="", static_folder="dist")
@@ -22,12 +22,12 @@ def assets(filename):
 
 @app.route("/outputs/<path:filename>")
 def outputs(filename):
-    return flask.send_from_directory("outputs", filename)
+    file_path = os.path.join(get_outputs_dir(), filename)
+    return flask.send_file(file_path)
 
 @app.route("/models/<path:filename>")
 def models(filename):
     file_path = os.path.join(get_models_dir(), filename)
-    print(file_path)
     return flask.send_file(file_path)
 
 @app.route("/retrieve")
