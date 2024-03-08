@@ -5,7 +5,7 @@ import favicon from "../assets/icons/favicon.png"
 import {EnableDragContext, MobileContext, SiteHueContext, SiteSaturationContext, SiteLightnessContext, 
 TrainTabContext, FolderLocationContext, EpochsContext, SaveEpochsContext, PreviewEpochsContext, PreviewPromptContext,
 GradientAccumulationStepsContext, LearningRateContext, ResolutionContext, LearningFunctionContext, TrainNameContext,
-LearningRateTEContext} from "../Context"
+LearningRateTEContext, PreviewStepsContext, SaveStepsContext} from "../Context"
 import functions from "../structures/Functions"
 import CheckpointBar from "../components/CheckpointBar"
 import TrainTag from "./TrainTag"
@@ -29,7 +29,9 @@ const Train: React.FunctionComponent = (props) => {
     const {folderLocation, setFolderLocation} = useContext(FolderLocationContext)
     const {epochs, setEpochs} = useContext(EpochsContext)
     const {saveEpochs, setSaveEpochs} = useContext(SaveEpochsContext)
+    const {saveSteps, setSaveSteps} = useContext(SaveStepsContext)
     const {previewEpochs, setPreviewEpochs} = useContext(PreviewEpochsContext)
+    const {previewSteps, setPreviewSteps} = useContext(PreviewStepsContext)
     const {previewPrompt, setPreviewPrompt} = useContext(PreviewPromptContext)
     const {learningRate, setLearningRate} = useContext(LearningRateContext)
     const {gradientAccumulationSteps, setGradientAccumulationSteps} = useContext(GradientAccumulationStepsContext)
@@ -69,6 +71,10 @@ const Train: React.FunctionComponent = (props) => {
         if (savedLearningRateTE) setLearningRateTE(savedLearningRateTE)
         const savedTrainName = localStorage.getItem("trainName")
         if (savedTrainName) setTrainName(savedTrainName)
+        const savedSteps = localStorage.getItem("saveSteps")
+        if (savedSteps) setSaveSteps(savedSteps)
+        const savedPreviewSteps = localStorage.getItem("previewSteps")
+        if (savedPreviewSteps) setPreviewSteps(savedPreviewSteps)
     }, [])
 
     useEffect(() => {
@@ -84,8 +90,11 @@ const Train: React.FunctionComponent = (props) => {
         localStorage.setItem("learningFunction", String(learningFunction))
         localStorage.setItem("learningRateTE", String(learningRateTE))
         localStorage.setItem("trainName", String(trainName))
+        localStorage.setItem("saveSteps", String(saveSteps))
+        localStorage.setItem("previewSteps", String(previewSteps))
     }, [folderLocation, trainTab, epochs, saveEpochs, previewEpochs, previewPrompt, learningRate, 
-        gradientAccumulationSteps, learningFunction, resolution, learningRateTE, trainName])
+        gradientAccumulationSteps, learningFunction, resolution, learningRateTE, trainName,
+        saveSteps, previewSteps])
 
     const trainTabsJSX = () => {
         return (

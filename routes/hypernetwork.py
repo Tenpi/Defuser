@@ -491,7 +491,7 @@ def main(args):
         unet.enable_gradient_checkpointing()
 
     # Add Hypernetwork
-    hypernetwork = create_hypernetwork(name)
+    hypernetwork = create_hypernetwork(name, enable_sizes=args.sizes)
     hypernetwork.to(accelerator.device)
     add_hypernet(unet, hypernetwork)
 
@@ -1112,7 +1112,7 @@ class DotDict(dict):
     __delattr__ = dict.__delitem__
 
 def train_hypernetwork(images, model_name, train_data, instance_prompt, output, num_train_epochs, learning_rate, text_encoder_lr, resolution, save_epochs, 
-    gradient_accumulation_steps, validation_prompt, validation_epochs, lr_scheduler):
+    gradient_accumulation_steps, validation_prompt, validation_epochs, lr_scheduler, sizes):
 
     if not model_name: model_name = ""
     if not train_data: train_data = ""
@@ -1127,6 +1127,7 @@ def train_hypernetwork(images, model_name, train_data, instance_prompt, output, 
     if not validation_prompt: validation_prompt = ""
     if not lr_scheduler: lr_scheduler = "constant"
     if not gradient_accumulation_steps: gradient_accumulation_steps = 1
+    if not sizes: sizes = ["320", "640", "768", "1024", "1280"]
 
     steps_per_epoch = math.ceil(len(images) / gradient_accumulation_steps)
     max_train_steps = num_train_epochs * steps_per_epoch
@@ -1137,5 +1138,6 @@ def train_hypernetwork(images, model_name, train_data, instance_prompt, output, 
     gradient_accumulation_steps, validation_prompt, validation_epochs, lr_scheduler)
 
     options.sources = get_sources(train_data)
+    options.sizes = sizes
 
     main(options)

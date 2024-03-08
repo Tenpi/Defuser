@@ -225,12 +225,12 @@ def start_textual_inversion():
     return "done"
 
 def hypernetwork(images, model_name, train_data, instance_prompt, output, num_train_epochs, learning_rate, text_encoder_lr, resolution, save_epochs, 
-    gradient_accumulation_steps, validation_prompt, validation_epochs, lr_scheduler):
+    gradient_accumulation_steps, validation_prompt, validation_epochs, lr_scheduler, sizes):
     global gen_thread 
     gen_thread = threading.get_ident()
     socketio.emit("train starting")
     train_hypernetwork(images, model_name, train_data, instance_prompt, output, num_train_epochs, learning_rate, text_encoder_lr, resolution, save_epochs, 
-    gradient_accumulation_steps, validation_prompt, validation_epochs, lr_scheduler)
+    gradient_accumulation_steps, validation_prompt, validation_epochs, lr_scheduler, sizes)
     socketio.emit("train complete")
     show_in_folder("", f"{output}/{instance_prompt}.pt")
     return "done"
@@ -252,12 +252,14 @@ def start_hypernetwork():
     validation_prompt = data["validation_prompt"]
     validation_epochs = data["validation_epochs"]
     lr_scheduler = data["learning_function"]
+    sizes = data["sizes"]
+    print(sizes)
     output = os.path.join(dirname, f"../outputs/models/hypernetwork/{instance_prompt}")
     pathlib.Path(output).mkdir(parents=True, exist_ok=True)
     model_name = os.path.join(get_models_dir(), f"diffusion/{model_name}")
 
     thread = threading.Thread(target=hypernetwork, args=(images, model_name, train_data, instance_prompt, output, num_train_epochs, learning_rate, text_encoder_lr, resolution, save_epochs, 
-    gradient_accumulation_steps, validation_prompt, validation_epochs, lr_scheduler))
+    gradient_accumulation_steps, validation_prompt, validation_epochs, lr_scheduler, sizes))
     thread.start()
     thread.join()
     gen_thread = None
@@ -302,13 +304,13 @@ def start_lora():
     gen_thread = None
     return "done"
 
-def dreambooth(images, model_name, train_data, instance_prompt, output, num_train_epochs, learning_rate, text_encoder_lr, resolution, save_epochs, 
-    gradient_accumulation_steps, validation_prompt, validation_epochs, lr_scheduler):
+def dreambooth(images, model_name, train_data, instance_prompt, output, num_train_epochs, learning_rate, text_encoder_lr, resolution, save_steps, 
+    gradient_accumulation_steps, validation_prompt, validation_steps, lr_scheduler):
     global gen_thread 
     gen_thread = threading.get_ident()
     socketio.emit("train starting")
-    train_dreambooth(images, model_name, train_data, instance_prompt, output, num_train_epochs, learning_rate, text_encoder_lr, resolution, save_epochs, 
-    gradient_accumulation_steps, validation_prompt, validation_epochs, lr_scheduler)
+    train_dreambooth(images, model_name, train_data, instance_prompt, output, num_train_epochs, learning_rate, text_encoder_lr, resolution, save_steps, 
+    gradient_accumulation_steps, validation_prompt, validation_steps, lr_scheduler)
     socketio.emit("train complete")
     show_in_folder("", f"{output}/{instance_prompt}.ckpt")
     return "done"
@@ -325,29 +327,29 @@ def start_dreambooth():
     learning_rate = data["learning_rate"]
     text_encoder_lr = data["text_encoder_lr"]
     resolution = data["resolution"]
-    save_epochs = data["save_epochs"] 
+    save_steps = data["save_steps"] 
     gradient_accumulation_steps = data["gradient_accumulation_steps"]
     validation_prompt = data["validation_prompt"]
-    validation_epochs = data["validation_epochs"]
+    validation_steps = data["validation_steps"]
     lr_scheduler = data["learning_function"]
     output = os.path.join(dirname, f"../outputs/models/dreambooth/{instance_prompt}")
     pathlib.Path(output).mkdir(parents=True, exist_ok=True)
     model_name = os.path.join(get_models_dir(), f"diffusion/{model_name}")
 
-    thread = threading.Thread(target=dreambooth, args=(images, model_name, train_data, instance_prompt, output, num_train_epochs, learning_rate, text_encoder_lr, resolution, save_epochs, 
-    gradient_accumulation_steps, validation_prompt, validation_epochs, lr_scheduler))
+    thread = threading.Thread(target=dreambooth, args=(images, model_name, train_data, instance_prompt, output, num_train_epochs, learning_rate, text_encoder_lr, resolution, save_steps, 
+    gradient_accumulation_steps, validation_prompt, validation_steps, lr_scheduler))
     thread.start()
     thread.join()
     gen_thread = None
     return "done"
 
-def checkpoint(images, model_name, train_data, instance_prompt, output, num_train_epochs, learning_rate, text_encoder_lr, resolution, save_epochs, 
-    gradient_accumulation_steps, validation_prompt, validation_epochs, lr_scheduler):
+def checkpoint(images, model_name, train_data, instance_prompt, output, num_train_epochs, learning_rate, text_encoder_lr, resolution, save_steps, 
+    gradient_accumulation_steps, validation_prompt, validation_steps, lr_scheduler):
     global gen_thread 
     gen_thread = threading.get_ident()
     socketio.emit("train starting")
-    train_checkpoint(images, model_name, train_data, instance_prompt, output, num_train_epochs, learning_rate, text_encoder_lr, resolution, save_epochs, 
-    gradient_accumulation_steps, validation_prompt, validation_epochs, lr_scheduler)
+    train_checkpoint(images, model_name, train_data, instance_prompt, output, num_train_epochs, learning_rate, text_encoder_lr, resolution, save_steps, 
+    gradient_accumulation_steps, validation_prompt, validation_steps, lr_scheduler)
     socketio.emit("train complete")
     show_in_folder("", f"{output}/{instance_prompt}.ckpt")
     return "done"
@@ -364,17 +366,17 @@ def start_checkpoint():
     learning_rate = data["learning_rate"]
     text_encoder_lr = data["text_encoder_lr"]
     resolution = data["resolution"]
-    save_epochs = data["save_epochs"] 
+    save_steps = data["save_steps"] 
     gradient_accumulation_steps = data["gradient_accumulation_steps"]
     validation_prompt = data["validation_prompt"]
-    validation_epochs = data["validation_epochs"]
+    validation_steps = data["validation_steps"]
     lr_scheduler = data["learning_function"]
     output = os.path.join(dirname, f"../outputs/models/checkpoint/{instance_prompt}")
     pathlib.Path(output).mkdir(parents=True, exist_ok=True)
     model_name = os.path.join(get_models_dir(), f"diffusion/{model_name}")
 
-    thread = threading.Thread(target=checkpoint, args=(images, model_name, train_data, instance_prompt, output, num_train_epochs, learning_rate, text_encoder_lr, resolution, save_epochs, 
-    gradient_accumulation_steps, validation_prompt, validation_epochs, lr_scheduler))
+    thread = threading.Thread(target=checkpoint, args=(images, model_name, train_data, instance_prompt, output, num_train_epochs, learning_rate, text_encoder_lr, resolution, save_steps, 
+    gradient_accumulation_steps, validation_prompt, validation_steps, lr_scheduler))
     thread.start()
     thread.join()
     gen_thread = None

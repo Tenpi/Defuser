@@ -1,4 +1,4 @@
-import React, {useContext, useEffect, useState, useRef} from "react"
+import React, {useContext, useEffect, useState, useRef, useReducer} from "react"
 import {useHistory} from "react-router-dom"
 import {EnableDragContext, MobileContext, SiteHueContext, SiteSaturationContext, SiteLightnessContext, 
 TrainTabContext, FolderLocationContext, SocketContext, TrainStartedContext, TrainProgressContext,
@@ -20,6 +20,7 @@ let clicking = false
 let scrollLock = false
 
 const TrainHypernetwork: React.FunctionComponent = (props) => {
+    const [ignored, forceUpdate] = useReducer(x => x + 1, 0)
     const {enableDrag, setEnableDrag} = useContext(EnableDragContext)
     const {mobile, setMobile} = useContext(MobileContext)
     const {siteHue, setSiteHue} = useContext(SiteHueContext)
@@ -53,6 +54,7 @@ const TrainHypernetwork: React.FunctionComponent = (props) => {
     const [sliceIndex, setSliceIndex] = useState(0)
     const [hover, setHover] = useState(false)
     const [xHover, setXHover] = useState(false)
+    const [sizes, setSizes] = useState(["320", "640", "768", "1024", "1280"])
     const progressBarRef = useRef(null) as React.RefObject<HTMLDivElement>
     const ref = useRef<HTMLCanvasElement>(null)
     const history = useHistory()
@@ -99,6 +101,15 @@ const TrainHypernetwork: React.FunctionComponent = (props) => {
         }
         return jsx
     }
+
+    useEffect(() => {
+        const savedSizes = localStorage.getItem("hypernetworkSizes")
+        if (savedSizes) setSizes(JSON.parse(savedSizes))
+    }, [])
+
+    useEffect(() => {
+        localStorage.setItem("hypernetworkSizes", JSON.stringify(sizes))
+    }, [sizes])
 
     useEffect(() => {
         if (!socket) return
@@ -228,6 +239,7 @@ const TrainHypernetwork: React.FunctionComponent = (props) => {
         json.validation_epochs = Number(previewEpochs)
         json.validation_prompt = previewPrompt
         json.learning_function = learningFunction
+        json.sizes = sizes
         await axios.post("/train-hypernetwork", json)
     }
 
@@ -254,6 +266,20 @@ const TrainHypernetwork: React.FunctionComponent = (props) => {
         setGradientAccumulationSteps("1")
         setResolution("256")
         setLearningFunction("constant")
+        setSizes(["320", "640", "768", "1024", "1280"])
+    }
+
+    const updateSizes = (value: string) => {
+        if (sizes.includes(value)) {
+            functions.removeItem(sizes, value)
+        } else {
+            sizes.push(value)
+        }
+        forceUpdate()
+    }
+
+    const hasSize = (value: string) => {
+        return sizes.includes(value)
     }
 
     return (
@@ -279,13 +305,21 @@ const TrainHypernetwork: React.FunctionComponent = (props) => {
                         <span className="train-tag-settings-title">Learning Rate:</span>
                         <input className="train-tag-settings-input" type="text" spellCheck={false} value={learningRate} onChange={(event) => setLearningRate(event.target.value)}/>
                     </div>
-                    {/* <div className="train-tag-settings-box">
-                        <span className="train-tag-settings-title">Text Learning Rate:</span>
-                        <input className="train-tag-settings-input" type="text" spellCheck={false} value={learningRateTE} onChange={(event) => setLearningRateTE(event.target.value)}/>
-                    </div> */}
                     <div className="train-tag-settings-box">
                         <span className="train-tag-settings-title">Gradient Accumulation Steps:</span>
                         <input className="train-tag-settings-input" type="text" spellCheck={false} value={gradientAccumulationSteps} onChange={(event) => setGradientAccumulationSteps(event.target.value)}/>
+                    </div>
+                    <div className="train-tag-settings-box">
+                        <span className="train-tag-settings-title">Sizes:</span>
+                        <div className="shade-sketch-box" style={{marginBottom: "0px"}}>
+                            <div className="shade-sketch-box-row">
+                                <button className="shade-sketch-button" style={{backgroundColor: hasSize("320") ? "var(--buttonBGStop)" : "var(--buttonBG)"}} onClick={() => updateSizes("320")}>320</button>
+                                <button className="shade-sketch-button" style={{backgroundColor: hasSize("640") ? "var(--buttonBGStop)" : "var(--buttonBG)"}} onClick={() => updateSizes("640")}>640</button>
+                                <button className="shade-sketch-button" style={{backgroundColor: hasSize("768") ? "var(--buttonBGStop)" : "var(--buttonBG)"}} onClick={() => updateSizes("768")}>768</button>
+                                <button className="shade-sketch-button" style={{backgroundColor: hasSize("1024") ? "var(--buttonBGStop)" : "var(--buttonBG)"}} onClick={() => updateSizes("1024")}>1024</button>
+                                <button className="shade-sketch-button" style={{backgroundColor: hasSize("1280") ? "var(--buttonBGStop)" : "var(--buttonBG)"}} onClick={() => updateSizes("1280")}>1280</button>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 <div className="train-tag-settings-column">

@@ -106,6 +106,7 @@ export const ClassifyFolderLocationContext = React.createContext<any>(null)
 export const ClassifyFoldersContext = React.createContext<any>(null)
 export const MiscTabContext = React.createContext<any>(null)
 export const SaveStepsContext = React.createContext<any>(null)
+export const PreviewStepsContext = React.createContext<any>(null)
 export const ShadeImageInputContext = React.createContext<any>(null)
 export const SimplifyImageInputContext = React.createContext<any>(null)
 export const AIImageInputContext = React.createContext<any>(null)
@@ -217,7 +218,8 @@ const Context: React.FunctionComponent = (props: any) => {
     const [miscTab, setMiscTab] = useState("train")
     const [classifyFolderLocation, setClassifyFolderLocation] = useState("")
     const [classifyFolders, setClassifyFolders] = useState([])
-    const [saveSteps, setSaveSteps] = useState("500")
+    const [saveSteps, setSaveSteps] = useState("1000")
+    const [previewSteps, setPreviewSteps] = useState("1000")
     const [shadeImageInput, setShadeImageInput] = useState("")
     const [simplifyImageInput, setSimplifyImageInput] = useState("")
     const [aiImageInput, setAIImageInput] = useState("")
@@ -229,6 +231,7 @@ const Context: React.FunctionComponent = (props: any) => {
 
     return (
         <>  
+            <PreviewStepsContext.Provider value={{previewSteps, setPreviewSteps}}>
             <LayerDivideInputContext.Provider value={{layerDivideInput, setLayerDivideInput}}>
             <HolaraAICookieContext.Provider value={{holaraAICookie, setHolaraAICookie}}>
             <NovelAITokenContext.Provider value={{novelAIToken, setNovelAIToken}}>
@@ -430,6 +433,7 @@ const Context: React.FunctionComponent = (props: any) => {
             </NovelAITokenContext.Provider>
             </HolaraAICookieContext.Provider>
             </LayerDivideInputContext.Provider>
+            </PreviewStepsContext.Provider>
         </>
     )
 }

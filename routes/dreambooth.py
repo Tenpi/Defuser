@@ -836,12 +836,10 @@ def main(args):
         else:
             accelerator.print(f"Resuming from checkpoint {path}")
             accelerator.load_state(os.path.join(args.output_dir, path))
-            epoch = int(path.split("-")[1])
+            global_step = int(path.split("-")[1])
 
-            initial_global_step = epoch * num_update_steps_per_epoch
-            first_epoch = epoch
-            global_step = initial_global_step
-
+            initial_global_step = global_step
+            first_epoch = global_step // num_update_steps_per_epoch
     else:
         initial_global_step = 0
 
@@ -1030,7 +1028,7 @@ def main(args):
                                     removing_checkpoint = os.path.join(args.output_dir, removing_checkpoint)
                                     shutil.rmtree(removing_checkpoint)
 
-                        save_path = os.path.join(args.output_dir, f"{name}-{epoch + 1}")
+                        save_path = os.path.join(args.output_dir, f"{name}-{global_step}")
                         accelerator.save_state(save_path)
                         logger.info(f"Saved state to {save_path}")
 
@@ -1077,7 +1075,7 @@ def main(args):
                 break
 
         if accelerator.is_main_process:
-            if args.validation_prompt is not None and (epoch+1) % args.validation_epochs == 0:
+            if args.validation_prompt is not None and (global_step) % args.validation_steps == 0:
                 logger.info(
                     f"Running validation... \n Generating {args.num_validation_images} images with prompt:"
                     f" {args.validation_prompt}."
@@ -1126,10 +1124,10 @@ def main(args):
                 ]
                 if len(images) > 1:
                     for i in range(len(images)):
-                        save_path = os.path.join(args.output_dir, f"{name}-{epoch + 1}-{i}.png")
+                        save_path = os.path.join(args.output_dir, f"{name}-{global_step}-{i}.png")
                         images[i].save(save_path)
                 else:
-                    save_path = os.path.join(args.output_dir, f"{name}-{epoch + 1}.png")
+                    save_path = os.path.join(args.output_dir, f"{name}-{global_step}.png")
                     images[0].save(save_path)
                     socketio.emit("train image complete", {"image": save_path})
 
@@ -1178,7 +1176,7 @@ def main(args):
     accelerator.end_training()
 
 def get_options(model_name, train_data, instance_prompt, output, max_train_steps, learning_rate, text_encoder_lr, resolution, save_steps, 
-    gradient_accumulation_steps, validation_prompt, validation_epochs, lr_scheduler):
+    gradient_accumulation_steps, validation_prompt, validation_steps, lr_scheduler):
     options = {}
     options["pretrained_model_name_or_path"] = model_name
     options["pretrained_vae_model_name_or_path"] = None
@@ -1198,7 +1196,8 @@ def get_options(model_name, train_data, instance_prompt, output, max_train_steps
     options["class_prompt"] = None
     options["validation_prompt"] = validation_prompt
     options["num_validation_images"] = 1
-    options["validation_epochs"] = validation_epochs
+    options["validation_epochs"] = None
+    options["validation_steps"] = validation_steps
     options["with_prior_preservation"] = False
     options["prior_loss_weight"] = 1.0
     options["num_class_images"] = 100
@@ -1260,16 +1259,16 @@ class DotDict(dict):
     __setattr__ = dict.__setitem__
     __delattr__ = dict.__delitem__
 
-def train_dreambooth(images, model_name, train_data, instance_prompt, output, num_train_epochs, learning_rate, text_encoder_lr, resolution, save_epochs, 
-    gradient_accumulation_steps, validation_prompt, validation_epochs, lr_scheduler):
+def train_dreambooth(images, model_name, train_data, instance_prompt, output, num_train_epochs, learning_rate, text_encoder_lr, resolution, save_steps, 
+    gradient_accumulation_steps, validation_prompt, validation_steps, lr_scheduler):
 
     if not model_name: model_name = ""
     if not train_data: train_data = ""
     if not instance_prompt: instance_prompt = ""
     if not output: output = ""
     if not num_train_epochs: num_train_epochs = 20
-    if not validation_epochs: validation_epochs = 5
-    if not save_epochs: save_epochs = 5
+    if not validation_steps: validation_steps = 1000
+    if not save_steps: save_steps = 1000
     if not learning_rate: learning_rate = 1e-4
     if not text_encoder_lr: text_encoder_lr = 5e-6
     if not resolution: resolution = 256
@@ -1279,11 +1278,11 @@ def train_dreambooth(images, model_name, train_data, instance_prompt, output, nu
 
     steps_per_epoch = math.ceil(len(images) / gradient_accumulation_steps)
     max_train_steps = num_train_epochs * steps_per_epoch
-    save_steps = save_epochs * steps_per_epoch
-    validation_steps = validation_epochs * steps_per_epoch
+    #save_steps = save_epochs * steps_per_epoch
+    #validation_steps = validation_epochs * steps_per_epoch
 
     options = get_options(model_name, train_data, instance_prompt, output, max_train_steps, learning_rate, text_encoder_lr, resolution, save_steps, 
-    gradient_accumulation_steps, validation_prompt, validation_epochs, lr_scheduler)
+    gradient_accumulation_steps, validation_prompt, validation_steps, lr_scheduler)
 
     options.sources = get_sources(train_data)
 

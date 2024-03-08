@@ -866,9 +866,9 @@ export default class Functions {
             ]
         } else if (dimension === "1024") {
             ranges = [
-                {value: -1, width: 1280, height: 896},
+                {value: -1, width: 1280, height: 768},
                 {value: 0, width: 1024, height: 1024},
-                {value: 1, width: 896, height: 1280}
+                {value: 1, width: 768, height: 1280}
             ]
         }
         for (let i = 0; i < ranges.length - 1; i++) {
@@ -901,7 +901,7 @@ export default class Functions {
             oldMin = 576
             oldMax = 960
         } else if (dimension === "1024") {
-            oldMin = 896
+            oldMin = 768
             oldMax = 1280
         }
         let newMin = -1

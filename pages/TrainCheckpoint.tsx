@@ -3,7 +3,7 @@ import {useHistory} from "react-router-dom"
 import {EnableDragContext, MobileContext, SiteHueContext, SiteSaturationContext, SiteLightnessContext, 
 TrainTabContext, FolderLocationContext, SocketContext, TrainStartedContext, TrainProgressContext,
 TrainProgressTextContext, TrainCompletedContext, TrainImagesContext, ModelNameContext, EpochsContext,
-SaveEpochsContext, PreviewEpochsContext, PreviewPromptContext, LearningRateContext, GradientAccumulationStepsContext,
+SaveStepsContext, PreviewStepsContext, PreviewPromptContext, LearningRateContext, GradientAccumulationStepsContext,
 ResolutionContext, LearningFunctionContext, ImageBrightnessContext, ImageContrastContext, PreviewImageContext,
 TrainRenderImageContext, TrainNameContext, LearningRateTEContext, ReverseSortContext} from "../Context"
 import {ProgressBar, Dropdown, DropdownButton} from "react-bootstrap"
@@ -37,8 +37,8 @@ const TrainCheckpoint: React.FunctionComponent = (props) => {
     const {trainCompleted, setTrainCompleted} = useContext(TrainCompletedContext)
     const {modelName, setModelName} = useContext(ModelNameContext)
     const {epochs, setEpochs} = useContext(EpochsContext)
-    const {saveEpochs, setSaveEpochs} = useContext(SaveEpochsContext)
-    const {previewEpochs, setPreviewEpochs} = useContext(PreviewEpochsContext)
+    const {saveSteps, setSaveSteps} = useContext(SaveStepsContext)
+    const {previewSteps, setPreviewSteps} = useContext(PreviewStepsContext)
     const {previewPrompt, setPreviewPrompt} = useContext(PreviewPromptContext)
     const {learningRate, setLearningRate} = useContext(LearningRateContext)
     const {gradientAccumulationSteps, setGradientAccumulationSteps} = useContext(GradientAccumulationStepsContext)
@@ -224,8 +224,8 @@ const TrainCheckpoint: React.FunctionComponent = (props) => {
         json.text_encoder_lr = Number(learningRateTE)
         json.gradient_accumulation_steps = Number(gradientAccumulationSteps)
         json.resolution = Number(resolution)
-        json.save_epochs = Number(saveEpochs)
-        json.validation_epochs = Number(previewEpochs)
+        json.save_steps = Number(saveSteps)
+        json.validation_steps = Number(previewSteps)
         json.validation_prompt = previewPrompt
         json.learning_function = learningFunction
         await axios.post("/train-checkpoint", json)
@@ -246,8 +246,8 @@ const TrainCheckpoint: React.FunctionComponent = (props) => {
     const reset = () => {
         setTrainName("")
         setEpochs("20")
-        setSaveEpochs("5")
-        setPreviewEpochs("5")
+        setSaveSteps("1000")
+        setPreviewSteps("1000")
         setPreviewPrompt("")
         setLearningRate("1e-4")
         setLearningRateTE("5e-6")
@@ -294,12 +294,12 @@ const TrainCheckpoint: React.FunctionComponent = (props) => {
                         <input className="train-tag-settings-input" type="text" spellCheck={false} value={resolution} onChange={(event) => setResolution(event.target.value)}/>
                     </div>
                     <div className="train-tag-settings-box">
-                        <span className="train-tag-settings-title">Save Epochs:</span>
-                        <input className="train-tag-settings-input" type="text" spellCheck={false} value={saveEpochs} onChange={(event) => setSaveEpochs(event.target.value)}/>
+                        <span className="train-tag-settings-title">Save Steps:</span>
+                        <input className="train-tag-settings-input" type="text" spellCheck={false} value={saveSteps} onChange={(event) => setSaveSteps(event.target.value)}/>
                     </div>
                     <div className="train-tag-settings-box">
-                        <span className="train-tag-settings-title">Preview Epochs:</span>
-                        <input className="train-tag-settings-input" type="text" spellCheck={false} value={previewEpochs} onChange={(event) => setPreviewEpochs(event.target.value)}/>
+                        <span className="train-tag-settings-title">Preview Steps:</span>
+                        <input className="train-tag-settings-input" type="text" spellCheck={false} value={previewSteps} onChange={(event) => setPreviewSteps(event.target.value)}/>
                     </div>
                     <div className="train-tag-settings-box">
                         <span className="train-tag-settings-title">Preview Prompt:</span>
