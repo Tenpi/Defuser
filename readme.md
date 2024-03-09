@@ -96,6 +96,8 @@ sudo make install
 
 ### ControlNet
 
+![Image](https://github.com/Tenpi/Defuser/blob/main/assets/images/controlnet.png?raw=true)
+
 ControlNet lets you control the generation using a "control image". The possible control images are canny, depth,
 lineart, anime, manga, softedge, scribble, and original image (reference). By clicking on "reference image", it will
 also reference the input image rather than just the control image. "Guess mode" is an option that will try to guess the
@@ -106,6 +108,8 @@ content if no prompt is provided.
 X-Adapter lets you use lora models trained on SDv1 in SDXL. In the dropdown select a v1 checkpoint that it will cross adapt to.
 
 ### Patch Controls
+
+![Image](https://github.com/Tenpi/Defuser/blob/main/assets/images/patch.png?raw=true)
 
 These are the drawing controls when using patch:
 - Wheel: brush size

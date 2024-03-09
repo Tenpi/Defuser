@@ -7,7 +7,7 @@ from torchvision import transforms
 from collections import namedtuple
 import numpy as np
 import array
-from .functions import get_models_dir
+from .functions import get_models_dir, get_normalized_dimensions
 
 topk = 4
 Norm = nn.BatchNorm2d
@@ -482,6 +482,9 @@ def colorize_sketch(sketch, style, output):
     for param in colorize_model.parameters():
         param.requires_grad = False
 
+    width = sketch.width
+    height = sketch.height
+
     #style = Image.open(style).convert("RGB")
     style = transforms.Resize((512, 512))(style)
     style_pil = style
@@ -515,6 +518,7 @@ def colorize_sketch(sketch, style, output):
     result = result.squeeze(0)
     result = re_scale(result.detach().cpu())
     result = to_pil(result)
+    result = result.resize((width, height))
 
     out_dir = os.path.dirname(output)
     if not os.path.exists(out_dir): os.mkdir(out_dir)
