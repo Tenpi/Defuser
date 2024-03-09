@@ -3,7 +3,7 @@ import {useHistory} from "react-router-dom"
 import {HashLink as Link} from "react-router-hash-link"
 import favicon from "../assets/icons/favicon.png"
 import {EnableDragContext, MobileContext, SiteHueContext, SiteSaturationContext, SiteLightnessContext, DrawImageContext, MaskImageContext,
-MaskDataContext, ImageBrightnessContext, ImageContrastContext} from "../Context"
+MaskDataContext, ImageBrightnessContext, ImageContrastContext, ImageHueContext, ImageSaturationContext} from "../Context"
 import functions from "../structures/Functions"
 import CanvasDraw from "../structures/CanvasDraw"
 import inpaintCheck from "../assets/icons/inpaint-check.png"
@@ -24,6 +24,8 @@ const Draw: React.FunctionComponent = (props) => {
     const {siteLightness, setSiteLightness} = useContext(SiteLightnessContext)
     const {imageBrightness, setImageBrightness} = useContext(ImageBrightnessContext)
     const {imageContrast, setImageContrast} = useContext(ImageContrastContext)
+    const {imageHue, setImageHue} = useContext(ImageHueContext)
+    const {imageSaturation, setImageSaturation} = useContext(ImageSaturationContext)
     const {drawImage, setDrawImage} = useContext(DrawImageContext)
     const {maskImage, setMaskImage} = useContext(MaskImageContext)
     const {maskData, setMaskData} = useContext(MaskDataContext)
@@ -237,7 +239,7 @@ const Draw: React.FunctionComponent = (props) => {
                     erase={erasing}
                     loadTimeOffset={0}
                     eraseColor="white"
-                    style={{filter: `brightness(${imageBrightness + 100}%) contrast(${imageContrast + 100}%)`}}
+                    style={{filter: `brightness(${imageBrightness + 100}%) contrast(${imageContrast + 100}%) hue-rotate(${imageHue - 180}deg) saturate(${imageSaturation}%)`}}
                 />
                 {/* <canvas ref={imageRef} className="draw-img"></canvas> */}
             </div>

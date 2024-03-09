@@ -4,7 +4,7 @@ import {HashLink as Link} from "react-router-hash-link"
 import favicon from "../assets/icons/favicon.png"
 import {EnableDragContext, MobileContext, SiteHueContext, SiteSaturationContext, SiteLightnessContext, UpdateImagesContext, PromptContext, NegativePromptContext, DeletionContext,
 StepsContext, CFGContext, ModelNameContext, SizeContext, SamplerContext, DenoiseContext, InterrogateTextContext, UpdateSavedContext, ClipSkipContext, PreviewImageContext, TabContext,
-SeedContext, VAENameContext, ImageBrightnessContext, ImageContrastContext, GeneratorContext} from "../Context"
+SeedContext, VAENameContext, ImageBrightnessContext, ImageContrastContext, GeneratorContext, ImageHueContext, ImageSaturationContext} from "../Context"
 import functions from "../structures/Functions"
 import deleteIcon from "../assets/icons/delete.png"
 import deleteIconHover from "../assets/icons/delete-hover.png"
@@ -31,6 +31,8 @@ const Image: React.FunctionComponent<ImageHistoryImageProps> = (props) => {
     const {siteLightness, setSiteLightness} = useContext(SiteLightnessContext)
     const {imageBrightness, setImageBrightness} = useContext(ImageBrightnessContext)
     const {imageContrast, setImageContrast} = useContext(ImageContrastContext)
+    const {imageHue, setImageHue} = useContext(ImageHueContext)
+    const {imageSaturation, setImageSaturation} = useContext(ImageSaturationContext)
     const [deleteHover, setDeleteHover] = useState(false)
     const [saveHover, setSaveHover] = useState(false)
     const [sendHover, setSendHover] = useState(false)
@@ -260,7 +262,7 @@ const Image: React.FunctionComponent<ImageHistoryImageProps> = (props) => {
                     <img className="image-img-button-small" onMouseEnter={() => setDeleteHover(true)} onClick={deleteImage} draggable={false}
                     onMouseLeave={() => setDeleteHover(false)} src={deleteHover ? deleteIconHover : deleteIcon} style={{filter: getFilter(), cursor: hover ? "pointer" : "default"}}/>
                 </div>
-                <img className="image-img-small" src={props.img} draggable={false} style={{filter: `brightness(${imageBrightness + 100}%) contrast(${imageContrast + 100}%)`}}/>
+                <img className="image-img-small" src={props.img} draggable={false} style={{filter: `brightness(${imageBrightness + 100}%) contrast(${imageContrast + 100}%) hue-rotate(${imageHue - 180}deg) saturate(${imageSaturation}%)`}}/>
             </div>
         )
     }
@@ -275,7 +277,7 @@ const Image: React.FunctionComponent<ImageHistoryImageProps> = (props) => {
                 <img className="image-img-button" onMouseEnter={() => setDeleteHover(true)} onClick={deleteImage} draggable={false}
                 onMouseLeave={() => setDeleteHover(false)} src={deleteHover ? deleteIconHover : deleteIcon} style={{filter: getFilter(), cursor: hover ? "pointer" : "default"}}/>
             </div>
-            <img className="image-img" src={props.img} draggable={false} style={{filter: `brightness(${imageBrightness + 100}%) contrast(${imageContrast + 100}%)`, maxHeight: getMaxHeight()}}/>
+            <img className="image-img" src={props.img} draggable={false} style={{filter: `brightness(${imageBrightness + 100}%) contrast(${imageContrast + 100}%) hue-rotate(${imageHue - 180}deg) saturate(${imageSaturation}%)`, maxHeight: getMaxHeight()}}/>
         </div>
     )
 }

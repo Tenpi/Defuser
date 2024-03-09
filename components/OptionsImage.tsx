@@ -4,7 +4,7 @@ import {HashLink as Link} from "react-router-hash-link"
 import favicon from "../assets/icons/favicon.png"
 import {EnableDragContext, MobileContext, SiteHueContext, SiteSaturationContext, SiteLightnessContext, DrawImageContext, MaskImageContext,
 InterrogateTextContext, ImageInputContext, ExpandImageContext, MaskDataContext, ImageBrightnessContext, ImageContrastContext, ExpandDialogFlagContext, 
-HorizontalExpandContext, VerticalExpandContext, ExpandMaskContext} from "../Context"
+HorizontalExpandContext, VerticalExpandContext, ExpandMaskContext, ImageHueContext, ImageSaturationContext} from "../Context"
 import functions from "../structures/Functions"
 import imgPlaceHolder from "../assets/images/img-placeholder.png"
 import fileType from "magic-bytes.js"
@@ -23,6 +23,8 @@ const OptionsImage: React.FunctionComponent = (props) => {
     const {siteLightness, setSiteLightness} = useContext(SiteLightnessContext)
     const {imageBrightness, setImageBrightness} = useContext(ImageBrightnessContext)
     const {imageContrast, setImageContrast} = useContext(ImageContrastContext)
+    const {imageHue, setImageHue} = useContext(ImageHueContext)
+    const {imageSaturation, setImageSaturation} = useContext(ImageSaturationContext)
     const {interrogateText, setInterrogateText} = useContext(InterrogateTextContext)
     const {drawImage, setDrawImage} = useContext(DrawImageContext)
     const {maskImage, setMaskImage} = useContext(MaskImageContext)
@@ -212,7 +214,7 @@ const OptionsImage: React.FunctionComponent = (props) => {
                 <img className="options-bar-img-button" src={xIcon} onClick={removeImage} style={{filter: getFilter()}} draggable={false}/>
             </div>
             {imageInput ? 
-            <canvas ref={ref} className="options-bar-img" draggable={false} style={{filter: `brightness(${imageBrightness + 100}%) contrast(${imageContrast + 100}%)`}}></canvas> :
+            <canvas ref={ref} className="options-bar-img" draggable={false} style={{filter: `brightness(${imageBrightness + 100}%) contrast(${imageContrast + 100}%) hue-rotate(${imageHue - 180}deg) saturate(${imageSaturation}%)`}}></canvas> :
             <img className="options-bar-img" src={imgPlaceHolder} style={{filter: getFilter()}} draggable={false}/>}
         </label>
         <input id="img" type="file" onChange={(event) => loadImage(event)}/>

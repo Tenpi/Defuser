@@ -5,7 +5,7 @@ import favicon from "../assets/icons/favicon.png"
 import {EnableDragContext, MobileContext, SiteHueContext, SiteSaturationContext, SiteLightnessContext, DrawImageContext, MaskImageContext,
 MaskDataContext, ControlProcessorContext, ThemeContext, ImageInputContext, ControlImageContext, ControlScaleContext, ControlGuessModeContext,
 ControlStartContext, ControlEndContext, ControlInvertContext, StyleFidelityContext, ControlReferenceImageContext, ImageBrightnessContext, ImageContrastContext,
-ExpandImageContext, UpscalerContext} from "../Context"
+ExpandImageContext, UpscalerContext, ImageHueContext, ImageSaturationContext} from "../Context"
 import functions from "../structures/Functions"
 import Slider from "react-slider"
 import radioButtonOff from "../assets/icons/radiobutton-off.png"
@@ -28,6 +28,8 @@ const ControlNet: React.FunctionComponent = (props) => {
     const {siteLightness, setSiteLightness} = useContext(SiteLightnessContext)
     const {imageBrightness, setImageBrightness} = useContext(ImageBrightnessContext)
     const {imageContrast, setImageContrast} = useContext(ImageContrastContext)
+    const {imageHue, setImageHue} = useContext(ImageHueContext)
+    const {imageSaturation, setImageSaturation} = useContext(ImageSaturationContext)
     const {controlProcessor, setControlProcessor} = useContext(ControlProcessorContext)
     const {imageInput, setImageInput} = useContext(ImageInputContext)
     const {controlImage, setControlImage} = useContext(ControlImageContext)
@@ -247,7 +249,7 @@ const ControlNet: React.FunctionComponent = (props) => {
                                 {isLineArt() ? <img className="control-image-button" src={alphaIcon} onClick={downloadAlpha} draggable={false} style={{filter: controlInvert ? "invert(1)" : ""}}/> : null}
                                 <img className="control-image-button" src={downloadIcon} onClick={download} draggable={false} style={{filter: controlInvert ? "invert(1)" : ""}}/>
                             </div>
-                            <img className="control-image" src={controlImage} draggable={false} style={{filter: `brightness(${imageBrightness + 100}%) contrast(${imageContrast + 100}%)`}}/>
+                            <img className="control-image" src={controlImage} draggable={false} style={{filter: `brightness(${imageBrightness + 100}%) contrast(${imageContrast + 100}%) hue-rotate(${imageHue - 180}deg) saturate(${imageSaturation}%)`}}/>
                         </div>
                         {controlNetOptionsJSX()}
                     </div>

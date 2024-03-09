@@ -1,7 +1,7 @@
 import React, {useContext, useEffect, useState, useRef} from "react"
 import {useHistory} from "react-router-dom"
 import {EnableDragContext, MobileContext, SiteHueContext, SiteSaturationContext, SiteLightnessContext,
-PreviewImageContext, TabContext, ImageBrightnessContext, ImageContrastContext} from "../Context"
+PreviewImageContext, TabContext, ImageBrightnessContext, ImageContrastContext, ImageHueContext, ImageSaturationContext} from "../Context"
 import functions from "../structures/Functions"
 import textIcon from "../assets/icons/text.png"
 import textIconHover from "../assets/icons/text-hover.png"
@@ -23,6 +23,8 @@ const TrainImage: React.FunctionComponent<TrainImageProps> = (props) => {
     const {siteLightness, setSiteLightness} = useContext(SiteLightnessContext)
     const {imageBrightness, setImageBrightness} = useContext(ImageBrightnessContext)
     const {imageContrast, setImageContrast} = useContext(ImageContrastContext)
+    const {imageHue, setImageHue} = useContext(ImageHueContext)
+    const {imageSaturation, setImageSaturation} = useContext(ImageSaturationContext)
     const {previewImage, setPreviewImage} = useContext(PreviewImageContext)
     const {tab, setTab} = useContext(TabContext)
     const [hover, setHover] = useState(false)
@@ -74,7 +76,7 @@ const TrainImage: React.FunctionComponent<TrainImageProps> = (props) => {
                 <img className="train-image-img-button" onMouseEnter={() => setTextHover(true)} onClick={showText} draggable={false}
                 onMouseLeave={() => setTextHover(false)} src={textHover ? textIconHover : textIcon} style={{filter: getFilter(), cursor: hover ? "pointer" : "default"}}/>
             </div>
-            <img className="train-image-img" src={props.img} draggable={false} style={{filter: `brightness(${imageBrightness + 100}%) contrast(${imageContrast + 100}%)`}}/>
+            <img className="train-image-img" src={props.img} draggable={false} style={{filter: `brightness(${imageBrightness + 100}%) contrast(${imageContrast + 100}%) hue-rotate(${imageHue - 180}deg) saturate(${imageSaturation}%)`}}/>
         </div>
     )
 }

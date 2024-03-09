@@ -6,7 +6,8 @@ import {ProgressBar} from "react-bootstrap"
 import {EnableDragContext, MobileContext, SiteHueContext, SiteSaturationContext, SiteLightnessContext, RenderImageContext, StartedContext,
 SocketContext, UpdateImagesContext, PreviewImageContext, ImageBrightnessContext, ImageContrastContext, SidebarTypeContext, AIWatermarkBrightnessContext, 
 AIWatermarkHueContext, AIWatermarkInvertContext, AIWatermarkMarginXContext, AIWatermarkMarginYContext, AIWatermarkOpacityContext, AIWatermarkPositionContext, 
-AIWatermarkSaturationContext, AIWatermarkScaleContext, AIWatermarkTypeContext, WatermarkContext, InvisibleWatermarkContext, StepAnimationContext} from "../Context"
+AIWatermarkSaturationContext, AIWatermarkScaleContext, AIWatermarkTypeContext, WatermarkContext, InvisibleWatermarkContext, StepAnimationContext,
+ImageHueContext, ImageSaturationContext} from "../Context"
 import xIcon from "../assets/icons/x.png"
 import xIconHover from "../assets/icons/x-hover.png"
 import playIcon from "../assets/icons/play.png"
@@ -33,6 +34,8 @@ const Render: React.FunctionComponent = (props) => {
     const {siteLightness, setSiteLightness} = useContext(SiteLightnessContext)
     const {imageBrightness, setImageBrightness} = useContext(ImageBrightnessContext)
     const {imageContrast, setImageContrast} = useContext(ImageContrastContext)
+    const {imageHue, setImageHue} = useContext(ImageHueContext)
+    const {imageSaturation, setImageSaturation} = useContext(ImageSaturationContext)
     const {renderImage, setRenderImage} = useContext(RenderImageContext)
     const {previewImage, setPreviewImage} = useContext(PreviewImageContext)
     const {socket, setSocket} = useContext(SocketContext)
@@ -247,7 +250,7 @@ const Render: React.FunctionComponent = (props) => {
                     <img className="render-img-button" src={xHover ? xIconHover : xIcon} style={{filter: getFilter()}}
                     onMouseEnter={() => setXHover(true)} onMouseLeave={() => setXHover(false)} onClick={remove}/>
                 </div> : null}
-                <img className="render-img" src={getRenderImage()} draggable={false} style={{filter: `brightness(${imageBrightness + 100}%) contrast(${imageContrast + 100}%)`}}/>
+                <img className="render-img" src={getRenderImage()} draggable={false} style={{filter: `brightness(${imageBrightness + 100}%) contrast(${imageContrast + 100}%) hue-rotate(${imageHue - 180}deg) saturate(${imageSaturation}%)`}}/>
             </div> : null}
         </div>
     )

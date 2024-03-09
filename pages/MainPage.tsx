@@ -13,6 +13,7 @@ import View from "./View"
 import SavedPrompts from "./SavedPrompts"
 import Watermark from "./Watermark"
 import Misc from "./Misc"
+import Classify from "./Classify"
 
 const MainPage: React.FunctionComponent = (props) => {
     const [ignored, forceUpdate] = useReducer(x => x + 1, 0)
@@ -47,6 +48,8 @@ const MainPage: React.FunctionComponent = (props) => {
             return <Watermark/>
         } else if (tab === "misc") {
             return <Misc/>
+        } else if (tab === "classify") {
+            return <Classify/>
         }
     }
 

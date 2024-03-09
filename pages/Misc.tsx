@@ -3,13 +3,9 @@ import {useHistory} from "react-router-dom"
 import {HashLink as Link} from "react-router-hash-link"
 import favicon from "../assets/icons/favicon.png"
 import {EnableDragContext, MobileContext, SiteHueContext, SiteSaturationContext, SiteLightnessContext, 
-MiscTabContext, ClassifyFolderLocationContext, EpochsContext, SaveStepsContext,
-GradientAccumulationStepsContext, LearningRateContext, ResolutionContext, LearningFunctionContext,
-LearningRateTEContext} from "../Context"
+MiscTabContext} from "../Context"
 import functions from "../structures/Functions"
 import CheckpointBar from "../components/CheckpointBar"
-import TrainClassifier from "./TrainClassifier"
-import AIDetector from "./AIDetector"
 import SimplifySketch from "./SimplifySketch"
 import ShadeSketch from "./ShadeSketch"
 import ColorizeSketch from "./ColorizeSketch"
@@ -23,14 +19,6 @@ const Misc: React.FunctionComponent = (props) => {
     const {siteSaturation, setSiteSaturation} = useContext(SiteSaturationContext)
     const {siteLightness, setSiteLightness} = useContext(SiteLightnessContext)
     const {miscTab, setMiscTab} = useContext(MiscTabContext)
-    const {classifyFolderLocation, setClassifyFolderLocation} = useContext(ClassifyFolderLocationContext)
-    const {epochs, setEpochs} = useContext(EpochsContext)
-    const {saveSteps, setSaveSteps} = useContext(SaveStepsContext)
-    const {learningRate, setLearningRate} = useContext(LearningRateContext)
-    const {gradientAccumulationSteps, setGradientAccumulationSteps} = useContext(GradientAccumulationStepsContext)
-    const {resolution, setResolution} = useContext(ResolutionContext)
-    const {learningFunction, setLearningFunction} = useContext(LearningFunctionContext)
-    const {learningRateTE, setLearningRateTE} = useContext(LearningRateTEContext)
     const ref = useRef<HTMLCanvasElement>(null)
     const history = useHistory()
 
@@ -39,48 +27,17 @@ const Misc: React.FunctionComponent = (props) => {
     }
 
     useEffect(() => {
-        const savedClassifyFolderLocation = localStorage.getItem("classifyFolderLocation")
-        if (savedClassifyFolderLocation) setClassifyFolderLocation(savedClassifyFolderLocation)
         const savedMiscTab = localStorage.getItem("miscTab")
         if (savedMiscTab) setMiscTab(savedMiscTab)
-        const savedEpochs = localStorage.getItem("epochs")
-        if (savedEpochs) setEpochs(savedEpochs)
-        const savedSaveSteps = localStorage.getItem("saveSteps")
-        if (savedSaveSteps) setSaveSteps(savedSaveSteps)
-        const savedLearningRate = localStorage.getItem("learningRate")
-        if (savedLearningRate) setLearningRate(savedLearningRate)
-        const savedGradientAccumulationSteps = localStorage.getItem("gradientAccumulationSteps")
-        if (savedGradientAccumulationSteps) setGradientAccumulationSteps(savedGradientAccumulationSteps)
-        const savedResolution = localStorage.getItem("resolution")
-        if (savedResolution) setResolution(savedResolution)
-        const savedLearningFunction = localStorage.getItem("learningFunction")
-        if (savedLearningFunction) setLearningFunction(savedLearningFunction)
-        const savedLearningRateTE = localStorage.getItem("learningRateTE")
-        if (savedLearningRateTE) setLearningRateTE(savedLearningRateTE)
     }, [])
 
     useEffect(() => {
-        localStorage.setItem("classifyFolderLocation", String(classifyFolderLocation))
         localStorage.setItem("miscTab", String(miscTab))
-        localStorage.setItem("epochs", String(epochs))
-        localStorage.setItem("saveSteps", String(saveSteps))
-        localStorage.setItem("learningRate", String(learningRate))
-        localStorage.setItem("gradientAccumulationSteps", String(gradientAccumulationSteps))
-        localStorage.setItem("resolution", String(resolution))
-        localStorage.setItem("learningFunction", String(learningFunction))
-        localStorage.setItem("learningRateTE", String(learningRateTE))
-    }, [classifyFolderLocation, miscTab, epochs, saveSteps, learningRate, 
-        gradientAccumulationSteps, learningFunction, resolution, learningRateTE])
+    }, [miscTab])
 
     const miscTabsJSX = () => {
         return (
             <div className="train-tab-row">
-                <div className="train-tab-container" onClick={() => setMiscTab("ai detector")}>
-                    <span className={miscTab === "ai detector" ? "train-tab-text-selected" : "train-tab-text"}>AI Detector</span>
-                </div>
-                <div className="train-tab-container" onClick={() => setMiscTab("train classifier")}>
-                    <span className={miscTab === "train classifier" ? "train-tab-text-selected" : "train-tab-text"}>Train Classifier</span>
-                </div>
                 <div className="train-tab-container" onClick={() => setMiscTab("simplify sketch")}>
                     <span className={miscTab === "simplify sketch" ? "train-tab-text-selected" : "train-tab-text"}>Simplify Sketch</span>
                 </div>
@@ -98,11 +55,7 @@ const Misc: React.FunctionComponent = (props) => {
     }
 
     const getTab = () => {
-        if (miscTab === "train classifier") {
-            return <TrainClassifier/>
-        } else if (miscTab === "ai detector") {
-            return <AIDetector/>
-        } else if (miscTab === "simplify sketch") {
+        if (miscTab === "simplify sketch") {
             return <SimplifySketch/>
         } else if (miscTab === "shade sketch") {
             return <ShadeSketch/>

@@ -3,7 +3,7 @@ import {useHistory} from "react-router-dom"
 import {HashLink as Link} from "react-router-hash-link"
 import favicon from "../assets/icons/favicon.png"
 import {EnableDragContext, MobileContext, SiteHueContext, SiteSaturationContext, SiteLightnessContext, PreviewImageContext,
-ImageBrightnessContext, ImageContrastContext, TabContext, ImageInputContext} from "../Context"
+ImageBrightnessContext, ImageContrastContext, TabContext, ImageInputContext, ImageHueContext, ImageSaturationContext} from "../Context"
 import functions from "../structures/Functions"
 import "./styles/preview.less"
 
@@ -15,6 +15,8 @@ const Preview: React.FunctionComponent = (props) => {
     const {siteLightness, setSiteLightness} = useContext(SiteLightnessContext)
     const {imageBrightness, setImageBrightness} = useContext(ImageBrightnessContext)
     const {imageContrast, setImageContrast} = useContext(ImageContrastContext)
+    const {imageHue, setImageHue} = useContext(ImageHueContext)
+    const {imageSaturation, setImageSaturation} = useContext(ImageSaturationContext)
     const {previewImage, setPreviewImage} = useContext(PreviewImageContext)
     const {tab, setTab} = useContext(TabContext)
     const {imageInput, setImageInput} = useContext(ImageInputContext)
@@ -83,7 +85,7 @@ const Preview: React.FunctionComponent = (props) => {
 
     return (
         <div className="preview" onMouseEnter={() => setEnableDrag(false)}>
-            <img ref={fullscreenRef} className="preview-img" src={previewImage} draggable={false} style={{filter: `brightness(${imageBrightness + 100}%) contrast(${imageContrast + 100}%)`}}/>
+            <img ref={fullscreenRef} className="preview-img" src={previewImage} draggable={false} style={{filter: `brightness(${imageBrightness + 100}%) contrast(${imageContrast + 100}%) hue-rotate(${imageHue - 180}deg) saturate(${imageSaturation}%)`}}/>
         </div>
     )
 }

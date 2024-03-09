@@ -8,6 +8,8 @@ export const SiteSaturationContext = React.createContext<any>(null)
 export const SiteLightnessContext = React.createContext<any>(null)
 export const ImageBrightnessContext = React.createContext<any>(null)
 export const ImageContrastContext = React.createContext<any>(null)
+export const ImageHueContext = React.createContext<any>(null)
+export const ImageSaturationContext = React.createContext<any>(null)
 
 export const StepsContext = React.createContext<any>(null)
 export const CFGContext = React.createContext<any>(null)
@@ -128,6 +130,7 @@ export const ModelDirContext = React.createContext<any>(null)
 export const OutputDirContext = React.createContext<any>(null)
 export const XAdaptModelContext = React.createContext<any>(null)
 export const FreeUContext = React.createContext<any>(null)
+export const ClassifyTabContext = React.createContext<any>(null)
 
 const Context: React.FunctionComponent = (props: any) => {
     const [theme, setTheme] = useState("light")
@@ -136,6 +139,8 @@ const Context: React.FunctionComponent = (props: any) => {
     const [siteLightness, setSiteLightness] = useState(50)
     const [imageBrightness, setImageBrightness] = useState(0)
     const [imageContrast, setImageContrast] = useState(0)
+    const [imageHue, setImageHue] = useState(180)
+    const [imageSaturation, setImageSaturation] = useState(100)
     const [steps, setSteps] = useState(20)
     const [cfg, setCFG] = useState(7)
     const [size, setSize] = useState(0)
@@ -218,7 +223,8 @@ const Context: React.FunctionComponent = (props: any) => {
     const [saucenaoAPIKey, setSaucenaoAPIKey] = useState("")
     const [randomPromptMode, setRandomPromptMode] = useState("1girl")
     const [stepAnimation, setStepAnimation] = useState("")
-    const [miscTab, setMiscTab] = useState("train")
+    const [miscTab, setMiscTab] = useState("simplify sketch")
+    const [classifyTab, setClassifyTab] = useState("ai detector")
     const [classifyFolderLocation, setClassifyFolderLocation] = useState("")
     const [classifyFolders, setClassifyFolders] = useState([])
     const [saveSteps, setSaveSteps] = useState("1000")
@@ -236,6 +242,9 @@ const Context: React.FunctionComponent = (props: any) => {
 
     return (
         <>  
+            <ClassifyTabContext.Provider value={{classifyTab, setClassifyTab}}>
+            <ImageSaturationContext.Provider value={{imageSaturation, setImageSaturation}}>
+            <ImageHueContext.Provider value={{imageHue, setImageHue}}>
             <FreeUContext.Provider value={{freeU, setFreeU}}>
             <XAdaptModelContext.Provider value={{xAdaptModel, setXAdaptModel}}>
             <PreviewStepsContext.Provider value={{previewSteps, setPreviewSteps}}>
@@ -443,6 +452,9 @@ const Context: React.FunctionComponent = (props: any) => {
             </PreviewStepsContext.Provider>
             </XAdaptModelContext.Provider>
             </FreeUContext.Provider>
+            </ImageHueContext.Provider>
+            </ImageSaturationContext.Provider>
+            </ClassifyTabContext.Provider>
         </>
     )
 }

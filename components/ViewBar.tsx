@@ -3,7 +3,8 @@ import {useHistory} from "react-router-dom"
 import {HashLink as Link} from "react-router-hash-link"
 import favicon from "../assets/icons/favicon.png"
 import {EnableDragContext, MobileContext, SiteHueContext, SiteSaturationContext, SiteLightnessContext, 
-ViewImagesContext, UpdateImagesContext, GeneratorContext, ImageBrightnessContext, ImageContrastContext} from "../Context"
+ViewImagesContext, UpdateImagesContext, GeneratorContext, ImageBrightnessContext, ImageContrastContext,
+ImageHueContext, ImageSaturationContext} from "../Context"
 import functions from "../structures/Functions"
 import downloadIcon from "../assets/icons/download.png"
 import "./styles/viewbar.less"
@@ -19,6 +20,8 @@ interface ViewImageProps {
 const ViewImage: React.FunctionComponent<ViewImageProps> = (props) => {
     const {imageBrightness, setImageBrightness} = useContext(ImageBrightnessContext)
     const {imageContrast, setImageContrast} = useContext(ImageContrastContext)
+    const {imageHue, setImageHue} = useContext(ImageHueContext)
+    const {imageSaturation, setImageSaturation} = useContext(ImageSaturationContext)
     const [hover, setHover] = useState(false)
 
     const download = async () => {
@@ -40,7 +43,7 @@ const ViewImage: React.FunctionComponent<ViewImageProps> = (props) => {
             <div className={`view-image-button-container ${hover ? "show-view-image-buttons" : ""}`}>
                 <img className="view-image-button" src={downloadIcon} onClick={download} draggable={false}/>
             </div>
-            <img className="view-image" src={props.img} onClick={() => props.update(props.img)} draggable={false} style={{filter: `brightness(${imageBrightness + 100}%) contrast(${imageContrast + 100}%)`}}/>
+            <img className="view-image" src={props.img} onClick={() => props.update(props.img)} draggable={false} style={{filter: `brightness(${imageBrightness + 100}%) contrast(${imageContrast + 100}%) hue-rotate(${imageHue - 180}deg) saturate(${imageSaturation}%)`}}/>
         </div>
     )
 }

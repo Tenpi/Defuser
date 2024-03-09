@@ -1,7 +1,7 @@
 import flask
 from __main__ import app, socketio
 from .classifier import train_classifier
-from .info import open_folder, show_in_folder
+from .info import open_folder, show_in_folder, select_file, select_folder
 from .functions import clean_image, next_index, get_models_dir, get_outputs_dir
 from .simplify_sketch import SketchSimplificationModel
 from .shade_sketch import shade_sketch
@@ -16,6 +16,8 @@ import inspect
 import ctypes
 from io import BytesIO
 import base64
+import torch
+import safetensors.torch
 
 gen_thread = None
 simplify_model = None
@@ -225,4 +227,50 @@ def start_layer_divide():
     thread.start()
     thread.join()
     gen_thread = None
+    return "done"
+
+def convert_embedding(input_path, output_path):
+    file_extension = pathlib.Path(input_path).suffix
+    sd15_tensor = None
+    if file_extension == ".pt":
+        sd15_embedding = torch.load(input_path, map_location=torch.device("cpu"), weights_only=True)
+        sd15_tensor = sd15_embedding["string_to_param"]["*"]
+    elif file_extension == ".bin":
+        sd15_embedding = torch.load(input_path, map_location=torch.device("cpu"), weights_only=True)
+        sd15_tensor = sd15_embedding["*"]
+    elif file_extension == ".safetensors":
+        loaded_tensors = safetensors.torch.load_file(input_path)
+        sd15_tensor = loaded_tensors["emb_params"]
+    else:
+        raise ValueError("Unsupported file format")
+    num_vectors = sd15_tensor.shape[0]
+    clip_g_shape = (num_vectors, 1280)
+    clip_l_shape = (num_vectors, 768)
+    clip_g = torch.zeros(clip_g_shape, dtype=torch.float16)
+    clip_l = torch.zeros(clip_l_shape, dtype=torch.float16)
+    clip_l[:sd15_tensor.shape[0], :sd15_tensor.shape[1]] = sd15_tensor.to(dtype=torch.float16)
+    safetensors.torch.save_file({"clip_g": clip_g, "clip_l": clip_l}, output_path)
+
+@app.route("/convert-embedding", methods=["POST"])
+def start_convert_embedding():
+    data = flask.request.json
+    mode = data["mode"]
+    if mode == "folder":
+        folder = select_folder()
+        output_folder = os.path.join(os.path.dirname(folder), f"{pathlib.Path(folder).stem}XL")
+        os.makedirs(output_folder, exist_ok=True)
+        files = os.listdir(folder)
+        for file in files:
+            input_path = os.path.join(folder, file)
+            output_path = os.path.join(output_folder, f"{pathlib.Path(file).stem}XL{pathlib.Path(file).suffix}")
+            try:
+                convert_embedding(input_path, output_path)
+            except ValueError:
+                continue
+        show_in_folder("", output_folder)
+    else:
+        file = select_file()
+        output_path = os.path.join(os.path.dirname(file), f"{pathlib.Path(file).stem}XL{pathlib.Path(file).suffix}")
+        convert_embedding(file, output_path)
+        show_in_folder("", output_path)
     return "done"

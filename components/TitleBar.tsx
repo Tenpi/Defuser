@@ -2,7 +2,8 @@ import React, {useContext, useEffect, useState, useRef} from "react"
 import {useHistory} from "react-router-dom"
 import {HashLink as Link} from "react-router-hash-link"
 import favicon from "../assets/icons/favicon.png"
-import {EnableDragContext, MobileContext, SiteHueContext, SiteSaturationContext, SiteLightnessContext, ThemeContext, ImageBrightnessContext, ImageContrastContext} from "../Context"
+import {EnableDragContext, MobileContext, SiteHueContext, SiteSaturationContext, SiteLightnessContext, ThemeContext, 
+ImageBrightnessContext, ImageContrastContext, ImageHueContext, ImageSaturationContext} from "../Context"
 import functions from "../structures/Functions"
 import Slider from "react-slider"
 import color from "../assets/icons/color.png"
@@ -72,6 +73,8 @@ const TitleBar: React.FunctionComponent<Props> = (props) => {
     const {siteLightness, setSiteLightness} = useContext(SiteLightnessContext)
     const {imageBrightness, setImageBrightness} = useContext(ImageBrightnessContext)
     const {imageContrast, setImageContrast} = useContext(ImageContrastContext)
+    const {imageHue, setImageHue} = useContext(ImageHueContext)
+    const {imageSaturation, setImageSaturation} = useContext(ImageSaturationContext)
     const [activeDropdown, setActiveDropdown] = useState(false)
     const {theme, setTheme} = useContext(ThemeContext)
     const ref = useRef<HTMLCanvasElement>(null)
@@ -89,12 +92,12 @@ const TitleBar: React.FunctionComponent<Props> = (props) => {
         const savedTheme = localStorage.getItem("theme")
         const savedImageBrightness = localStorage.getItem("imageBrightness")
         const savedImageContrast = localStorage.getItem("imageContrast")
+        const savedImageHue = localStorage.getItem("imageHue")
+        const savedImageSaturation = localStorage.getItem("imageSaturation")
         if (savedHue) setSiteHue(Number(savedHue))
         if (savedSaturation) setSiteSaturation(Number(savedSaturation))
         if (savedLightness) setSiteLightness(Number(savedLightness))
         if (savedTheme) setTheme(savedTheme)
-        if (savedImageBrightness) setImageBrightness(Number(savedImageBrightness))
-        if (savedImageContrast) setImageContrast(Number(savedImageContrast))
     }, [])
 
     useEffect(() => {
@@ -120,6 +123,8 @@ const TitleBar: React.FunctionComponent<Props> = (props) => {
         setSiteLightness(50)
         setImageBrightness(0)
         setImageContrast(0)
+        setImageHue(180)
+        setImageSaturation(100)
         setTimeout(() => {
             props.rerender()
         }, 100)
@@ -181,6 +186,14 @@ const TitleBar: React.FunctionComponent<Props> = (props) => {
                 <div className="title-dropdown-row">
                     <span className="title-dropdown-text">Image Contrast</span>
                     <Slider className="title-dropdown-slider" trackClassName="title-dropdown-slider-track" thumbClassName="title-dropdown-slider-thumb" onChange={(value) => setImageContrast(value)} min={0} max={50} step={1} value={imageContrast}/>
+                </div>
+                <div className="title-dropdown-row">
+                    <span className="title-dropdown-text">Image Hue</span>
+                    <Slider className="title-dropdown-slider" trackClassName="title-dropdown-slider-track" thumbClassName="title-dropdown-slider-thumb" onChange={(value) => setImageHue(value)} min={150} max={210} step={1} value={imageHue}/>
+                </div>
+                <div className="title-dropdown-row">
+                    <span className="title-dropdown-text">Image Saturation</span>
+                    <Slider className="title-dropdown-slider" trackClassName="title-dropdown-slider-track" thumbClassName="title-dropdown-slider-thumb" onChange={(value) => setImageSaturation(value)} min={50} max={150} step={1} value={imageSaturation}/>
                 </div>
                 <div className="title-dropdown-row">
                     <button className="title-dropdown-button" onClick={() => resetFilters()}>Reset</button>

@@ -5,7 +5,7 @@ TrainTabContext, FolderLocationContext, SocketContext, TrainStartedContext, Trai
 TrainProgressTextContext, TrainCompletedContext, TrainImagesContext, ModelNameContext, EpochsContext,
 SaveStepsContext, PreviewStepsContext, PreviewPromptContext, LearningRateContext, GradientAccumulationStepsContext,
 ResolutionContext, LearningFunctionContext, ImageBrightnessContext, ImageContrastContext, PreviewImageContext,
-TrainRenderImageContext, TrainNameContext, LearningRateTEContext, ReverseSortContext} from "../Context"
+TrainRenderImageContext, TrainNameContext, LearningRateTEContext, ReverseSortContext, ImageHueContext, ImageSaturationContext} from "../Context"
 import {ProgressBar, Dropdown, DropdownButton} from "react-bootstrap"
 import xIcon from "../assets/icons/x.png"
 import xIconHover from "../assets/icons/x-hover.png"
@@ -27,6 +27,8 @@ const TrainDreamBooth: React.FunctionComponent = (props) => {
     const {siteLightness, setSiteLightness} = useContext(SiteLightnessContext)
     const {imageBrightness, setImageBrightness} = useContext(ImageBrightnessContext)
     const {imageContrast, setImageContrast} = useContext(ImageContrastContext)
+    const {imageHue, setImageHue} = useContext(ImageHueContext)
+    const {imageSaturation, setImageSaturation} = useContext(ImageSaturationContext)
     const {socket, setSocket} = useContext(SocketContext)
     const {trainTab, setTrainTab} = useContext(TrainTabContext)
     const {folderLocation, setFolderLocation} = useContext(FolderLocationContext)
@@ -334,7 +336,7 @@ const TrainDreamBooth: React.FunctionComponent = (props) => {
                     <img className="render-img-button" src={xHover ? xIconHover : xIcon} style={{filter: getFilter()}}
                     onMouseEnter={() => setXHover(true)} onMouseLeave={() => setXHover(false)} onClick={remove}/>
                 </div> : null}
-                <img className="render-img" src={trainRenderImage} draggable={false} style={{filter: `brightness(${imageBrightness + 100}%) contrast(${imageContrast + 100}%)`}}/>
+                <img className="render-img" src={trainRenderImage} draggable={false} style={{filter: `brightness(${imageBrightness + 100}%) contrast(${imageContrast + 100}%) hue-rotate(${imageHue - 180}deg) saturate(${imageSaturation}%)`}}/>
             </div></div> : null}
             <div className="train-tag-images-container">
                 {imagesJSX()}

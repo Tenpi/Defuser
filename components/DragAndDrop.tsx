@@ -2,7 +2,7 @@ import React, {useContext, useEffect, useRef, useState, useReducer} from "react"
 import {useHistory} from "react-router-dom"
 import {ImageInputContext, InterrogateTextContext, MaskImageContext, MaskDataContext, ExpandImageContext, ExpandMaskContext,
 HorizontalExpandContext, VerticalExpandContext, ShadeImageInputContext, SimplifyImageInputContext, AIImageInputContext, TabContext,
-MiscTabContext, ColorizeSketchInputContext, ColorizeStyleInputContext, LayerDivideInputContext} from "../Context"
+MiscTabContext, ColorizeSketchInputContext, ColorizeStyleInputContext, LayerDivideInputContext, ClassifyTabContext} from "../Context"
 import {HashLink as Link} from "react-router-hash-link"
 import functions from "../structures/Functions"
 import path from "path"
@@ -31,6 +31,7 @@ const DragAndDrop: React.FunctionComponent = (props) => {
     const {layerDivideInput, setLayerDivideInput} = useContext(LayerDivideInputContext)
     const {tab, setTab} = useContext(TabContext)
     const {miscTab, setMiscTab} = useContext(MiscTabContext)
+    const {classifyTab, setClassifyTab} = useContext(ClassifyTabContext)
     const [uploadHover, setUploadHover] = useState(false)
     const history = useHistory()
 
@@ -102,9 +103,7 @@ const DragAndDrop: React.FunctionComponent = (props) => {
                     if (metadata) setInterrogateText(metadata)
                     setTimeout(() => {
                         if (tab === "misc") {
-                            if (miscTab === "ai detector") {
-                                setAIImageInput(link)
-                            } else if (miscTab === "simplify sketch") {
+                            if (miscTab === "simplify sketch") {
                                 setSimplifyImageInput(link)
                             } else if (miscTab === "shade sketch") {
                                 setShadeImageInput(link)
@@ -116,6 +115,10 @@ const DragAndDrop: React.FunctionComponent = (props) => {
                                 }
                             } else if (miscTab === "layer divide") {
                                 setLayerDivideInput(link)
+                            }
+                        } else if (tab === "classify") {
+                            if (classifyTab === "ai detector") {
+                                setAIImageInput(link)
                             }
                         } else {
                             setImageInput(link)
@@ -130,9 +133,7 @@ const DragAndDrop: React.FunctionComponent = (props) => {
 
     const removeImage = (event?: any) => {
         if (tab === "misc") {
-            if (miscTab === "ai detector") {
-                setAIImageInput("")
-            } else if (miscTab === "simplify sketch") {
+            if (miscTab === "simplify sketch") {
                 setSimplifyImageInput("")
             } else if (miscTab === "shade sketch") {
                 setShadeImageInput("")
@@ -144,6 +145,10 @@ const DragAndDrop: React.FunctionComponent = (props) => {
                 }
             } else if (miscTab === "layer divide") {
                 setLayerDivideInput("")
+            }
+        } else if (tab === "classify") {
+            if (classifyTab === "ai detector") {
+                setAIImageInput("")
             }
         } else {
             setImageInput("")

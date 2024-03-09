@@ -310,8 +310,20 @@ def save_watermark():
     if invisible_watermark: encode_watermark(path, path, "SDV2")
     return "done"
 
-@app.route("/update-location", methods=["POST"])
-def update_location():
+def select_file():
+    program = os.path.join(dirname, "../dialog/dialog")
+    if platform.system() == "Windows":
+        program = os.path.join(dirname, "../dialog/dialog.exe")
+    if platform.system() == "Darwin":
+        program = os.path.join(dirname, "../dialog/dialog.app")
+    process = subprocess.Popen([program, "-o"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    file_selected, err = process.communicate()
+    file_selected = file_selected.decode("utf-8")
+    if "None" in file_selected:
+        file_selected = ""
+    return file_selected.strip()
+
+def select_folder():
     program = os.path.join(dirname, "../dialog/dialog")
     if platform.system() == "Windows":
         program = os.path.join(dirname, "../dialog/dialog.exe")
@@ -323,6 +335,10 @@ def update_location():
     if "None" in folder_selected:
         folder_selected = ""
     return folder_selected.strip()
+
+@app.route("/update-location", methods=["POST"])
+def update_location():
+    return select_folder()
 
 @app.route("/list-files", methods=["POST"])
 def list_files():

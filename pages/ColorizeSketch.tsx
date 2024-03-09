@@ -2,7 +2,8 @@ import React, {useContext, useEffect, useState, useRef} from "react"
 import {useHistory} from "react-router-dom"
 import {EnableDragContext, MobileContext, SiteHueContext, SiteSaturationContext, FormatContext,
 SiteLightnessContext, SocketContext, ImageBrightnessContext, ImageContrastContext, TrainStartedContext,
-TrainCompletedContext, PreviewImageContext, UpdateImagesContext, ColorizeSketchInputContext, ColorizeStyleInputContext} from "../Context"
+TrainCompletedContext, PreviewImageContext, UpdateImagesContext, ColorizeSketchInputContext, ColorizeStyleInputContext,
+ImageHueContext, ImageSaturationContext} from "../Context"
 import functions from "../structures/Functions"
 import imgPlaceHolder from "../assets/images/img-placeholder.png"
 import xIcon from "../assets/icons/x-alt.png"
@@ -22,6 +23,8 @@ const ColorizeSketch: React.FunctionComponent = (props) => {
     const {siteLightness, setSiteLightness} = useContext(SiteLightnessContext)
     const {imageBrightness, setImageBrightness} = useContext(ImageBrightnessContext)
     const {imageContrast, setImageContrast} = useContext(ImageContrastContext)
+    const {imageHue, setImageHue} = useContext(ImageHueContext)
+    const {imageSaturation, setImageSaturation} = useContext(ImageSaturationContext)
     const {socket, setSocket} = useContext(SocketContext)
     const {format, setFormat} = useContext(FormatContext)
     const {previewImage, setPreviewImage} = useContext(PreviewImageContext)
@@ -272,7 +275,7 @@ const ColorizeSketch: React.FunctionComponent = (props) => {
                             <img className="options-bar-img-button" src={xIcon} onClick={removeStyleImage} style={{filter: getFilter()}} draggable={false}/>
                         </div>
                         {colorizeStyleInput ? 
-                        <canvas ref={styleRef} className="options-bar-img" draggable={false} style={{filter: `brightness(${imageBrightness + 100}%) contrast(${imageContrast + 100}%)`}}></canvas> :
+                        <canvas ref={styleRef} className="options-bar-img" draggable={false} style={{filter: `brightness(${imageBrightness + 100}%) contrast(${imageContrast + 100}%) hue-rotate(${imageHue - 180}deg) saturate(${imageSaturation}%)`}}></canvas> :
                         <img className="options-bar-img" src={imgPlaceHolder} style={{filter: getFilter()}} draggable={false}/>}
                     </label>
                     <input id="style-img" type="file" onChange={(event) => loadStyleImage(event)}/>
