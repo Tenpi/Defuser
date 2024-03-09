@@ -31,6 +31,7 @@ from diffusers import (
     DiffusionPipeline,
     DPMSolverMultistepScheduler,
     StableDiffusionPipeline,
+    StableDiffusionXLPipeline,
     UNet2DConditionModel,
 )
 from diffusers.optimization import get_scheduler
@@ -84,13 +85,22 @@ def step_progress(self, step: int, timestep: int, call_dict: dict):
             socketio.emit("train image progress", {"step": step, "total_step": total_steps, "width": w, "height": h, "image": pixels})
         return call_dict
 
-def log_validation(text_encoder, tokenizer, unet, vae, options, accelerator, weight_dtype, epoch):
+def log_validation(text_encoder, tokenizer, unet, vae, options, accelerator, weight_dtype, text_encoder_2=None, tokenizer_2=None):
     global pipeline
     logger.info(
         f"Running validation... \n Generating {options.num_validation_images} images with prompt:"
         f" {options.validation_prompt}."
     )
-    pipeline = StableDiffusionPipeline.from_single_file(options.model, torch_dtype=weight_dtype)
+    xl = False
+    if "XL" in options.model:
+        xl = True
+
+    if xl:
+        pipeline = StableDiffusionXLPipeline.from_single_file(options.model, torch_dtype=weight_dtype)
+        pipeline.text_encoder_2 = text_encoder_2
+        pipeline.tokenizer_2 = tokenizer_2
+    else:
+        pipeline = StableDiffusionPipeline.from_single_file(options.model, torch_dtype=weight_dtype)
     pipeline.tokenizer = tokenizer
     pipeline.text_encoder = accelerator.unwrap_model(text_encoder)
     pipeline.unet = unet
@@ -221,6 +231,11 @@ class TextualInversionDataset(Dataset):
 def main(options):
     global pipeline
     name = options.initializer_token
+
+    xl = False
+    if "XL" in options.model:
+        xl = True
+
     accelerator_project_config = ProjectConfiguration(project_dir=options.output_dir)
     accelerator = Accelerator(
         gradient_accumulation_steps=options.gradient_accumulation_steps,
@@ -256,7 +271,11 @@ def main(options):
         if options.output_dir is not None:
             os.makedirs(options.output_dir, exist_ok=True)
 
-    generator = StableDiffusionPipeline.from_single_file(options.model, local_files_only=True)
+    generator = None
+    if xl:
+        generator = StableDiffusionXLPipeline.from_single_file(options.model, local_files_only=True)
+    else:
+        generator = StableDiffusionPipeline.from_single_file(options.model, local_files_only=True)
 
     tokenizer = generator.tokenizer
 
@@ -264,6 +283,11 @@ def main(options):
     text_encoder = generator.text_encoder
     vae = generator.vae
     unet = generator.unet
+    text_encoder_2 = None
+    tokenizer_2 = None
+    if xl:
+        tokenizer_2 = generator.tokenizer_2
+        text_encoder_2 = generator.text_encoder_2
 
     placeholder_tokens = [options.placeholder_token]
 
@@ -289,6 +313,8 @@ def main(options):
 
     vae.requires_grad_(False)
     unet.requires_grad_(False)
+    if xl:
+        text_encoder_2.requires_grad_(False)
     text_encoder.text_model.encoder.requires_grad_(False)
     text_encoder.text_model.final_layer_norm.requires_grad_(False)
     text_encoder.text_model.embeddings.position_embedding.requires_grad_(False)
@@ -363,6 +389,8 @@ def main(options):
 
     unet.to(accelerator.device, dtype=weight_dtype)
     vae.to(accelerator.device, dtype=weight_dtype)
+    if xl:
+        text_encoder_2.to(accelerator.device, dtype=weight_dtype)
 
     num_update_steps_per_epoch = math.ceil(len(train_dataloader) / options.gradient_accumulation_steps)
     if overrode_max_train_steps:
@@ -432,7 +460,34 @@ def main(options):
 
                 encoder_hidden_states = text_encoder(batch["input_ids"])[0].to(dtype=weight_dtype)
 
-                model_pred = unet(noisy_latents, timesteps, encoder_hidden_states).sample
+                if xl:
+                    encoder_output_2 = text_encoder_2(
+                        batch["input_ids_2"].reshape(batch["input_ids_1"].shape[0], -1), output_hidden_states=True
+                    )
+                    encoder_hidden_states_2 = encoder_output_2.hidden_states[-2].to(dtype=weight_dtype)
+                    original_size = [
+                        (batch["original_size"][0][i].item(), batch["original_size"][1][i].item())
+                        for i in range(options.train_batch_size)
+                    ]
+                    crop_top_left = [
+                        (batch["crop_top_left"][0][i].item(), batch["crop_top_left"][1][i].item())
+                        for i in range(options.train_batch_size)
+                    ]
+                    target_size = (options.resolution, options.resolution)
+                    add_time_ids = torch.cat(
+                        [
+                            torch.tensor(original_size[i] + crop_top_left[i] + target_size)
+                            for i in range(options.train_batch_size)
+                        ]
+                    ).to(accelerator.device, dtype=weight_dtype)
+                    added_cond_kwargs = {"text_embeds": encoder_output_2[0], "time_ids": add_time_ids}
+                    encoder_hidden_states = torch.cat([encoder_hidden_states, encoder_hidden_states_2], dim=-1)
+
+                model_pred = None
+                if xl:
+                    model_pred = unet(noisy_latents, timesteps, encoder_hidden_states, added_cond_kwargs=added_cond_kwargs).sample
+                else:
+                    model_pred = unet(noisy_latents, timesteps, encoder_hidden_states).sample
 
                 if noise_scheduler.config.prediction_type == "epsilon":
                     target = noise
@@ -505,7 +560,7 @@ def main(options):
 
                     if options.validation_prompt is not None and global_step % options.validation_steps == 0:
                         images = log_validation(
-                            text_encoder, tokenizer, unet, vae, options, accelerator, weight_dtype, epoch
+                            text_encoder, tokenizer, unet, vae, options, accelerator, weight_dtype, epoch, text_encoder_2, tokenizer_2
                         )
                         if len(images) > 1:
                             for i in range(len(images)):
@@ -530,7 +585,12 @@ def main(options):
         else:
             save_full_model = options.save_as_full_pipeline
         if save_full_model:
-            pipeline = StableDiffusionPipeline.from_single_file(options.model)
+            if xl:
+                pipeline = StableDiffusionXLPipeline.from_single_file(options.model)
+                pipeline.text_encoder_2 = text_encoder_2
+                pipeline.tokenizer_2 = tokenizer_2
+            else:
+                pipeline = StableDiffusionPipeline.from_single_file(options.model)
             pipeline.text_encoder = accelerator.unwrap_model(text_encoder)
             pipeline.vae = vae
             pipeline.unet = unet

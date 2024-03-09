@@ -41,6 +41,7 @@ from diffusers import (
     DDPMScheduler,
     DPMSolverMultistepScheduler,
     StableDiffusionPipeline,
+    StableDiffusionXLPipeline,
     UNet2DConditionModel,
 )
 from diffusers.loaders import LoraLoaderMixin
@@ -411,10 +412,40 @@ def encode_prompt(text_encoders, tokenizers, prompt, text_input_ids_list=None):
 
     return prompt_embeds[0]
 
+def encode_prompt_xl(text_encoders, tokenizers, prompt, text_input_ids_list=None):
+    prompt_embeds_list = []
+
+    for i, text_encoder in enumerate(text_encoders):
+        if tokenizers is not None:
+            tokenizer = tokenizers[i]
+            text_input_ids = tokenize_prompt(tokenizer, prompt)
+        else:
+            assert text_input_ids_list is not None
+            text_input_ids = text_input_ids_list[i]
+
+        prompt_embeds = text_encoder(
+            text_input_ids.to(text_encoder.device),
+            output_hidden_states=True,
+        )
+
+        # We are only ALWAYS interested in the pooled output of the final text encoder
+        pooled_prompt_embeds = prompt_embeds[0]
+        prompt_embeds = prompt_embeds.hidden_states[-2]
+        bs_embed, seq_len, _ = prompt_embeds.shape
+        prompt_embeds = prompt_embeds.view(bs_embed, seq_len, -1)
+        prompt_embeds_list.append(prompt_embeds)
+
+    prompt_embeds = torch.concat(prompt_embeds_list, dim=-1)
+    pooled_prompt_embeds = pooled_prompt_embeds.view(bs_embed, -1)
+    return prompt_embeds, pooled_prompt_embeds
 
 def main(args):
     global pipeline
     name = args.instance_prompt
+
+    xl = False
+    if "XL" in args.pretrained_model_name_or_path:
+        xl = True
 
     accelerator_project_config = ProjectConfiguration(project_dir=args.output_dir)
     kwargs = DistributedDataParallelKwargs(find_unused_parameters=True)
@@ -463,11 +494,20 @@ def main(args):
     elif accelerator.mixed_precision == "bf16":
         weight_dtype = torch.bfloat16
 
-    pipeline = StableDiffusionPipeline.from_single_file(args.pretrained_model_name_or_path, torch_dtype=weight_dtype)
+    if xl:
+        pipeline = StableDiffusionXLPipeline.from_single_file(args.pretrained_model_name_or_path, torch_dtype=weight_dtype)
+    else:
+        pipeline = StableDiffusionPipeline.from_single_file(args.pretrained_model_name_or_path, torch_dtype=weight_dtype)
 
     tokenizer = pipeline.tokenizer
+    tokenizer_two = None
+    if xl:
+        tokenizer_two = pipeline.tokenizer_2
     noise_scheduler = pipeline.scheduler #DDPMScheduler.from_config(pipeline.scheduler.config)
     text_encoder = pipeline.text_encoder
+    text_encoder_two = None
+    if xl:
+        text_encoder_two = pipeline.text_encoder_2
 
     vae = pipeline.vae
     vae_scaling_factor = vae.config.scaling_factor
@@ -478,6 +518,8 @@ def main(args):
     vae.requires_grad_(False)
     text_encoder.requires_grad_(False)
     unet.requires_grad_(False)
+    if xl:
+        text_encoder_two.requires_grad_(False)
 
     # Move unet, vae and text_encoder to device and cast to weight_dtype
     unet.to(accelerator.device, dtype=weight_dtype)
@@ -486,6 +528,8 @@ def main(args):
     vae.to(accelerator.device, dtype=torch.float32)
 
     text_encoder.to(accelerator.device, dtype=weight_dtype)
+    if xl:
+        text_encoder_two.to(accelerator.device, dtype=weight_dtype)
 
     if args.gradient_checkpointing:
         unet.enable_gradient_checkpointing()
@@ -610,22 +654,48 @@ def main(args):
         collate_fn=lambda examples: collate_fn(examples, args.with_prior_preservation),
         num_workers=args.dataloader_num_workers,
     )
+    
+    def compute_time_ids(crops_coords_top_left, original_size=None):
+        # Adapted from pipeline.StableDiffusionXLPipeline._get_add_time_ids
+        if original_size is None:
+            original_size = (args.resolution, args.resolution)
+        target_size = (args.resolution, args.resolution)
+        add_time_ids = list(original_size + crops_coords_top_left + target_size)
+        add_time_ids = torch.tensor([add_time_ids])
+        add_time_ids = add_time_ids.to(accelerator.device, dtype=weight_dtype)
+        return add_time_ids
+    
 
     if not args.train_text_encoder:
         tokenizers = [tokenizer]
         text_encoders = [text_encoder]
+        if xl:
+            tokenizers = [tokenizer, tokenizer_two]
+            text_encoders = [text_encoder, text_encoder_two]
 
         def compute_text_embeddings(prompt, text_encoders, tokenizers):
             with torch.no_grad():
                 prompt_embeds = encode_prompt(text_encoders, tokenizers, prompt)
                 prompt_embeds = prompt_embeds.to(accelerator.device)
             return prompt_embeds
+        
+        def compute_text_embeddings_xl(prompt, text_encoders, tokenizers):
+            with torch.no_grad():
+                prompt_embeds, pooled_prompt_embeds = encode_prompt_xl(text_encoders, tokenizers, prompt)
+                prompt_embeds = prompt_embeds.to(accelerator.device)
+                pooled_prompt_embeds = pooled_prompt_embeds.to(accelerator.device)
+            return prompt_embeds, pooled_prompt_embeds
 
     # If no type of tuning is done on the text_encoder and custom instance prompts are NOT
     # provided (i.e. the --instance_prompt is used for all images), we encode the instance prompt once to avoid
     # the redundant encoding.
     if freeze_text_encoder and not train_dataset.custom_instance_prompts:
-        instance_prompt_hidden_states = compute_text_embeddings(args.instance_prompt, text_encoders, tokenizers)
+        if xl:
+            instance_prompt_hidden_states, instance_pooled_prompt_embeds = compute_text_embeddings_xl(
+                args.instance_prompt, text_encoders, tokenizers
+            )
+        else:
+            instance_prompt_hidden_states = compute_text_embeddings(args.instance_prompt, text_encoders, tokenizers)
 
     # Clear the memory here
     if freeze_text_encoder and not train_dataset.custom_instance_prompts:
@@ -638,16 +708,26 @@ def main(args):
     add_special_tokens = True if args.train_text_encoder_ti else False
 
     if not train_dataset.custom_instance_prompts:
-        if freeze_text_encoder:
-            prompt_embeds = instance_prompt_hidden_states
-
-        # if we're optimizing the text encoder (both if instance prompt is used for all images or custom prompts) we need to tokenize and encode the
-        # batch prompts on all training steps
+        if xl:
+            if freeze_text_encoder:
+                prompt_embeds = instance_prompt_hidden_states
+                unet_add_text_embeds = instance_pooled_prompt_embeds
+            # if we're optmizing the text encoder (both if instance prompt is used for all images or custom prompts) we need to tokenize and encode the
+            # batch prompts on all training steps
+            else:
+                tokens_one = tokenize_prompt(tokenizer, args.instance_prompt, add_special_tokens)
+                tokens_two = tokenize_prompt(tokenizer_two, args.instance_prompt, add_special_tokens)
         else:
-            tokens_one = tokenize_prompt(tokenizer, args.instance_prompt, add_special_tokens)
-            if args.with_prior_preservation:
-                class_tokens_one = tokenize_prompt(tokenizer, args.class_prompt, add_special_tokens)
-                tokens_one = torch.cat([tokens_one, class_tokens_one], dim=0)
+            if freeze_text_encoder:
+                prompt_embeds = instance_prompt_hidden_states
+
+            # if we're optimizing the text encoder (both if instance prompt is used for all images or custom prompts) we need to tokenize and encode the
+            # batch prompts on all training steps
+            else:
+                tokens_one = tokenize_prompt(tokenizer, args.instance_prompt, add_special_tokens)
+                if args.with_prior_preservation:
+                    class_tokens_one = tokenize_prompt(tokenizer, args.class_prompt, add_special_tokens)
+                    tokens_one = torch.cat([tokens_one, class_tokens_one], dim=0)
 
     if args.train_text_encoder_ti and args.validation_prompt:
         # replace instances of --token_abstraction in validation prompt with the new tokens: "<si><si+1>" etc.
@@ -777,9 +857,13 @@ def main(args):
             else:
                 # still optimizng the text encoder
                 text_encoder.train()
+                if xl:
+                    text_encoder_two.train()
                 # set top parameter requires_grad = True for gradient checkpointing works
                 if args.train_text_encoder:
                     text_encoder.text_model.embeddings.requires_grad_(True)
+                    if xl:
+                        text_encoder_two.text_model.embeddings.requires_grad_(True)
 
         unet.train()
         for step, batch in enumerate(train_dataloader):
@@ -793,6 +877,8 @@ def main(args):
 
                     else:
                         tokens_one = tokenize_prompt(tokenizer, prompts, add_special_tokens)
+                        if xl:
+                            tokens_two = tokenize_prompt(tokenizer_two, prompts, add_special_tokens)
 
                 if args.cache_latents:
                     model_input = latents_cache[step].sample()
@@ -821,6 +907,14 @@ def main(args):
                 # (this is the forward diffusion process)
                 noisy_model_input = noise_scheduler.add_noise(model_input, noise, timesteps)
 
+                if xl:
+                    add_time_ids = torch.cat(
+                        [
+                            compute_time_ids(original_size=s, crops_coords_top_left=c)
+                            for s, c in zip(batch["original_sizes"], batch["crop_top_lefts"])
+                        ]
+                    )
+
                 # Calculate the elements to repeat depending on the use of prior-preservation and custom captions.
                 if not train_dataset.custom_instance_prompts:
                     elems_to_repeat_text_embeds = bsz // 2 if args.with_prior_preservation else bsz
@@ -833,14 +927,30 @@ def main(args):
                     prompt_embeds_input = prompt_embeds.repeat(elems_to_repeat_text_embeds, 1, 1)
                     model_pred = unet(noisy_model_input, timesteps, prompt_embeds_input).sample
                 else:
-                    prompt_embeds = encode_prompt(
-                        text_encoders=[text_encoder],
-                        tokenizers=None,
-                        prompt=None,
-                        text_input_ids_list=[tokens_one],
-                    )
-                    prompt_embeds_input = prompt_embeds.repeat(elems_to_repeat_text_embeds, 1, 1)
-                    model_pred = unet(noisy_model_input, timesteps, prompt_embeds_input).sample
+                    if xl:
+                        unet_added_conditions = {"time_ids": add_time_ids}
+                        prompt_embeds, pooled_prompt_embeds = encode_prompt_xl(
+                            text_encoders=[text_encoder, text_encoder_two],
+                            tokenizers=None,
+                            prompt=None,
+                            text_input_ids_list=[tokens_one, tokens_two],
+                        )
+                        unet_added_conditions.update(
+                            {"text_embeds": pooled_prompt_embeds.repeat(elems_to_repeat_text_embeds, 1)}
+                        )
+                        prompt_embeds_input = prompt_embeds.repeat(elems_to_repeat_text_embeds, 1, 1)
+                        model_pred = unet(
+                            noisy_model_input, timesteps, prompt_embeds_input, added_cond_kwargs=unet_added_conditions
+                        ).sample
+                    else:
+                        prompt_embeds = encode_prompt(
+                            text_encoders=[text_encoder],
+                            tokenizers=None,
+                            prompt=None,
+                            text_input_ids_list=[tokens_one],
+                        )
+                        prompt_embeds_input = prompt_embeds.repeat(elems_to_repeat_text_embeds, 1, 1)
+                        model_pred = unet(noisy_model_input, timesteps, prompt_embeds_input).sample
 
                 # Get the target for loss depending on the prediction type
                 if noise_scheduler.config.prediction_type == "epsilon":
@@ -956,11 +1066,18 @@ def main(args):
                 # create pipeline
                 v_unet = copy.deepcopy(accelerator.unwrap_model(unet))
                 hypernetwork = accelerator.unwrap_model(hypernetwork)
-                pipeline = StableDiffusionPipeline.from_single_file(
-                    args.pretrained_model_name_or_path,
-                    unet=v_unet,
-                    torch_dtype=weight_dtype,
-                )
+                if xl:
+                    pipeline = StableDiffusionXLPipeline.from_single_file(
+                        args.pretrained_model_name_or_path,
+                        unet=v_unet,
+                        torch_dtype=weight_dtype,
+                    )
+                else:
+                    pipeline = StableDiffusionPipeline.from_single_file(
+                        args.pretrained_model_name_or_path,
+                        unet=v_unet,
+                        torch_dtype=weight_dtype,
+                    )
                 add_hypernet(v_unet, hypernetwork)
 
 

@@ -820,6 +820,16 @@ def main(args):
         num_workers=args.dataloader_num_workers,
     )
 
+    def compute_time_ids(crops_coords_top_left, original_size=None):
+        # Adapted from pipeline.StableDiffusionXLPipeline._get_add_time_ids
+        if original_size is None:
+            original_size = (args.resolution, args.resolution)
+        target_size = (args.resolution, args.resolution)
+        add_time_ids = list(original_size + crops_coords_top_left + target_size)
+        add_time_ids = torch.tensor([add_time_ids])
+        add_time_ids = add_time_ids.to(accelerator.device, dtype=weight_dtype)
+        return add_time_ids
+
     if not args.train_text_encoder:
         tokenizers = [tokenizer_one]
         text_encoders = [text_encoder_one]
@@ -1096,6 +1106,14 @@ def main(args):
                 # Add noise to the model input according to the noise magnitude at each timestep
                 # (this is the forward diffusion process)
                 noisy_model_input = noise_scheduler.add_noise(model_input, noise, timesteps)
+
+                if xl:
+                    add_time_ids = torch.cat(
+                        [
+                            compute_time_ids(original_size=s, crops_coords_top_left=c)
+                            for s, c in zip(batch["original_sizes"], batch["crop_top_lefts"])
+                        ]
+                    )
 
                 # Calculate the elements to repeat depending on the use of prior-preservation and custom captions.
                 if not train_dataset.custom_instance_prompts:
