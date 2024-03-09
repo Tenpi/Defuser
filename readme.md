@@ -96,8 +96,6 @@ sudo make install
 
 ### ControlNet
 
-<img height="350" src="https://github.com/Tenpi/Ethical-Diffusion/blob/main/dist/assets/images/controlnet.png?raw=true"/>
-
 ControlNet lets you control the generation using a "control image". The possible control images are canny, depth,
 lineart, anime, manga, softedge, scribble, and original image (reference). By clicking on "reference image", it will
 also reference the input image rather than just the control image. "Guess mode" is an option that will try to guess the
@@ -129,9 +127,27 @@ contains spaces, wrap it in parantheses. Examples: \
 
 ### Lineart Extraction
 
-<img height="300" src="https://github.com/Tenpi/Defuser/blob/main/assets/images/lineart.png?raw=true"/>
-
 Invert the controlnet processor to extract a lineart (optionally with alpha).
+
+### Background Removal
+
+Click the transparency icon in the input image to run the segmentator.
+
+### Simplify Sketch
+
+Attempts to clean up a rough sketch (misc tab).
+
+### Shade Sketch
+
+Applies shading to a sketch from a configerable light direction (misc tab).
+
+### Colorize Sketch
+
+Attempts to color a sketch using a reference image (misc tab).
+
+### Layer Divider
+
+Attempts to divide an image into psd layers (misc tab).
 
 ### Watermark Tool
 
