@@ -16,7 +16,7 @@ models is supported. It aims to be simple and fast to use.
 - Train textual inversions, hypernetworks, lora, dreambooth, and new checkpoints.
 - Merge two or three checkpoints together.
 - Interrogate images with WDTagger, DeepBooru, or BLIP.
-- Auto tag and source train images with interrogator and saucenao.
+- Auto tag and source images with interrogator and saucenao.
 - Embed all train image sources into model files.
 - Save generation parameters as image metadata that can be recalled.
 - Upscale generated images using waifu2x, Real-ESRGAN, or Real-CUGAN.
@@ -33,10 +33,10 @@ models is supported. It aims to be simple and fast to use.
 - Shade a sketch from different lighting directions.
 - Colorize a sketch using reference image.
 - Divide an image into PSD layers.
-- Adapt SDv1 lora to use in SDXL.
+- Cross adapt SD1.5 lora to use in SDXL.
 - Change the generation source (local, Novel AI, Holara AI)
 
-### Supported Architectures
+### Supported Architectures/Services
 - Stable Diffusion 1
 - Stable Diffusion 2 ("V2" in checkpoint name)
 - Stable Diffusion XL ("XL" in checkpoint name)
