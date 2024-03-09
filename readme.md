@@ -127,27 +127,11 @@ contains spaces, wrap it in parantheses. Examples: \
 
 ### Lineart Extraction
 
-Invert the controlnet processor to extract a lineart (optionally with alpha).
+Invert the controlnet processor to extract the lineart of the image (optionally using alpha).
 
 ### Background Removal
 
-Click the transparency icon in the input image to run the segmentator.
-
-### Simplify Sketch
-
-Attempts to clean up a rough sketch (misc tab).
-
-### Shade Sketch
-
-Applies shading to a sketch from a configerable light direction (misc tab).
-
-### Colorize Sketch
-
-Attempts to color a sketch using a reference image (misc tab).
-
-### Layer Divider
-
-Attempts to divide an image into psd layers (misc tab).
+Click the transparency icon in the input image to run the segmentator which will attempt to separate the character from the background.
 
 ### Watermark Tool
 
@@ -159,6 +143,15 @@ also an invisible watermark that isn't visible but can be decoded from the image
 You should generate sources for the images in order to embed them into the metadata of the trained model. The rate limit of 
 a free saucenao account is 4/30s but you can add them manually by creating a file {image name}.source.txt with the source url. 
 Shortcut: Any image with name like 1234567.png will be assumed to be from pixiv with source https://www.pixiv.net/en/artworks/1234567. 
+
+### Miscellaneous Tools
+- Simplify Sketch - Attempts to clean up a rough sketch (misc tab).
+- Shade Sketch - Applies shading to a sketch from a configerable light direction (misc tab).
+- Colorize Sketch -Attempts to color a sketch using a reference image (misc tab).
+- Layer Divider - Attempts to divide an image into psd layers (misc tab).
+- Embedding Converter - Converts an SD1.5 embedding to SDXL.
+- AI Detector - Detect if an anime-styled image is AI.
+- Train Classifier - Train an image classification model.
 
 ### Important
 
