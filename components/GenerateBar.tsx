@@ -70,6 +70,7 @@ const GenerateBar: React.FunctionComponent = (props) => {
     const {horizontalExpand, setHorizontalExpand} = useContext(HorizontalExpandContext)
     const {verticalExpand, setVerticalExpand} = useContext(VerticalExpandContext)
     const {started, setStarted} = useContext(StartedContext)
+    const [interrogateStarted, setInterrogateStarted] = useState(false)
     const {socket, setSocket} = useContext(SocketContext)
     const {loopMode, setLoopMode} = useContext(LoopModeContext)
     const {savedPrompts, setSavedPrompts} = useContext(SavedPromptsContext)
@@ -349,8 +350,15 @@ const GenerateBar: React.FunctionComponent = (props) => {
         const form = new FormData()
         form.append("image", file)
         form.append("model_name", interrogatorName)
+        setInterrogateStarted(true)
         const result = await axios.post("/interrogate", form).then((r) => r.data)
-        setInterrogateText(result.replaceAll("_", " "))
+        setInterrogateStarted(false)
+        if (result) setInterrogateText(result.replaceAll("_", " "))
+    }
+
+    const interruptInterrogate = async () => {
+        await axios.post("/interrupt-interrogate")
+        setInterrogateStarted(false)
     }
 
     const appendToPrompt = () => {
@@ -441,7 +449,7 @@ const GenerateBar: React.FunctionComponent = (props) => {
                         <img className="generate-bar-checkbox" src={upscaling ? checkboxChecked : checkbox} style={{filter: getFilter()}}/>
                         <img className="generate-bar-icon" src={upscale} style={{filter: getFilter()}}/>
                     </div>
-                    <button className="generate-bar-button-2" onClick={interrogate}>Interrogate</button>
+                    <button className="generate-bar-button-2" onClick={() => interrogateStarted ? interruptInterrogate() : interrogate()} style={{backgroundColor: interrogateStarted ? "var(--buttonBG)" : "var(--buttonBG2)"}}>{interrogateStarted ? "Stop" : "Interrogate"}</button>
                 </div>
             </div>
         </div>

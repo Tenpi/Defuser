@@ -10,14 +10,42 @@ import torch
 import os
 import numpy as np
 from PIL import Image
+import threading
+import inspect
+import ctypes
 
 dirname = os.path.dirname(__file__)
 device = "mps" if torch.backends.mps.is_available() else "cuda" if torch.cuda.is_available() else "cpu"
 
+gen_thread = None
+global_result = ""
 deepbooru_model = None
 wdtagger_model = None
 blip_model = None
 blip_processor = None
+
+def _async_raise(tid, exctype):
+    '''Raises an exception in the threads with id tid'''
+    if not inspect.isclass(exctype):
+        raise TypeError("Only types can be raised (not instances)")
+    res = ctypes.pythonapi.PyThreadState_SetAsyncExc(ctypes.c_long(tid),
+                                                     ctypes.py_object(exctype))
+    if res == 0:
+        raise ValueError("invalid thread id")
+    elif res != 1:
+        ctypes.pythonapi.PyThreadState_SetAsyncExc(ctypes.c_long(tid), None)
+        raise SystemError("PyThreadState_SetAsyncExc failed")
+
+@app.route("/interrupt-interrogate", methods=["POST"])
+def interrupt_interrogate():
+    global gen_thread
+    if gen_thread:
+        try:
+            _async_raise(gen_thread, ChildProcessError)
+        except ChildProcessError:
+            pass
+        gen_thread = None
+        return "done"
 
 @socketio.on("load interrogate model")
 def load_interrogate_model(model_name):
@@ -95,6 +123,9 @@ def predict_blip(image):
     return result
 
 def interrogate(file, model_name):
+    global gen_thread 
+    global global_result
+    gen_thread = threading.get_ident()
     if not model_name:
         model_name = "wdtagger"
 
@@ -109,11 +140,19 @@ def interrogate(file, model_name):
         result = predict_deepbooru(image)
     elif model_name == "blip":
         result = predict_blip(image)
+    global_result = result
     return result
 
 @app.route("/interrogate", methods=["POST"])
 def interrogate_route():
+    global gen_thread
+    global global_result
+    global_result = ""
     file = flask.request.files["image"]
     model_name = flask.request.form.get("model_name")
-    return interrogate(file, model_name)
+    thread = threading.Thread(target=interrogate, args=(file, model_name))
+    thread.start()
+    thread.join()
+    gen_thread = None
+    return global_result
 
