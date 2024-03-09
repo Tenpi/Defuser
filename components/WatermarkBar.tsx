@@ -194,7 +194,7 @@ const WatermarkBar: React.FunctionComponent = (props) => {
     }, [img, watermarkImg, gifData, seed, aiWatermarkPosition, aiWatermarkType, aiWatermarkHue, aiWatermarkSaturation, aiWatermarkBrightness, aiWatermarkInvert, aiWatermarkOpacity, aiWatermarkMarginX, aiWatermarkMarginY, aiWatermarkScale])
 
     const jpg = async (imageOverride?: string, canvasOverride?: HTMLCanvasElement, imgOverride?: HTMLImageElement, noDL?: boolean) => {
-        let imageLink = imageOverride ? imageOverride : imageInput
+        let imageLink = imageOverride ? imageOverride : getImgSrc()
         draw(0, true, canvasOverride, imgOverride)
         const img = applyWatermark("image/jpeg", canvasOverride) as string
         let inMime = "image/jpeg"
@@ -209,11 +209,12 @@ const WatermarkBar: React.FunctionComponent = (props) => {
         const blob = new Blob([metaBuffer])
         const url = URL.createObjectURL(blob)
         if (noDL) return url
-        functions.download(`${path.basename(imageName, path.extname(imageName))}_aiwatermark.jpg`, url)
+        const name = imageName || "image"
+        functions.download(`${path.basename(name, path.extname(name))}_aiwatermark.jpg`, url)
     }
 
     const png = async (imageOverride?: string, canvasOverride?: HTMLCanvasElement, imgOverride?: HTMLImageElement, noDL?: boolean) => {
-        let imageLink = imageOverride ? imageOverride : imageInput
+        let imageLink = imageOverride ? imageOverride : getImgSrc()
         draw(0, true, canvasOverride, imgOverride)
         const img = applyWatermark("image/png", canvasOverride) as string
         let inMime = "image/jpeg"
@@ -228,7 +229,8 @@ const WatermarkBar: React.FunctionComponent = (props) => {
         const blob = new Blob([metaBuffer])
         const url = URL.createObjectURL(blob)
         if (noDL) return url
-        functions.download(`${path.basename(imageName, path.extname(imageName))}_aiwatermark.png`, url)
+        const name = imageName || "image"
+        functions.download(`${path.basename(name, path.extname(name))}_aiwatermark.png`, url)
     }
 
     const loadImages = async (event: any) => {
@@ -319,13 +321,13 @@ const WatermarkBar: React.FunctionComponent = (props) => {
 
     const reset = () => {
         setAIWatermarkPosition("top left")
-        setAIWatermarkType("none")
+        setAIWatermarkType("fan")
         setAIWatermarkHue(0)
         setAIWatermarkSaturation(0)
         setAIWatermarkBrightness(0)
         setAIWatermarkInvert(false)
         setAIWatermarkOpacity(100)
-        setAIWatermarkMarginX(-26)
+        setAIWatermarkMarginX(10)
         setAIWatermarkMarginY(10)
         setAIWatermarkScale(0.7)
     }

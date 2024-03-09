@@ -54,7 +54,7 @@ def black_to_alpha(img_path):
     cv2.imwrite(img_path, image)
 
 @socketio.on("load control models")
-def load_control_models(h):
+def load_control_models():
     global midas
     global lineart
     global lineart_anime
