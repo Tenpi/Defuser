@@ -3,7 +3,7 @@
   "version": "0.0.1",
   "description": "Image generation UI for diffusers",
   "scripts": {
-    "start": "npm run clean && webpack && cross-env PYTORCH_ENABLE_MPS_FALLBACK=1 python3 server.py",
+    "start": "git pull && npm run clean && webpack && cross-env PYTORCH_ENABLE_MPS_FALLBACK=1 python3 server.py",
     "build": "npm run clean && webpack && npm run redirects && npm run headers && npm run favicon",
     "redirects": "echo \"/* /index.html 200\" | cat > dist/_redirects",
     "headers": "echo \"/*\nCross-Origin-Opener-Policy: same-origin\nCross-Origin-Embedder-Policy: require-corp\" | cat > dist/_headers",

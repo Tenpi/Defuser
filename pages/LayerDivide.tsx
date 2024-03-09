@@ -225,7 +225,7 @@ const LayerDivide: React.FunctionComponent = (props) => {
                     <input id="img" type="file" onChange={(event) => loadImage(event)}/>
                 </div>
                 <div className="shade-sketch-box" style={{border: "none"}}>
-                    <div className="shade-sketch-box-row">
+                    <div className="shade-sketch-box-row" style={{background: "transparent"}}>
                         <span className="train-tag-settings-title">Downscale:</span>
                         <input className="train-tag-settings-input" type="text" spellCheck={false} value={downscale} onChange={(event) => setDownscale(event.target.value)} style={{width: "70px"}}/>
                     </div>

@@ -56,7 +56,7 @@ const Draw: React.FunctionComponent = (props) => {
     const getNormalizedDimensions = () => {
         let greaterValue = img.width > img.height ? img.width : img.height
         const heightBigger = img.height > img.width
-        const ratio = greaterValue / (heightBigger ? 800 : 1200)
+        const ratio = greaterValue / (heightBigger ? 800 : 800)
         const width = Math.floor(img.width / ratio)
         const height = Math.floor(img.height / ratio)
         return {width, height}

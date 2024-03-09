@@ -932,6 +932,28 @@ export default class Functions {
         }
     }
 
+    public static parseAutomaticMeta = (meta: string) => {
+        let arr = [] as any
+        const prompt = meta.match(/(.*?)(?=\n(S|N))/)?.[0].trim()
+        const negativePrompt = meta.match(/(?<=Negative prompt:)(.*?)(?=\n)/)?.[0].trim()
+        const steps = meta.match(/(?<=Steps:)(.*?)(?=,)/)?.[0].trim()
+        const sampler = meta.match(/(?<=Sampler:)(.*?)(?=,)/)?.[0].trim()
+        const cfg = meta.match(/(?<=CFG scale:)(.*?)(?=,)/)?.[0].trim()
+        const seed = meta.match(/(?<=Seed:)(.*?)(?=,)/)?.[0].trim()
+        const size = meta.match(/(?<=Size:)(.*?)(?=,)/)?.[0].trim()
+        const model = meta.match(/(?<=Model:)(.*?)(?=,)/)?.[0].trim()
+        if (prompt) arr.push(`Prompt: ${prompt}`)
+        if (negativePrompt) arr.push(`Negative Prompt: ${prompt}`)
+        if (size) arr.push(`Size: ${size}`)
+        if (model) arr.push(`Model: ${model}`)
+        if (model) arr.push(`VAE: ${model}`)
+        if (steps) arr.push(`Steps: ${steps}`)
+        if (cfg) arr.push(`CFG: ${cfg}`)
+        if (sampler) arr.push(`Sampler: ${sampler}`)
+        if (seed) arr.push(`Seed: ${seed}`)
+        return arr
+    }
+
     public static parseNovelAIMeta = (meta: any) => {
         let arr = [] as any
         const comment = meta.find((o: any) => o.name === "Comment")
@@ -1005,6 +1027,8 @@ export default class Functions {
             if (!arr.length) {
                 const novelAI = meta.find((o: any) => o.value === "NovelAI")
                 if (novelAI) arr = Functions.parseNovelAIMeta(meta)
+                const automatic = meta.find((o: any) => o.name === "parameters")
+                if (automatic) arr = Functions.parseAutomaticMeta(automatic.value)
             }
             retStr = arr.join("\n")
         } else if (inMime === "image/jpeg") {
@@ -1015,6 +1039,7 @@ export default class Functions {
                     str +=  meta[i].value.replaceAll("UNICODE", "").replaceAll(/\u0000/g, "")
                 }
             }
+            if (!str.includes("Prompt")) str = Functions.parseAutomaticMeta(str).join("\n")
             retStr = str
         } else {
             const form = new FormData()
@@ -1211,7 +1236,7 @@ export default class Functions {
     public static getNormalizedDimensions = (img: any) => {
         let greaterValue = img.width > img.height ? img.width : img.height
         const heightBigger = img.height > img.width
-        const ratio = greaterValue / (heightBigger ? 800 : 1200)
+        const ratio = greaterValue / (heightBigger ? 800 : 800)
         const width = Math.floor(img.width / ratio)
         const height = Math.floor(img.height / ratio)
         return {width, height}
