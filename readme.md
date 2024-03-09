@@ -143,3 +143,11 @@ other than cc0 mitsua diffusion are prone to generating potential copyright infr
 ### Related/Credits
 
 - [diffusers](https://github.com/huggingface/diffusers)
+- [controlnet](https://github.com/lllyasviel/ControlNet)
+- [x-adapter](https://github.com/showlab/X-Adapter)
+- [sketch-simplification](https://github.com/bobbens/sketch_simplification)
+- [shade-sketch](https://github.com/qyzdao/ShadeSketch)
+- [colorize-sketch](https://github.com/ktaebum/AttentionedDeepPaint)
+- [manga-lineart](https://github.com/ljsabc/MangaLineExtraction_PyTorch)
+- [anime-lineart](https://github.com/Mukosame/Anime2Sketch)
+- [anime-segmentation](https://github.com/SkyTNT/anime-segmentation)
