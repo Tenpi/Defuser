@@ -33,6 +33,7 @@ models is supported. It aims to be simple and fast to use.
 - Shade a sketch from different lighting directions.
 - Colorize a sketch using reference image.
 - Divide an image into PSD layers.
+- Adapt SDv1 lora to use in SDXL.
 - Change the generation source (local, Novel AI, Holara AI)
 
 ### Supported Architectures
@@ -99,6 +100,10 @@ ControlNet lets you control the generation using a "control image". The possible
 lineart, anime, manga, softedge, scribble, and original image (reference). By clicking on "reference image", it will
 also reference the input image rather than just the control image. "Guess mode" is an option that will try to guess the
 content if no prompt is provided.
+
+### X-Adapter
+
+X-Adapter lets you use lora models trained on SDv1 in SDXL. In the dropdown select a v1 checkpoint that it will cross adapt to.
 
 ### Patch Controls
 
