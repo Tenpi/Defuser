@@ -131,6 +131,11 @@ export const OutputDirContext = React.createContext<any>(null)
 export const XAdaptModelContext = React.createContext<any>(null)
 export const FreeUContext = React.createContext<any>(null)
 export const ClassifyTabContext = React.createContext<any>(null)
+export const IPAdapterContext = React.createContext<any>(null)
+export const IPProcessorContext = React.createContext<any>(null)
+export const IPWeightContext = React.createContext<any>(null)
+export const IPImageContext = React.createContext<any>(null)
+export const IPAdapterNamesContext = React.createContext<any>(null)
 
 const Context: React.FunctionComponent = (props: any) => {
     const [theme, setTheme] = useState("light")
@@ -239,9 +244,19 @@ const Context: React.FunctionComponent = (props: any) => {
     const [layerDivideInput, setLayerDivideInput] = useState("")
     const [xAdaptModel, setXAdaptModel] = useState("None")
     const [freeU, setFreeU] = useState(false)
+    const [ipAdapter, setIPAdapter] = useState("None")
+    const [ipProcessor, setIPProcessor] = useState("off")
+    const [ipWeight, setIPWeight] = useState(0.5)
+    const [ipImage, setIPImage] = useState("")
+    const [ipAdapterNames, setIPAdapterNames] = useState([])
 
     return (
         <>  
+            <IPAdapterNamesContext.Provider value={{ipAdapterNames, setIPAdapterNames}}>
+            <IPImageContext.Provider value={{ipImage, setIPImage}}>
+            <IPWeightContext.Provider value={{ipWeight, setIPWeight}}>
+            <IPProcessorContext.Provider value={{ipProcessor, setIPProcessor}}>
+            <IPAdapterContext.Provider value={{ipAdapter, setIPAdapter}}>
             <ClassifyTabContext.Provider value={{classifyTab, setClassifyTab}}>
             <ImageSaturationContext.Provider value={{imageSaturation, setImageSaturation}}>
             <ImageHueContext.Provider value={{imageHue, setImageHue}}>
@@ -455,6 +470,11 @@ const Context: React.FunctionComponent = (props: any) => {
             </ImageHueContext.Provider>
             </ImageSaturationContext.Provider>
             </ClassifyTabContext.Provider>
+            </IPAdapterContext.Provider>
+            </IPProcessorContext.Provider>
+            </IPWeightContext.Provider>
+            </IPImageContext.Provider>
+            </IPAdapterNamesContext.Provider>
         </>
     )
 }

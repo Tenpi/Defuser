@@ -24,6 +24,8 @@ models/segmentator/*
 models/promptgen/*
 models/detector/*
 models/upscaler/*
+models/ipadapter/models/*
+models/ipadapter/sdxl_models/*
 models/vae/*
 models/misc/*
 outputs/local
@@ -53,4 +55,6 @@ dialog/random.pt
 !models/promptgen/readme.txt
 !models/upscaler/readme.txt
 !models/misc/readme.txt
+!models/ipadapter/models/readme.txt
+!models/ipadapter/sdxl_models/readme.txt
 !outputs/readme.txt

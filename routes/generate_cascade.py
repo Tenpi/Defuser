@@ -4,9 +4,7 @@ import torch
 from .functions import next_index, is_nsfw, get_normalized_dimensions, get_seed, append_info, upscale, get_models_dir, get_outputs_dir
 from .invisiblewatermark import encode_watermark
 from .info import get_diffusion_models, get_vae_models
-from diffusers import StableCascadePriorPipeline, StableCascadeDecoderPipeline, DDPMWuerstchenScheduler, \
-EulerAncestralDiscreteScheduler, EulerDiscreteScheduler, DDPMScheduler, DDIMScheduler, UniPCMultistepScheduler, DEISMultistepScheduler, DPMSolverMultistepScheduler, \
-HeunDiscreteScheduler
+from diffusers import StableCascadePriorPipeline, StableCascadeDecoderPipeline, DDPMWuerstchenScheduler
 from .hypernet import load_hypernet, add_hypernet, clear_hypernets
 from compel import Compel, ReturnedEmbeddingsType, DiffusersTextualInversionManager
 from PIL import Image

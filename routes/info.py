@@ -95,6 +95,15 @@ def get_hypernetworks():
 def get_lora_models():
     return get_model_files("lora")
 
+@app.route("/ip-adapter-models")
+def get_ip_adapter_models():
+    subfolder = flask.request.args.get("subfolder")
+    dir = os.path.join(get_models_dir(), "ipadapter", subfolder)
+    if not os.path.exists(dir): return []
+    files = os.listdir(dir)
+    files = list(filter(lambda file: file != "image_encoder", files))
+    return list(filter(lambda file: not is_unwanted(file) and not is_image(file), files))
+
 def get_outputs(folder: str):
     dir = os.path.join(get_outputs_dir(), f"local/{folder}")
     if not os.path.exists(dir): return []

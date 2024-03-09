@@ -382,7 +382,6 @@ def add_hypernet(unet: "UNet2DConditionModel", hypernet: Hypernetwork) -> None:
             attn_processors[key] = HyperAttnProcessor([hypernet])
     unet.set_attn_processor(attn_processors)
 
-
 def clear_hypernets(unet: "UNet2DConditionModel") -> None:
     """
     Remove all hypernetworks from an unet.

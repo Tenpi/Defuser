@@ -5,7 +5,7 @@ from .functions import next_index, is_nsfw, get_normalized_dimensions, get_seed,
 from .invisiblewatermark import encode_watermark
 from .info import get_diffusion_models, get_vae_models
 from diffusers import StableDiffusionPipeline, StableDiffusionXLPipeline, StableDiffusionXLImg2ImgPipeline, StableDiffusionXLInpaintPipeline, \
-StableDiffusionXLControlNetPipeline, StableDiffusionXLControlNetImg2ImgPipeline, StableDiffusionXLControlNetInpaintPipeline, \
+StableDiffusionXLControlNetPipeline, StableDiffusionXLControlNetImg2ImgPipeline, StableDiffusionXLControlNetInpaintPipeline, LCMScheduler, \
 EulerAncestralDiscreteScheduler, EulerDiscreteScheduler, DDPMScheduler, DDIMScheduler, UniPCMultistepScheduler, DEISMultistepScheduler, DPMSolverMultistepScheduler, \
 HeunDiscreteScheduler, AutoencoderKL
 from .stable_diffusion_xl_reference import StableDiffusionXLReferencePipeline
@@ -234,11 +234,8 @@ def get_generator_xl(model_name: str = "", vae: str = "", mode: str = "text", cl
         else:
             generator.vae = AutoencoderKL.from_single_file(vae_model)
         generator.vae = generator.vae.to(device=processor, dtype=dtype)
-        generator.vae.enable_slicing()
-        generator.vae.enable_tiling()
         vae_name = vae
-    generator = generator.to(device=processor, dtype=dtype)
-    generator.enable_attention_slicing()
+    generator = generator.to(device=device, dtype=dtype)
     generator.safety_checker = None
     return generator
 
@@ -328,12 +325,18 @@ def generate_xl(data, request_files, get_controlnet=None, clear_step_frames=None
     invisible_watermark = data["invisible_watermark"] if "invisible_watermark" in data else True
     nsfw_enabled = data["nsfw_tab"] if "nsfw_tab" in data else False
     freeu = data["freeu"] if "freeu" in data else False
+    ip_adapter = data["ip_adapter"] if "ip_adapter" in data else "None"
+    ip_processor = data["ip_processor"] if "ip_processor" in data else "off"
+    ip_weight = float(data["ip_weight"]) if "ip_weight" in data else 0.5
     x_adapt_model = data["x_adapt_model"] if "x_adapt_model" in data else "None"
 
     input_image = None
     input_mask = None
     control_image = None
+    ip_adapter_image = None
     cross_attention_kwargs = {}
+    if "ip_image" in request_files and ip_processor == "on":
+        ip_adapter_image = Image.open(request_files["ip_image"]).convert("RGB")
     if "image" in request_files:
         input_image = Image.open(request_files["image"]).convert("RGB")
         mode = "image"
@@ -386,6 +389,9 @@ def generate_xl(data, request_files, get_controlnet=None, clear_step_frames=None
     elif sampler == "heun":
         generator.scheduler = HeunDiscreteScheduler.from_config(generator.scheduler.config)
         if use_x_adapter: generator.scheduler_sd1_5 = HeunDiscreteScheduler.from_config(generator.scheduler_sd1_5.config)
+    elif sampler == "lcm":
+        generator.scheduler = LCMScheduler.from_config(generator.scheduler.config)
+        if use_x_adapter: generator.scheduler_sd1_5 = LCMScheduler.from_config(generator.scheduler_sd1_5.config)
     
     if use_x_adapter:
         generator.scheduler = DDPMScheduler.from_config(generator.scheduler.config)
@@ -396,6 +402,13 @@ def generate_xl(data, request_files, get_controlnet=None, clear_step_frames=None
         generator.scheduler.beta_schedule = "linear"
         generator.scheduler.clip_sample = False
 
+    if not use_x_adapter:
+        generator.unload_ip_adapter()
+        if ip_processor == "on":
+            ip_adapter_path = os.path.join(get_models_dir(), "ipadapter")
+            generator.load_ip_adapter(ip_adapter_path, subfolder="models", weight_name=ip_adapter, local_files_only=True)
+            generator.set_ip_adapter_scale(ip_weight)
+
     for textual_inversion in textual_inversions:
         textual_inversion_name = textual_inversion["name"]
         textual_inversion_path = os.path.join(get_models_dir(), textual_inversion["model"].replace("models/", ""))
@@ -403,7 +416,7 @@ def generate_xl(data, request_files, get_controlnet=None, clear_step_frames=None
             generator.load_textual_inversion(textual_inversion_path, token=textual_inversion_name)
         except ValueError:
             continue
-    
+
     has_hypernet = False
     for hypernetwork in hypernetworks:
         hypernet_scale = float(hypernetwork["weight"])
@@ -453,6 +466,12 @@ def generate_xl(data, request_files, get_controlnet=None, clear_step_frames=None
             generator.unload_lora_weights()
             generator.disable_lora()
             cross_attention_kwargs.pop("scale", None)
+
+    generator.vae.enable_slicing()
+    generator.vae.enable_tiling()
+    generator.unet.fuse_qkv_projections()
+    if ip_processor == "off" and not has_hypernet:
+        generator.enable_attention_slicing()
     
     conditioning = None
     negative_conditioning = None
@@ -545,6 +564,7 @@ def generate_xl(data, request_files, get_controlnet=None, clear_step_frames=None
                     pooled_prompt_embeds=pooled,
                     negative_prompt_embeds=negative_conditioning,
                     negative_pooled_prompt_embeds=negative_pooled,
+                    ip_adapter_image=ip_adapter_image,
                     width=width,
                     height=height,
                     num_inference_steps=steps,
@@ -585,6 +605,7 @@ def generate_xl(data, request_files, get_controlnet=None, clear_step_frames=None
             image = generator(
                 image=input_image,
                 strength=denoise,
+                ip_adapter_image=ip_adapter_image,
                 prompt_embeds=conditioning,
                 pooled_prompt_embeds=pooled,
                 negative_prompt_embeds=negative_conditioning,
@@ -628,6 +649,7 @@ def generate_xl(data, request_files, get_controlnet=None, clear_step_frames=None
             image = generator(
                 image=input_image,
                 mask_image=input_mask,
+                ip_adapter_image=ip_adapter_image,
                 width=normalized["width"],
                 height=normalized["height"],
                 strength=denoise,
@@ -701,6 +723,7 @@ def generate_xl(data, request_files, get_controlnet=None, clear_step_frames=None
                     pooled_prompt_embeds=pooled,
                     negative_prompt_embeds=negative_conditioning,
                     negative_pooled_prompt_embeds=negative_pooled,
+                    ip_adapter_image=ip_adapter_image,
                     num_inference_steps=steps,
                     guidance_scale=cfg,
                     generator=torch.manual_seed(seed),
@@ -771,6 +794,7 @@ def generate_xl(data, request_files, get_controlnet=None, clear_step_frames=None
                     image=input_image,
                     control_image=control_image,
                     strength=denoise,
+                    ip_adapter_image=ip_adapter_image,
                     prompt_embeds=conditioning,
                     pooled_prompt_embeds=pooled,
                     negative_prompt_embeds=negative_conditioning,
@@ -821,6 +845,7 @@ def generate_xl(data, request_files, get_controlnet=None, clear_step_frames=None
                 mask_image=input_mask,
                 control_image=control_image,
                 strength=denoise,
+                ip_adapter_image=ip_adapter_image,
                 prompt_embeds=conditioning,
                 pooled_prompt_embeds=pooled,
                 negative_prompt_embeds=negative_conditioning,

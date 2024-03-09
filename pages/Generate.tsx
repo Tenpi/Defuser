@@ -5,7 +5,8 @@ import favicon from "../assets/icons/favicon.png"
 import {EnableDragContext, MobileContext, SiteHueContext, SiteSaturationContext, SiteLightnessContext} from "../Context"
 import functions from "../structures/Functions"
 import CheckpointBar from "../components/CheckpointBar"
-import Controlnet from "../components/ControlNet"
+import ControlNet from "../components/ControlNet"
+import IPAdapter from "../components/IPAdapter"
 import GenerateBar from "../components/GenerateBar"
 import ImageHistory from "../components/ImageHistory"
 import OptionsBar from "../components/OptionsBar"
@@ -30,7 +31,8 @@ const Generate: React.FunctionComponent = (props) => {
             <CheckpointBar/>
             <GenerateBar/>
             <OptionsBar/>
-            <Controlnet/>
+            <ControlNet/>
+            <IPAdapter/>
             <Render/>
             <ImageHistory/>
         </div>

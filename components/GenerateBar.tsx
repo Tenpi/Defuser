@@ -10,7 +10,8 @@ ControlImageContext, ControlProcessorContext, ControlScaleContext, ControlGuessM
 ControlInvertContext, StyleFidelityContext, ControlReferenceImageContext, HorizontalExpandContext, VerticalExpandContext, UpscalerContext,
 ExpandImageContext, ExpandMaskContext, StartedContext, SocketContext, LoopModeContext, SavedPromptsContext, WatermarkContext, NSFWTabContext,
 InvisibleWatermarkContext, SauceNaoAPIKeyContext, RandomPromptModeContext, GeneratorContext, NovelAITokenContext, HolaraAICookieContext,
-SavedPromptsNovelAIContext, SavedPromptsHolaraAIContext, ModelDirContext, OutputDirContext, XAdaptModelContext, FreeUContext} from "../Context"
+SavedPromptsNovelAIContext, SavedPromptsHolaraAIContext, ModelDirContext, OutputDirContext, XAdaptModelContext, FreeUContext, IPAdapterContext,
+IPProcessorContext, IPImageContext, IPWeightContext} from "../Context"
 import functions from "../structures/Functions"
 import checkbox from "../assets/icons/checkbox2.png"
 import checkboxChecked from "../assets/icons/checkbox2-checked.png"
@@ -88,6 +89,10 @@ const GenerateBar: React.FunctionComponent = (props) => {
     const {freeU, setFreeU} = useContext(FreeUContext)
     const {modelDir, setModelDir} = useContext(ModelDirContext)
     const {outputDir, setOutputDir} = useContext(OutputDirContext)
+    const {ipAdapter, setIPAdapter} = useContext(IPAdapterContext)
+    const {ipProcessor, setIPProcessor} = useContext(IPProcessorContext)
+    const {ipWeight, setIPWeight} = useContext(IPWeightContext)
+    const {ipImage, setIPImage} = useContext(IPImageContext)
     const ref = useRef<HTMLCanvasElement>(null)
     const history = useHistory()
 
@@ -294,10 +299,13 @@ const GenerateBar: React.FunctionComponent = (props) => {
         const nsfw_tab = nsfwTab
         const x_adapt_model = xAdaptModel
         const freeu = freeU
+        const ip_adapter = ipAdapter
+        const ip_processor = ipProcessor
+        const ip_weight = ipWeight
         const json = {prompt, negative_prompt, steps, cfg, width, height, denoise, seed, sampler, amount, model_name, vae_name, 
         clip_skip, processing, format, textual_inversions, hypernetworks, loras, control_processor, control_scale, guess_mode,
         control_start, control_end, style_fidelity, control_reference_image, upscaler, nsfw_tab, watermark, invisible_watermark,
-        generator, novelai_token, holara_cookie, x_adapt_model, freeu}
+        generator, novelai_token, holara_cookie, x_adapt_model, freeu, ip_adapter, ip_processor, ip_weight}
         if (expandImage) json.denoise = 1.0
         const form = new FormData()
         form.append("data", JSON.stringify(json))
@@ -320,6 +328,12 @@ const GenerateBar: React.FunctionComponent = (props) => {
             const blob = new Blob([new Uint8Array(arrayBuffer)])
             const file = new File([blob], "control.png", {type: "image/png"})
             form.append("control_image", file)
+        }
+        if (ipImage) {
+            const arrayBuffer = await fetch(ipImage).then((r) => r.arrayBuffer())
+            const blob = new Blob([new Uint8Array(arrayBuffer)])
+            const file = new File([blob], "image.png", {type: "image/png"})
+            form.append("ip_image", file)
         }
         axios.post("/generate", form)
     }
