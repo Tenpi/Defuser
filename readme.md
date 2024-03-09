@@ -72,11 +72,10 @@ Install the code dependencies.
 ```sh
 npm install
 pip3 install -r requirements.txt
-# MPS / CPU
-pip3 install --pre torch torchvision torchaudio --index-url https://download.pytorch.org/whl/nightly/cpu
-# CUDA
-pip3 install --pre torch torchvision torchaudio --index-url https://download.pytorch.org/whl/nightly/cu121
 ```
+
+Install pytorch nightly for latest features.
+https://pytorch.org/get-started/locally/
 
 ### Running
 
