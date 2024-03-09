@@ -70,7 +70,7 @@ npm install
 pip3 install -r requirements.txt
 ```
 
-Install pytorch nightly for latest features. \
+Install pytorch nightly for latest features. 
 https://pytorch.org/get-started/locally/
 
 ### Running
