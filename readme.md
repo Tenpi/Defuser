@@ -145,10 +145,10 @@ a free saucenao account is 4/30s but you can add them manually by creating a fil
 Shortcut: Any image with name like 1234567.png will be assumed to be from pixiv with source https://www.pixiv.net/en/artworks/1234567. 
 
 ### Miscellaneous Tools
-- Simplify Sketch - Attempts to clean up a rough sketch (misc tab).
-- Shade Sketch - Applies shading to a sketch from a configerable light direction (misc tab).
-- Colorize Sketch -Attempts to color a sketch using a reference image (misc tab).
-- Layer Divider - Attempts to divide an image into psd layers (misc tab).
+- Simplify Sketch - Attempts to clean up a rough sketch.
+- Shade Sketch - Applies shading to a sketch from a configerable light direction.
+- Colorize Sketch -Attempts to color a sketch using a reference image.
+- Layer Divider - Attempts to divide an image into psd layers.
 - Embedding Converter - Converts an SD1.5 embedding to SDXL.
 - AI Detector - Detect if an anime-styled image is AI.
 - Train Classifier - Train an image classification model.
