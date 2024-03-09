@@ -96,7 +96,7 @@ sudo make install
 
 ### ControlNet
 
-![Image](https://github.com/Tenpi/Defuser/blob/main/assets/images/controlnet.png?raw=true)
+<img height="300" src="https://github.com/Tenpi/Ethical-Diffusion/blob/main/dist/assets/images/controlnet.png?raw=true"/>
 
 ControlNet lets you control the generation using a "control image". The possible control images are canny, depth,
 lineart, anime, manga, softedge, scribble, and original image (reference). By clicking on "reference image", it will
@@ -109,7 +109,7 @@ X-Adapter lets you use lora models trained on SDv1 in SDXL. In the dropdown sele
 
 ### Patch Controls
 
-![Image](https://github.com/Tenpi/Defuser/blob/main/assets/images/patch.png?raw=true)
+<img height="300" src="https://github.com/Tenpi/Defuser/blob/main/assets/images/patch.png?raw=true"/>
 
 These are the drawing controls when using patch:
 - Wheel: brush size
@@ -120,7 +120,7 @@ These are the drawing controls when using patch:
 
 ### Lineart Extraction
 
-![Image](https://github.com/Tenpi/Defuser/blob/main/assets/images/lineart.png?raw=true)
+<img height="300" src="https://github.com/Tenpi/Defuser/blob/main/assets/images/lineart.png?raw=true"/>
 
 Invert the controlnet processor to extract a lineart (optionally with alpha).
 
