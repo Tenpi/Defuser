@@ -21,7 +21,7 @@ const MainPage: React.FunctionComponent = (props) => {
     const {tab, setTab} = useContext(TabContext)
 
     useEffect(() => {
-        document.title = "Defuser"
+        document.title = "Defusers"
     }, [])
 
     useEffect(() => {

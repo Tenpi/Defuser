@@ -1,4 +1,4 @@
-# Defuser
+# Defusers
 
 ![Image](https://github.com/Tenpi/Defuser/blob/main/assets/images/readme.png?raw=true)
 
@@ -100,6 +100,10 @@ ControlNet lets you control the generation using a "control image". The possible
 lineart, anime, manga, softedge, scribble, and original image (reference). By clicking on "reference image", it will
 also reference the input image rather than just the control image. "Guess mode" is an option that will try to guess the
 content if no prompt is provided.
+
+### IP Adapter
+
+IP Adapter adapts the features from an input image and often has better results than using img input.
 
 ### X-Adapter
 

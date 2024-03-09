@@ -53,9 +53,7 @@ def get_cascade_generators(model_name: str = "", cpu: bool = False):
     if not decoder:
         decoder = StableCascadeDecoderPipeline.from_pretrained("stabilityai/stable-cascade")
     prior = prior.to(device=processor, dtype=dtype)
-    prior.enable_attention_slicing()
     decoder = decoder.to(device=processor, dtype=dtype)
-    decoder.enable_attention_slicing()
     return prior, decoder
 
 def unload_models_cascade():
@@ -180,6 +178,9 @@ def generate_cascade(data, request_files, clear_step_frames=None, generate_step_
         prior.disable_lora()
         cross_attention_kwargs.pop("scale", None)
     """
+
+    prior.enable_attention_slicing()
+    decoder.enable_attention_slicing()
 
     def step_progress_prior(self, step: int, timestep: int, call_dict: dict):
         socketio.emit("step progress", {"step": step, "total_step": steps-1})

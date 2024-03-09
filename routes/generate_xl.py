@@ -469,7 +469,6 @@ def generate_xl(data, request_files, get_controlnet=None, clear_step_frames=None
 
     generator.vae.enable_slicing()
     generator.vae.enable_tiling()
-    generator.unet.fuse_qkv_projections()
     if ip_processor == "off" and not has_hypernet:
         generator.enable_attention_slicing()
     

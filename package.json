@@ -1,5 +1,5 @@
 {
-  "name": "defuser",
+  "name": "defusers",
   "version": "0.0.1",
   "description": "Image generation UI for diffusers",
   "scripts": {

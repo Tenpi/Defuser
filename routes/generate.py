@@ -10,7 +10,7 @@ StableDiffusionControlNetInpaintPipeline, StableDiffusionControlNetPipeline, Con
 DDPMScheduler, DDIMScheduler, UniPCMultistepScheduler, DEISMultistepScheduler, DPMSolverMultistepScheduler, HeunDiscreteScheduler, AutoencoderKL, MotionAdapter, AnimateDiffPipeline
 from diffusers.utils import export_to_gif
 from .stable_diffusion_controlnet_reference import StableDiffusionControlNetReferencePipeline
-from .hypernet import load_hypernet, add_hypernet, clear_hypernets, clear_ip_adapter
+from .hypernet import load_hypernet, add_hypernet, clear_hypernets
 from .external import generate_novelai, generate_holara, update_ext_upscaling, update_ext_infinite
 from .generate_xl import generate_xl, unload_models_xl, update_upscaling_xl, update_infinite_xl, update_precision_xl
 from .generate_cascade import generate_cascade, unload_models_cascade, update_upscaling_cascade, update_infinite_cascade, update_precision_cascade

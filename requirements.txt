@@ -31,6 +31,6 @@ setuptools==69.1.1
 skimage==0.0
 tensorflow==2.15.0
 tensorflow_macos==2.15.0
-torch==2.3.0.dev20240307
-torchvision==0.18.0.dev20240307
+torch==2.3.0.dev20240309
+torchvision==0.18.0.dev20240309
 tqdm==4.66.2
