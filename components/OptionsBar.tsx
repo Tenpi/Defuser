@@ -133,7 +133,7 @@ const OptionsBar: React.FunctionComponent = (props) => {
 
     const getXAdaptJSX = () => {
         let jsx = [] as any
-        const adapters = ["None", ...modelNames]
+        const adapters = ["None", ...modelNames.filter((m: any) => !m.includes("XL") && !m.includes("SC"))]
         for (let i = 0; i < adapters.length; i++) {
             jsx.push(<Dropdown.Item active={xAdaptModel === adapters[i]} onClick={() => setXAdaptModel(adapters[i])}>{adapters[i]}</Dropdown.Item>)
         }
