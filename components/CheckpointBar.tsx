@@ -124,7 +124,7 @@ const CheckpointBar: React.FunctionComponent = (props) => {
             <img className="checkpoint-bar-icon" src={savedPrompts} style={{filter: getFilter(), cursor: "pointer"}} onClick={() => setTab("saved prompts")}/>
             <img className="checkpoint-bar-icon" src={watermark} style={{filter: getFilter(), cursor: "pointer"}} onClick={() => setTab("watermark")}/>
             <img className="checkpoint-bar-icon" src={train} style={{filter: getFilter(), cursor: "pointer"}} onClick={() => setTab("train")}/>
-            <img className="checkpoint-bar-icon" src={classify} style={{filter: getFilter(), cursor: "pointer"}} onClick={() => setTab("misc")}/>
+            {/* <img className="checkpoint-bar-icon" src={classify} style={{filter: getFilter(), cursor: "pointer"}} onClick={() => setTab("misc")}/> */}
             <img className="checkpoint-bar-icon" src={misc} style={{filter: getFilter(), cursor: "pointer"}} onClick={() => setTab("misc")}/>
             <img className="checkpoint-bar-icon" src={settings} style={{filter: getFilter(), cursor: "pointer"}} onClick={() => setTab("settings")}/>
         </div>
