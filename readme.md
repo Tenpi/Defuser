@@ -60,12 +60,8 @@ Download the models from https://huggingface.co/Moepi/models
 and place them in the correct folder in "models". This script 
 should download all of them.
 ```sh
-rm -rf models
-# Windows: rmdir /s models
 git lfs install
 git clone https://huggingface.co/Moepi/models
-rm models/.git models/.gitattributes
-# Windows: del models/.git models/.gitattributes
 ```
 
 Install the code dependencies.
