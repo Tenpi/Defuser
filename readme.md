@@ -96,7 +96,7 @@ sudo make install
 
 ### ControlNet
 
-<img height="300" src="https://github.com/Tenpi/Ethical-Diffusion/blob/main/dist/assets/images/controlnet.png?raw=true"/>
+<img height="350" src="https://github.com/Tenpi/Ethical-Diffusion/blob/main/dist/assets/images/controlnet.png?raw=true"/>
 
 ControlNet lets you control the generation using a "control image". The possible control images are canny, depth,
 lineart, anime, manga, softedge, scribble, and original image (reference). By clicking on "reference image", it will
@@ -118,12 +118,6 @@ These are the drawing controls when using patch:
 - B: brush
 - E: eraser
 
-### Lineart Extraction
-
-<img height="300" src="https://github.com/Tenpi/Defuser/blob/main/assets/images/lineart.png?raw=true"/>
-
-Invert the controlnet processor to extract a lineart (optionally with alpha).
-
 ### Prompt Weights
 
 To add weight to a word, append "+". To subtract weight, add "-". You can also append a number for a specific value. If the word
@@ -132,6 +126,12 @@ contains spaces, wrap it in parantheses. Examples: \
 `blue--` \
 `(blue hat)++` \
 `(red hat)1.5`
+
+### Lineart Extraction
+
+<img height="300" src="https://github.com/Tenpi/Defuser/blob/main/assets/images/lineart.png?raw=true"/>
+
+Invert the controlnet processor to extract a lineart (optionally with alpha).
 
 ### Watermark Tool
 
