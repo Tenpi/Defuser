@@ -23,6 +23,8 @@ import axios from "axios"
 
 let pos = 0
 let scrollLock = false
+let timer = null as any
+let clicking = false
 
 const SideBar: React.FunctionComponent = (props) => {
     const [ignored, forceUpdate] = useReducer(x => x + 1, 0)
@@ -180,12 +182,36 @@ const SideBar: React.FunctionComponent = (props) => {
 
     const appendToPrompt = (str: string) => {
         if (tab === "settings") {
-            const newStr = `${str}, ${negativePrompt}`
+            let newStr = negativePrompt ? `${str}, ${negativePrompt}` : str
             setNegativePrompt(newStr)
         } else {
-            const newStr = `${str}, ${prompt}`
+            const newStr = prompt ? `${str}, ${prompt}` : str
             setPrompt(newStr)
         }
+    }
+
+    const openModel = async (file: any) => {
+        await axios.post("/show-in-folder", {path: file.model})
+    }
+
+    const append = (modelType: string, file: any) => {
+        if (modelType === "textual inversion") appendToPrompt(file.name)
+        if (modelType === "hypernetwork") appendToPrompt(`<hypernet:${file.name}:1>`)
+        if (modelType === "lora") appendToPrompt(`<lora:${file.name}:1>`)
+    }
+
+    const handleClick = (modelType: string, file: any) => {
+        if (clicking) {
+            clicking = false
+            clearTimeout(timer)
+            return openModel(file)
+        }
+        clicking = true
+        timer = setTimeout(() => {
+            clicking = false
+            clearTimeout(timer)
+            append(modelType, file)
+        }, 200)
     }
 
     const modelFolderJSX = (modelType: string, modelFolder: any) => {
@@ -210,13 +236,8 @@ const SideBar: React.FunctionComponent = (props) => {
                     isPlaceholder = true
                     image = networkPlaceholder
                 }
-                const append = () => {
-                    if (modelType === "textual inversion") appendToPrompt(file.name)
-                    if (modelType === "hypernetwork") appendToPrompt(`<hypernet:${file.name}:1>`)
-                    if (modelType === "lora") appendToPrompt(`<lora:${file.name}:1>`)
-                }
                 jsx.push(
-                <div className="network-container" onClick={append}>
+                <div className="network-container" onClick={() => handleClick(modelType, file)}>
                     {isPlaceholder ? <span className="network-title">{file.name}</span> : null}
                     <img className="network-image" src={image} style={{filter: isPlaceholder ? getFilter() : ""}}/>
                 </div>)

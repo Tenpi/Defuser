@@ -117,67 +117,15 @@ def generate_cascade(data, request_files, clear_step_frames=None, generate_step_
     nsfw_enabled = data["nsfw_tab"] if "nsfw_tab" in data else False
 
     input_image = None
-    input_mask = None
-    cross_attention_kwargs = {}
     if "image" in request_files:
         input_image = Image.open(request_files["image"]).convert("RGB")
         mode = "image"
-        if "mask" in request_files:
-            input_mask =  Image.open(request_files["mask"]).convert("RGB")
-            mode = "inpaint"
 
     socketio.emit("image starting")
 
     prior, decoder = get_cascade_generators(model_name, processing == "cpu")
 
     prior.scheduler = DDPMWuerstchenScheduler.from_config(prior.scheduler.config)
-
-    """
-    for textual_inversion in textual_inversions:
-        textual_inversion_name = textual_inversion["name"]
-        textual_inversion_path = os.path.join(get_models_dir(), textual_inversion["model"].replace("models/", ""))
-        try:
-            prior.load_textual_inversion(textual_inversion_path, token=textual_inversion_name)
-        except ValueError:
-            continue
-            
-    has_hypernet = False
-    for hypernetwork in hypernetworks:
-        hypernet_scale = float(hypernetwork["weight"])
-        hypernet_path = os.path.join(get_models_dir(), hypernetwork["model"].replace("models/", ""))
-        has_hypernet = True
-        try:
-            hypernet = load_hypernet(hypernet_path, hypernet_scale, device)
-            add_hypernet(prior.prior, hypernet)
-        except ValueError:
-            continue
-    if not has_hypernet:
-        clear_hypernets(prior.prior)
-
-    has_lora = False
-    prior.unfuse_lora()
-    adapters = []
-    adapter_weights = []
-    for lora in loras:
-        lora_scale = float(lora["weight"])
-        weight_name = os.path.basename(lora["model"])
-        lora_name = lora["name"]
-        lora_path = os.path.join(get_models_dir(), lora["model"].replace("models/", ""))
-        has_lora = True
-        try:
-            adapters.append(lora_name)
-            adapter_weights.append(lora_scale)
-            prior.load_lora_weights(lora_path, weight_name=weight_name, adapter_name=lora_name)
-        except ValueError:
-            continue
-    prior.set_adapters(adapters, adapter_weights=adapter_weights)
-    prior.fuse_lora()
-    prior.enable_lora()
-    if not has_lora:
-        prior.unload_lora_weights()
-        prior.disable_lora()
-        cross_attention_kwargs.pop("scale", None)
-    """
 
     prior.enable_attention_slicing()
     decoder.enable_attention_slicing()

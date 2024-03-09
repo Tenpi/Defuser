@@ -273,7 +273,7 @@ def update_precision():
     if precision == "full":
         dtype = torch.float32
     elif precision == "half":
-        dtype = torch.bfloat16
+        dtype = torch.float16
     update_precision_xl(precision)
     update_precision_cascade(precision)
     return "done"
