@@ -103,7 +103,7 @@ content if no prompt is provided.
 
 ### X-Adapter
 
-X-Adapter lets you use lora models trained on SDv1 in SDXL. In the dropdown select a v1 checkpoint that it will cross adapt to.
+X-Adapter lets you use lora models trained on SD1.5 in SDXL. In the dropdown select a v1 checkpoint that it will cross adapt to.
 
 ### Patch Controls
 
