@@ -118,6 +118,12 @@ These are the drawing controls when using patch:
 - B: brush
 - E: eraser
 
+### Lineart Extraction
+
+![Image](https://github.com/Tenpi/Defuser/blob/main/assets/images/lineart.png?raw=true)
+
+Invert the controlnet processor to extract a lineart (optionally with alpha).
+
 ### Prompt Weights
 
 To add weight to a word, append "+". To subtract weight, add "-". You can also append a number for a specific value. If the word
