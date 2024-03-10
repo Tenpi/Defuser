@@ -9,6 +9,7 @@ from diffusers import StableDiffusionPipeline, StableDiffusionImg2ImgPipeline, S
 StableDiffusionControlNetInpaintPipeline, StableDiffusionControlNetPipeline, ControlNetModel, EulerAncestralDiscreteScheduler, EulerDiscreteScheduler, LCMScheduler, \
 DDPMScheduler, DDIMScheduler, UniPCMultistepScheduler, DEISMultistepScheduler, DPMSolverMultistepScheduler, HeunDiscreteScheduler, AutoencoderKL, MotionAdapter, AnimateDiffPipeline
 from diffusers.utils import export_to_gif
+from diffusers.image_processor import IPAdapterMaskProcessor
 from .stable_diffusion_controlnet_reference import StableDiffusionControlNetReferencePipeline
 from .hypernet import load_hypernet, add_hypernet, clear_hypernets
 from .external import generate_novelai, generate_holara, update_ext_upscaling, update_ext_infinite
@@ -358,9 +359,15 @@ def generate(request_data, request_files):
     input_mask = None
     control_image = None
     ip_adapter_image = None
+    ip_adapter_mask = None
     cross_attention_kwargs = {}
     if "ip_image" in request_files and ip_processor == "on":
         ip_adapter_image = Image.open(request_files["ip_image"]).convert("RGB")
+    if "ip_mask" in request_files and ip_processor == "on":
+        ip_adapter_mask = Image.open(request_files["ip_mask"]).convert("RGB")
+        ip_mask_processor = IPAdapterMaskProcessor()
+        converted_masks = ip_mask_processor.preprocess([ip_adapter_mask], height=height, width=width)
+        cross_attention_kwargs["ip_adapter_masks"] = converted_masks
     if "image" in request_files:
         input_image = Image.open(request_files["image"]).convert("RGB")
         mode = "image"
@@ -461,7 +468,7 @@ def generate(request_data, request_files):
     if not has_lora:
         generator.unload_lora_weights()
         generator.disable_lora()
-        cross_attention_kwargs.pop("scale", None)
+        #cross_attention_kwargs.pop("scale", None)
 
     generator.vae.enable_slicing()
     generator.vae.enable_tiling()

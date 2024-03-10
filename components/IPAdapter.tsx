@@ -4,7 +4,7 @@ import {HashLink as Link} from "react-router-hash-link"
 import favicon from "../assets/icons/favicon.png"
 import {EnableDragContext, MobileContext, SiteHueContext, SiteSaturationContext, SiteLightnessContext, ThemeContext, 
 ImageBrightnessContext, ImageContrastContext, ImageHueContext, ImageSaturationContext, IPAdapterContext, IPProcessorContext,
-IPWeightContext, IPImageContext, IPAdapterNamesContext, ModelNameContext} from "../Context"
+IPWeightContext, IPImageContext, IPAdapterNamesContext, ModelNameContext, IPDrawImageContext, IPMaskImageContext, IPMaskDataContext} from "../Context"
 import functions from "../structures/Functions"
 import {Dropdown, DropdownButton} from "react-bootstrap"
 import Slider from "react-slider"
@@ -15,6 +15,7 @@ import radioButtonOnLight from "../assets/icons/radiobutton-on-light.png"
 import checkboxChecked from "../assets/icons/checkbox-checked.png"
 import checkbox from "../assets/icons/checkbox.png"
 import imgPlaceHolder from "../assets/images/img-placeholder.png"
+import drawIcon from "../assets/icons/draw.png"
 import xIcon from "../assets/icons/x-alt.png"
 import fileType from "magic-bytes.js"
 import "./styles/controlnet.less"
@@ -39,7 +40,11 @@ const IPAdapter: React.FunctionComponent = (props) => {
     const {ipImage, setIPImage} = useContext(IPImageContext)
     const {ipAdapterNames, setIPAdapterNames} = useContext(IPAdapterNamesContext)
     const {modelName, setModelName} = useContext(ModelNameContext)
+    const {ipDrawImage, setIPDrawImage} = useContext(IPDrawImageContext)
+    const {ipMaskImage, setIPMaskImage} = useContext(IPMaskImageContext)
+    const {ipMaskData, setIPMaskData} = useContext(IPMaskDataContext)
     const [img, setImg] = useState(null) as any
+    const [maskImg, setMaskImg] = useState(null) as any 
     const ref = useRef(null) as any
     
     const history = useHistory()
@@ -107,10 +112,13 @@ const IPAdapter: React.FunctionComponent = (props) => {
         event?.preventDefault()
         event?.stopPropagation()
         setIPImage("")
+        setIPMaskImage("")
+        setIPMaskData("")
         setImg(null)
+        setMaskImg(null)
     }
 
-    const loadImg = async () => {
+    const loadImages = async () => {
         if (!ipImage) return
         const image = document.createElement("img")
         await new Promise<void>((resolve) => {
@@ -118,10 +126,17 @@ const IPAdapter: React.FunctionComponent = (props) => {
             image.src = ipImage
         })
         setImg(image)
+        if (!ipMaskImage) return
+        const mask = document.createElement("img")
+        await new Promise<void>(async (resolve) => {
+            mask.onload = () => resolve()
+            mask.src = ipMaskImage
+        })
+        setMaskImg(mask)
     }
     useEffect(() => {
-        loadImg()
-    }, [ipImage])
+        loadImages()
+    }, [ipImage, ipMaskImage])
 
     const updateImage = () => {
         if (!ref.current || !img) return
@@ -129,11 +144,43 @@ const IPAdapter: React.FunctionComponent = (props) => {
         ref.current.height = functions.getNormalizedDimensions(img).height
         const ctx = ref.current.getContext("2d")!
         ctx.drawImage(img, 0, 0, ref.current.width, ref.current.height)
+
+        if (maskImg) {
+            const maskCanvas = document.createElement("canvas")
+            maskCanvas.width = maskImg.width 
+            maskCanvas.height = maskImg.height
+            const maskCtx = maskCanvas.getContext("2d")!
+            maskCtx.drawImage(maskImg, 0, 0, ref.current.width, ref.current.height)
+
+            const imgData = ctx.getImageData(0, 0, ref.current.width, ref.current.height)
+            const maskPixels = maskCtx.getImageData(0, 0, ref.current.width, ref.current.height).data
+
+            const pixels = imgData.data
+            for (let i = 0; i < pixels.length; i+=4) {
+                if (maskPixels[i] < 10 && maskPixels[i+1] < 10 && maskPixels[i+2] < 10) {
+                    // ignore
+                } else {
+                    const color = functions.rotateColor("#fc1594", siteHue, siteSaturation, siteLightness)
+                    const {r, g, b} = functions.hexToRgb(color)
+                    pixels[i] = r 
+                    pixels[i+1] = g
+                    pixels[i+2] = b
+                }
+            }
+            ctx.putImageData(imgData, 0, 0)
+        }
     }
 
     useEffect(() => {
         updateImage()
-    }, [img, ipProcessor])
+    }, [img, ipProcessor, maskImg, siteHue, siteSaturation, siteLightness])
+
+    const startDrawing = (event: any) => {
+        if (!ipImage) return
+        event?.preventDefault()
+        event?.stopPropagation()
+        setIPDrawImage(ipImage)
+    }
 
     const updateIPAdapterModels = async (first?: boolean) => {
         let subfolder = "models"
@@ -193,7 +240,8 @@ const IPAdapter: React.FunctionComponent = (props) => {
                     <div className="control-image-drawer-container">
                         <label htmlFor="ip-img" className="control-image-container" onMouseEnter={() => setImageHover(true)} onMouseLeave={() => setImageHover(false)}>
                             <div className={`control-image-button-container ${img && imageHover ? "show-control-image-buttons" : ""}`}>
-                                <img className="control-image-button" src={xIcon} onClick={removeImage} draggable={false}/>
+                                <img className="control-image-button" src={drawIcon} onClick={startDrawing} draggable={false} style={{marginRight: "5px", height: "17px"}}/>
+                                <img className="control-image-button" src={xIcon} onClick={removeImage} draggable={false} style={{height: "17px"}}/>
                             </div>
                             {img ? 
                             <canvas ref={ref} className="control-image" draggable={false} style={{filter: `brightness(${imageBrightness + 100}%) contrast(${imageContrast + 100}%) hue-rotate(${imageHue - 180}deg) saturate(${imageSaturation}%)`, maxWidth: "250px", maxHeight: "250px"}}></canvas> :

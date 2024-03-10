@@ -11,7 +11,7 @@ ControlInvertContext, StyleFidelityContext, ControlReferenceImageContext, Horizo
 ExpandImageContext, ExpandMaskContext, StartedContext, SocketContext, LoopModeContext, SavedPromptsContext, WatermarkContext, NSFWTabContext,
 InvisibleWatermarkContext, SauceNaoAPIKeyContext, RandomPromptModeContext, GeneratorContext, NovelAITokenContext, HolaraAICookieContext,
 SavedPromptsNovelAIContext, SavedPromptsHolaraAIContext, ModelDirContext, OutputDirContext, XAdaptModelContext, FreeUContext, IPAdapterContext,
-IPProcessorContext, IPImageContext, IPWeightContext} from "../Context"
+IPProcessorContext, IPImageContext, IPWeightContext, IPMaskImageContext} from "../Context"
 import functions from "../structures/Functions"
 import checkbox from "../assets/icons/checkbox2.png"
 import checkboxChecked from "../assets/icons/checkbox2-checked.png"
@@ -45,6 +45,7 @@ const GenerateBar: React.FunctionComponent = (props) => {
     const {vaeName, setVAEName} = useContext(VAENameContext)
     const {processing, setProcessing} = useContext(ProcessingContext)
     const {maskImage, setMaskImage} = useContext(MaskImageContext)
+    const {ipMaskImage, setIPMaskImage} = useContext(IPMaskImageContext)
     const [infinite, setInfinite] = useState(false)
     const [upscaling, setUpscaling] = useState(true)
     const [start, setStart] = useState(false)
@@ -247,6 +248,35 @@ const GenerateBar: React.FunctionComponent = (props) => {
         return null
     }
 
+    const getActiveIPMask = async () => {
+        if (!ipMaskImage) return null
+        const maskImg = document.createElement("img")
+        await new Promise<void>((resolve) => {
+            maskImg.onload = () => resolve()
+            maskImg.src = ipMaskImage
+        })
+        const normalized = functions.getNormalizedDimensions(maskImg)
+        const maskCanvas = document.createElement("canvas")
+        maskCanvas.width = normalized.width
+        maskCanvas.height = normalized.height 
+        const maskCtx = maskCanvas.getContext("2d")!
+        maskCtx.drawImage(maskImg, 0, 0, maskCanvas.width, maskCanvas.height)
+        const maskPixels = maskCtx.getImageData(0, 0, maskCanvas.width, maskCanvas.height).data
+        let active = false
+        for (let i = 0; i < maskPixels.length; i+=4) {
+            if (maskPixels[i] < 10 && maskPixels[i+1] < 10 && maskPixels[i+2] < 10) {
+                // ignore
+            } else {
+                active = true 
+                break
+            }
+        }
+        if (active) {
+            return maskImage
+        }
+        return null
+    }
+
     const getNormalizedImage = async () => {
         const img = document.createElement("img")
         await new Promise<void>((resolve) => {
@@ -286,6 +316,7 @@ const GenerateBar: React.FunctionComponent = (props) => {
         const hypernetworks = getActiveHypernetworks()
         const loras = getActiveLoRAs()
         const activeMask = await getActiveMask()
+        const activeIPMask = await getActiveIPMask()
         const control_processor = controlProcessor
         const control_scale = controlScale
         const control_start = controlStart
@@ -334,6 +365,12 @@ const GenerateBar: React.FunctionComponent = (props) => {
             const blob = new Blob([new Uint8Array(arrayBuffer)])
             const file = new File([blob], "image.png", {type: "image/png"})
             form.append("ip_image", file)
+        }
+        if (activeIPMask) {
+            const arrayBuffer = await fetch(activeIPMask).then((r) => r.arrayBuffer())
+            const blob = new Blob([new Uint8Array(arrayBuffer)])
+            const file = new File([blob], "mask.png", {type: "image/png"})
+            form.append("ip_mask", file)
         }
         axios.post("/generate", form)
     }

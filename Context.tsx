@@ -136,6 +136,9 @@ export const IPProcessorContext = React.createContext<any>(null)
 export const IPWeightContext = React.createContext<any>(null)
 export const IPImageContext = React.createContext<any>(null)
 export const IPAdapterNamesContext = React.createContext<any>(null)
+export const IPDrawImageContext = React.createContext<any>(null)
+export const IPMaskImageContext = React.createContext<any>(null)
+export const IPMaskDataContext = React.createContext<any>(null)
 
 const Context: React.FunctionComponent = (props: any) => {
     const [theme, setTheme] = useState("light")
@@ -249,9 +252,15 @@ const Context: React.FunctionComponent = (props: any) => {
     const [ipWeight, setIPWeight] = useState(0.5)
     const [ipImage, setIPImage] = useState("")
     const [ipAdapterNames, setIPAdapterNames] = useState([])
+    const [ipDrawImage, setIPDrawImage] = useState("")
+    const [ipMaskImage, setIPMaskImage] = useState("")
+    const [ipMaskData, setIPMaskData] = useState("")
 
     return (
         <>  
+            <IPMaskDataContext.Provider value={{ipMaskData, setIPMaskData}}>
+            <IPMaskImageContext.Provider value={{ipMaskImage, setIPMaskImage}}>
+            <IPDrawImageContext.Provider value={{ipDrawImage, setIPDrawImage}}>
             <IPAdapterNamesContext.Provider value={{ipAdapterNames, setIPAdapterNames}}>
             <IPImageContext.Provider value={{ipImage, setIPImage}}>
             <IPWeightContext.Provider value={{ipWeight, setIPWeight}}>
@@ -475,6 +484,9 @@ const Context: React.FunctionComponent = (props: any) => {
             </IPWeightContext.Provider>
             </IPImageContext.Provider>
             </IPAdapterNamesContext.Provider>
+            </IPDrawImageContext.Provider>
+            </IPMaskImageContext.Provider>
+            </IPMaskDataContext.Provider>
         </>
     )
 }

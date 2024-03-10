@@ -8,6 +8,7 @@ from diffusers import StableDiffusionPipeline, StableDiffusionXLPipeline, Stable
 StableDiffusionXLControlNetPipeline, StableDiffusionXLControlNetImg2ImgPipeline, StableDiffusionXLControlNetInpaintPipeline, LCMScheduler, \
 EulerAncestralDiscreteScheduler, EulerDiscreteScheduler, DDPMScheduler, DDIMScheduler, UniPCMultistepScheduler, DEISMultistepScheduler, DPMSolverMultistepScheduler, \
 HeunDiscreteScheduler, AutoencoderKL
+from diffusers.image_processor import IPAdapterMaskProcessor
 from .stable_diffusion_xl_reference import StableDiffusionXLReferencePipeline
 from .hypernet import load_hypernet, add_hypernet, clear_hypernets
 from .x_adapter import load_adapter_lora, unload_adapter_loras, Adapter_XL, UNet2DConditionAdapterModel, StableDiffusionXLAdapterPipeline, StableDiffusionXLAdapterControlnetPipeline, StableDiffusionXLAdapterControlnetI2IPipeline
@@ -334,9 +335,15 @@ def generate_xl(data, request_files, get_controlnet=None, clear_step_frames=None
     input_mask = None
     control_image = None
     ip_adapter_image = None
+    ip_adapter_mask = None
     cross_attention_kwargs = {}
     if "ip_image" in request_files and ip_processor == "on":
         ip_adapter_image = Image.open(request_files["ip_image"]).convert("RGB")
+    if "ip_mask" in request_files and ip_processor == "on":
+        ip_adapter_mask = Image.open(request_files["ip_mask"]).convert("RGB")
+        ip_mask_processor = IPAdapterMaskProcessor()
+        converted_masks = ip_mask_processor.preprocess([ip_adapter_mask], height=height, width=width)
+        cross_attention_kwargs["ip_adapter_masks"] = converted_masks
     if "image" in request_files:
         input_image = Image.open(request_files["image"]).convert("RGB")
         mode = "image"

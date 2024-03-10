@@ -2,9 +2,9 @@ import React, {useContext, useEffect, useState, useRef} from "react"
 import {useHistory} from "react-router-dom"
 import {HashLink as Link} from "react-router-hash-link"
 import favicon from "../assets/icons/favicon.png"
-import {EnableDragContext, MobileContext, SiteHueContext, SiteSaturationContext, SiteLightnessContext, DrawImageContext, MaskImageContext,
-MaskDataContext, ControlProcessorContext, ThemeContext, ImageInputContext, ControlImageContext, ControlScaleContext, ControlGuessModeContext,
-ControlStartContext, ControlEndContext, ControlInvertContext, StyleFidelityContext, ControlReferenceImageContext, ImageBrightnessContext, ImageContrastContext,
+import {EnableDragContext, MobileContext, SiteHueContext, SiteSaturationContext, SiteLightnessContext, ControlProcessorContext, 
+ThemeContext, ImageInputContext, ControlImageContext, ControlScaleContext, ControlGuessModeContext, ControlStartContext, ControlEndContext, 
+ControlInvertContext, StyleFidelityContext, ControlReferenceImageContext, ImageBrightnessContext, ImageContrastContext,
 ExpandImageContext, UpscalerContext, ImageHueContext, ImageSaturationContext} from "../Context"
 import functions from "../structures/Functions"
 import Slider from "react-slider"

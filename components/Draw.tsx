@@ -3,7 +3,8 @@ import {useHistory} from "react-router-dom"
 import {HashLink as Link} from "react-router-hash-link"
 import favicon from "../assets/icons/favicon.png"
 import {EnableDragContext, MobileContext, SiteHueContext, SiteSaturationContext, SiteLightnessContext, DrawImageContext, MaskImageContext,
-MaskDataContext, ImageBrightnessContext, ImageContrastContext, ImageHueContext, ImageSaturationContext} from "../Context"
+MaskDataContext, ImageBrightnessContext, ImageContrastContext, ImageHueContext, ImageSaturationContext, IPDrawImageContext, IPMaskImageContext,
+IPMaskDataContext} from "../Context"
 import functions from "../structures/Functions"
 import CanvasDraw from "../structures/CanvasDraw"
 import inpaintCheck from "../assets/icons/inpaint-check.png"
@@ -12,6 +13,7 @@ import inpaintClear from "../assets/icons/inpaint-clear.png"
 import inpaintUndo from "../assets/icons/inpaint-undo.png"
 import inpaintErase from "../assets/icons/inpaint-erase.png"
 import inpaintDraw from "../assets/icons/inpaint-draw.png"
+import inpaintInvert from "../assets/icons/inpaint-invert.png"
 import "./styles/draw.less"
 
 let lastScrollY = window.scrollY
@@ -29,6 +31,9 @@ const Draw: React.FunctionComponent = (props) => {
     const {drawImage, setDrawImage} = useContext(DrawImageContext)
     const {maskImage, setMaskImage} = useContext(MaskImageContext)
     const {maskData, setMaskData} = useContext(MaskDataContext)
+    const {ipDrawImage, setIPDrawImage} = useContext(IPDrawImageContext)
+    const {ipMaskImage, setIPMaskImage} = useContext(IPMaskImageContext)
+    const {ipMaskData, setIPMaskData} = useContext(IPMaskDataContext)
     const [brushSize, setBrushSize] = useState(25)
     const [brushColor, setBrushColor] = useState("rgba(252, 21, 148, 0.5)")
     const [erasing, setErasing] = useState(false)
@@ -46,12 +51,18 @@ const Draw: React.FunctionComponent = (props) => {
         if (savedImage) setMaskImage(savedImage)
         const savedData = localStorage.getItem("maskData")
         if (savedData) setMaskData(savedData)
+        const savedIPImage = localStorage.getItem("ipMaskImage")
+        if (savedIPImage) setIPMaskImage(savedIPImage)
+        const savedIPData = localStorage.getItem("ipMaskData")
+        if (savedIPData) setIPMaskData(savedIPData)
     }, [])
 
     useEffect(() => {
         localStorage.setItem("maskImage", maskImage)
         localStorage.setItem("maskData", maskData)
-    }, [maskImage, maskData])
+        localStorage.setItem("ipMaskImage", ipMaskImage)
+        localStorage.setItem("ipMaskData", ipMaskData)
+    }, [maskImage, maskData, ipMaskImage, ipMaskData])
 
     const getNormalizedDimensions = () => {
         let greaterValue = img.width > img.height ? img.width : img.height
@@ -115,20 +126,24 @@ const Draw: React.FunctionComponent = (props) => {
     }, [siteHue, siteSaturation, siteLightness])
 
     const loadImg = async () => {
-        if (!drawImage) return setImg(null)
+        if (!drawImage && !ipDrawImage) return setImg(null)
         const img = document.createElement("img")
         await new Promise<void>((resolve) => {
             img.onload = () => resolve()
-            img.src = drawImage
+            img.src = drawImage || ipDrawImage
         })
         setImg(img)
     }
 
     const updateMask = async () => {
-        if (!maskData || !maskRef.current) return
-        const parsedData = JSON.parse(maskData)
+        if (!maskRef.current) return
+        const data = drawImage ? maskData : ipMaskData
+        if (!data) return
+        const parsedData = JSON.parse(data)
         for (let i = 0; i < parsedData.lines.length; i++) {
-            parsedData.lines[i].brushColor = functions.rotateColor("rgba(252, 21, 148, 1)", siteHue, siteSaturation, siteLightness)
+            if (parsedData.lines[i].brushColor !== "erase") {
+                parsedData.lines[i].brushColor = functions.rotateColor("rgba(252, 21, 148, 1)", siteHue, siteSaturation, siteLightness)
+            }
         }
         // @ts-ignore
         maskRef.current.loadSaveData(JSON.stringify(parsedData), true)
@@ -142,7 +157,7 @@ const Draw: React.FunctionComponent = (props) => {
                 updateMask()
             }, 100)
         }, 100)
-    }, [drawImage, maskData, siteHue, siteLightness, siteSaturation])
+    }, [drawImage, maskData, ipDrawImage, ipMaskData, siteHue, siteLightness, siteSaturation])
 
     const draw = () => {
         setErasing(false)
@@ -166,6 +181,7 @@ const Draw: React.FunctionComponent = (props) => {
 
     const close = () => {
         setDrawImage("")
+        setIPDrawImage("")
         setImg(null)
     }
 
@@ -203,12 +219,44 @@ const Draw: React.FunctionComponent = (props) => {
         const mask = await convertToWhite(image)
         // @ts-ignore
         const data = maskRef.current.getSaveData()
-        setMaskImage(mask)
-        setMaskData(data)
+        if (drawImage) {
+            setMaskImage(mask)
+            setMaskData(data)
+        } else if (ipDrawImage) {
+            setIPMaskImage(mask)
+            setIPMaskData(data)
+        }
         close()
     }
 
-    if (!drawImage || !img) return null
+    const invert = async () => {
+        if (!maskRef.current) return
+        // @ts-ignore
+        const data = maskRef.current.getSaveData()
+        const brushColor = functions.rotateColor("rgba(252, 21, 148, 1)", siteHue, siteSaturation, siteLightness)
+        const parsed = JSON.parse(data)
+        let megaLineIdx = parsed.lines.findIndex((l: any) => l.brushRadius === parsed.width + parsed.height)
+        if (megaLineIdx === -1) {
+            parsed.lines.unshift({brushColor: "erase", brushRadius: parsed.width + parsed.height, 
+            points: [{x: 0, y: 0}, {x: parsed.width, y: parsed.height}]})
+            megaLineIdx = 0
+        }
+        for (let i = 0; i < parsed.lines.length; i++) {
+            if (parsed.lines[i].brushColor === "erase") {
+                parsed.lines[i].brushColor = brushColor
+            } else {
+                parsed.lines[i].brushColor = "erase"
+            }
+            if (parsed.lines[i].points[0]?.erase) {
+                delete parsed.lines[i].points[0].erase
+            }
+        }
+        // @ts-ignore
+        maskRef.current.loadSaveData(JSON.stringify(parsed), true)
+    }
+
+    if (!img) return null
+    if (!drawImage && !ipDrawImage) return null
 
     const width = getNormalizedDimensions().width
     const height = getNormalizedDimensions().height
@@ -217,6 +265,7 @@ const Draw: React.FunctionComponent = (props) => {
         <div className="draw">
             <div className="draw-img-container">
                 <div className="draw-button-container">
+                    <img className="draw-button" onClick={invert} src={inpaintInvert} style={{filter: getFilter()}} draggable={false}/>
                     <img className="draw-button" onClick={draw} src={inpaintDraw} style={{filter: getFilter()}} draggable={false}/>
                     <img className="draw-button" onClick={erase} src={inpaintErase} style={{filter: getFilter()}} draggable={false}/>
                     <img className="draw-button" onClick={undo} src={inpaintUndo} style={{filter: getFilter()}} draggable={false}/>
@@ -235,10 +284,10 @@ const Draw: React.FunctionComponent = (props) => {
                     hideGrid={true}
                     canvasWidth={width}
                     canvasHeight={height}
-                    imgSrc={drawImage}
+                    imgSrc={drawImage || ipDrawImage}
                     erase={erasing}
                     loadTimeOffset={0}
-                    eraseColor="white"
+                    eraseColor="#000000"
                     style={{filter: `brightness(${imageBrightness + 100}%) contrast(${imageContrast + 100}%) hue-rotate(${imageHue - 180}deg) saturate(${imageSaturation}%)`}}
                 />
                 {/* <canvas ref={imageRef} className="draw-img"></canvas> */}
