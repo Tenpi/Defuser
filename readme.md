@@ -53,16 +53,19 @@ Git LFS: https://git-lfs.com
 
 Clone the repository.
 ```sh
-git clone https://github.com/Tenpi/Defuser.git
-cd defuser
+git clone https://github.com/Tenpi/Defuzers.git
+cd defuzers
 ```
 
-Download the models from https://huggingface.co/Moepi/models 
+Download the models from https://huggingface.co/defuzers/models
 and place them in the correct folder in "models". This script 
-should download all of them.
+should download all of them. 
+
+*Some models like ip adapter are quite big, you can omit them if 
+you aren't going to use them.
 ```sh
 git lfs install
-git clone https://huggingface.co/Moepi/models
+git clone https://huggingface.co/defuzers/models
 ```
 
 Install the code dependencies.

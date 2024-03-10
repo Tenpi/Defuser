@@ -99,6 +99,9 @@ const Classify: React.FunctionComponent = (props) => {
                 <div className="train-tab-container" onClick={() => setClassifyTab("unconditional")}>
                     <span className={classifyTab === "unconditional" ? "train-tab-text-selected" : "train-tab-text"}>Unconditional</span>
                 </div>
+                <div className="train-tab-container" onClick={() => setClassifyTab("lcm")}>
+                    <span className={classifyTab === "lcm" ? "train-tab-text-selected" : "train-tab-text"}>LCM</span>
+                </div>
             </div>
         )
     }
@@ -114,7 +117,9 @@ const Classify: React.FunctionComponent = (props) => {
             return <ConvertEmbedding/>
         } else if (classifyTab === "unconditional") {
             return <TrainUnconditional/>
-        } 
+        } else if (classifyTab === "lcm") {
+            return
+        }
     }
 
     return (
