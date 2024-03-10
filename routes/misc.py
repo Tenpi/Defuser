@@ -49,11 +49,13 @@ def interrupt_misc():
         socketio.emit("train interrupt")
         return "done"
 
-def image_classifier(train_dir, output_dir, num_train_epochs, learning_rate, gradient_accumulation_steps, lr_scheduler_type, save_steps, resolution):
+def image_classifier(train_dir, output_dir, num_train_epochs, learning_rate, gradient_accumulation_steps, 
+    lr_scheduler_type, save_steps, resolution, architecture):
     global gen_thread 
     gen_thread = threading.get_ident()
     socketio.emit("train starting")
-    train_classifier(train_dir, output_dir, num_train_epochs, learning_rate, gradient_accumulation_steps, lr_scheduler_type, save_steps, resolution)
+    train_classifier(train_dir, output_dir, num_train_epochs, learning_rate, gradient_accumulation_steps, 
+    lr_scheduler_type, save_steps, resolution, architecture)
     socketio.emit("train complete")
     open_folder("", output_dir)
     return "done"
@@ -69,11 +71,12 @@ def start_image_classifier():
     gradient_accumulation_steps = data["gradient_accumulation_steps"]
     lr_scheduler_type = data["learning_function"]
     resolution = data["resolution"] 
+    architecture = data["architecture"]
     output_dir = os.path.join(get_outputs_dir(), f"models/classifier/{pathlib.Path(train_dir).stem}")
     pathlib.Path(output_dir).mkdir(parents=True, exist_ok=True)
 
     thread = threading.Thread(target=image_classifier, args=(train_dir, output_dir, num_train_epochs, learning_rate, 
-    gradient_accumulation_steps, lr_scheduler_type, save_steps, resolution))
+    gradient_accumulation_steps, lr_scheduler_type, save_steps, resolution, architecture))
     thread.start()
     thread.join()
     gen_thread = None

@@ -33,6 +33,7 @@ const TrainClassifier: React.FunctionComponent = (props) => {
     const {resolution, setResolution} = useContext(ResolutionContext)
     const {gradientAccumulationSteps, setGradientAccumulationSteps} = useContext(GradientAccumulationStepsContext)
     const {learningFunction, setLearningFunction} = useContext(LearningFunctionContext)
+    const [architecture, setArchitecture] = useState("resnet")
     const progressBarRef = useRef(null) as React.RefObject<HTMLDivElement>
     const ref = useRef<HTMLCanvasElement>(null)
     const history = useHistory()
@@ -40,6 +41,15 @@ const TrainClassifier: React.FunctionComponent = (props) => {
     const getFilter = () => {
         return `hue-rotate(${siteHue - 180}deg) saturate(${siteSaturation}%) brightness(${siteLightness + 50}%)`
     }
+
+    useEffect(() => {
+        const savedArchitecture = localStorage.getItem("classifierArchitecture")
+        if (savedArchitecture) setArchitecture(savedArchitecture)
+    }, [])
+
+    useEffect(() => {
+        localStorage.setItem("classifierArchitecture", String(architecture))
+    }, [architecture])
 
     useEffect(() => {
         if (!socket) return
@@ -128,6 +138,7 @@ const TrainClassifier: React.FunctionComponent = (props) => {
         json.save_steps = Number(saveSteps)
         json.resolution = Number(resolution)
         json.learning_function = learningFunction
+        json.architecture = architecture
         await axios.post("/train-classifier", json)
     }
 
@@ -153,8 +164,17 @@ const TrainClassifier: React.FunctionComponent = (props) => {
         return learningFunction
     }
 
+    const getArchitecture = () => {
+        if (architecture === "resnet") return "ResNet"
+        if (architecture === "convnext") return "ConvNext"
+        if (architecture === "convnextv2") return "ConvNextV2"
+        if (architecture === "vit") return "ViT"
+        if (architecture === "beit") return "BEiT"
+        if (architecture === "swinv2") return "SwinV2"
+    }
+
     return (
-        <div className="train-tag" onMouseEnter={() => setEnableDrag(false)}>
+        <div className="train-tag" onMouseEnter={() => setEnableDrag(false)} style={{height: "85vh"}}>
             <div className="train-tag-folder-container">
                 <img className="train-tag-folder" src={folder} style={{filter: getFilter()}} onClick={updateLocation}/>
                 <div className="train-tag-location" onDoubleClick={openImageLocation}>{classifyFolderLocation ? classifyFolderLocation : "None"}</div>
@@ -175,6 +195,17 @@ const TrainClassifier: React.FunctionComponent = (props) => {
                     <div className="train-tag-settings-box">
                         <span className="train-tag-settings-title">Gradient Accumulation Steps:</span>
                         <input className="train-tag-settings-input" type="text" spellCheck={false} value={gradientAccumulationSteps} onChange={(event) => setGradientAccumulationSteps(event.target.value)}/>
+                    </div>
+                    <div className="train-tag-settings-box">
+                        <span className="train-tag-settings-title">Architecture:</span>
+                        <DropdownButton title={getArchitecture()} drop="down" className="checkpoint-selector">
+                            <Dropdown.Item active={architecture === "resnet"} onClick={() => setArchitecture("resnet")}>ResNet</Dropdown.Item>
+                            <Dropdown.Item active={architecture === "convnext"} onClick={() => setArchitecture("convnext")}>ConvNext</Dropdown.Item>
+                            <Dropdown.Item active={architecture === "convnextv2"} onClick={() => setArchitecture("convnextv2")}>ConvNextV2</Dropdown.Item>
+                            <Dropdown.Item active={architecture === "vit"} onClick={() => setArchitecture("vit")}>ViT</Dropdown.Item>
+                            <Dropdown.Item active={architecture === "beit"} onClick={() => setArchitecture("beit")}>BEiT</Dropdown.Item>
+                            <Dropdown.Item active={architecture === "swinv2"} onClick={() => setArchitecture("swinv2")}>SwinV2</Dropdown.Item>
+                        </DropdownButton>
                     </div>
                 </div>
                 <div className="train-tag-settings-column">

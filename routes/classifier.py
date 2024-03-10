@@ -26,7 +26,9 @@ from torchvision.transforms import (
 from tqdm.auto import tqdm
 
 import transformers
-from transformers import ResNetConfig, ResNetForImageClassification, ConvNextImageProcessor, get_scheduler
+from transformers import ResNetConfig, ResNetForImageClassification, ConvNextConfig, ConvNextImageProcessor, ConvNextForImageClassification, \
+ConvNextV2Config, ConvNextV2ForImageClassification, ViTConfig, ViTImageProcessor, ViTForImageClassification, Swinv2Config, Swinv2ForImageClassification, \
+Swin2SRImageProcessor, BeitConfig, BeitImageProcessor, BeitForImageClassification, get_scheduler
 from transformers.utils.versions import require_version
 
 from PIL import Image, ImageFile
@@ -102,14 +104,64 @@ def main(args):
     id2label = {str(i): label for i, label in enumerate(labels)}
     label2id = {label: str(i) for i, label in enumerate(labels)}
 
-    config = ResNetConfig(
-        num_labels=len(labels),
-        id2label=id2label,
-        label2id=label2id,
-        image_size=int(args.resolution)
-    )
-    image_processor = ConvNextImageProcessor(size={"width": int(args.resolution), "height": int(args.resolution)})
-    model = ResNetForImageClassification(config)
+    config = None
+    image_processor = None
+    model = None
+
+    if args.architecture == "resnet":
+        config = ResNetConfig(
+            num_labels=len(labels),
+            id2label=id2label,
+            label2id=label2id,
+            image_size=int(args.resolution)
+        )
+        image_processor = ConvNextImageProcessor(size={"width": int(args.resolution), "height": int(args.resolution)})
+        model = ResNetForImageClassification(config)
+    elif args.architecture == "convnext":
+        config = ConvNextConfig(
+            num_labels=len(labels),
+            id2label=id2label,
+            label2id=label2id,
+            image_size=int(args.resolution)
+        )
+        image_processor = ConvNextImageProcessor(size={"width": int(args.resolution), "height": int(args.resolution)})
+        model = ConvNextForImageClassification(config)
+    elif args.architecture == "convnextv2":
+        config = ConvNextV2Config(
+            num_labels=len(labels),
+            id2label=id2label,
+            label2id=label2id,
+            image_size=int(args.resolution)
+        )
+        image_processor = ConvNextImageProcessor(size={"width": int(args.resolution), "height": int(args.resolution)})
+        model = ConvNextV2ForImageClassification(config)
+    elif args.architecture == "vit":
+        config = ViTConfig(
+            num_labels=len(labels),
+            id2label=id2label,
+            label2id=label2id,
+            image_size=int(args.resolution)
+        )
+        image_processor = ViTImageProcessor(size={"width": int(args.resolution), "height": int(args.resolution)})
+        model = ViTForImageClassification(config)
+    elif args.architecture == "swinv2":
+        config = Swinv2Config(
+            num_labels=len(labels),
+            id2label=id2label,
+            label2id=label2id,
+            image_size=int(args.resolution)
+        )
+        image_processor = Swin2SRImageProcessor(size={"width": int(args.resolution), "height": int(args.resolution)})
+        model = Swinv2ForImageClassification(config)
+    elif args.architecture == "beit":
+        config = BeitConfig(
+            num_labels=len(labels),
+            id2label=id2label,
+            label2id=label2id,
+            image_size=int(args.resolution)
+        )
+        image_processor = BeitImageProcessor(size={"width": int(args.resolution), "height": int(args.resolution)})
+        model = BeitForImageClassification(config)
 
     if "shortest_edge" in image_processor.size:
         size = image_processor.size["shortest_edge"]
@@ -354,7 +406,8 @@ class DotDict(dict):
     __setattr__ = dict.__setitem__
     __delattr__ = dict.__delitem__
 
-def get_args(train_dir, output_dir, num_train_epochs, learning_rate, gradient_accumulation_steps, lr_scheduler_type, save_steps, resolution):
+def get_args(train_dir, output_dir, num_train_epochs, learning_rate, gradient_accumulation_steps, 
+             lr_scheduler_type, save_steps, resolution, architecture):
     args = DotDict()
     args.dataset_name = None
     args.train_dir = train_dir
@@ -380,13 +433,15 @@ def get_args(train_dir, output_dir, num_train_epochs, learning_rate, gradient_ac
     args.image_column_name = "image"
     args.label_column_name = "label"
     args.resolution = resolution
+    args.architecture = architecture
 
     if args.output_dir is not None:
         os.makedirs(args.output_dir, exist_ok=True)
 
     return args
 
-def train_classifier(train_dir, output_dir, num_train_epochs, learning_rate, gradient_accumulation_steps, lr_scheduler_type, save_steps, resolution):
+def train_classifier(train_dir, output_dir, num_train_epochs, learning_rate, gradient_accumulation_steps, 
+    lr_scheduler_type, save_steps, resolution, architecture):
 
     if not train_dir: train_dir = ""
     if not output_dir: output_dir = ""
@@ -396,6 +451,8 @@ def train_classifier(train_dir, output_dir, num_train_epochs, learning_rate, gra
     if not learning_rate: learning_rate = 5e-5
     if not lr_scheduler_type: lr_scheduler_type = "linear"
     if not gradient_accumulation_steps: gradient_accumulation_steps = 1
+    if not architecture: architecture = "resnet"
 
-    args = get_args(train_dir, output_dir, num_train_epochs, learning_rate, gradient_accumulation_steps, lr_scheduler_type, save_steps, resolution)
+    args = get_args(train_dir, output_dir, num_train_epochs, learning_rate, gradient_accumulation_steps, 
+    lr_scheduler_type, save_steps, resolution, architecture)
     main(args)
