@@ -9,6 +9,7 @@ from .colorize_sketch import colorize_sketch
 from .layer_divide import layer_divide
 from .model_convert import model_convert
 from .convert_to_ckpt import convert_to_ckpt
+from .unconditional import train_unconditional
 from transformers import BeitFeatureExtractor, BeitForImageClassification
 from PIL import Image
 import os
@@ -229,6 +230,40 @@ def start_layer_divide():
     area = int(data["area"])
     downscale = data["downscale"]
     thread = threading.Thread(target=run_layer_divide, args=(input_image, divide_mode, loops, clusters, cluster_threshold, blur_size, layer_mode, area, downscale))
+    thread.start()
+    thread.join()
+    gen_thread = None
+    return "done"
+
+def unconditional(name, train_data, output, num_train_epochs, learning_rate, resolution,
+    gradient_accumulation_steps, save_steps, save_image_steps, lr_scheduler):
+    global gen_thread 
+    gen_thread = threading.get_ident()
+    socketio.emit("train starting")
+    train_unconditional(name, train_data, output, num_train_epochs, learning_rate, resolution,
+    gradient_accumulation_steps, save_steps, save_image_steps, lr_scheduler)
+    socketio.emit("train complete")
+    open_folder("", f"{output}")
+    return "done"
+
+@app.route("/train-unconditional", methods=["POST"])
+def start_unconditional():
+    global gen_thread
+    data = flask.request.json
+    name = data["name"]
+    train_data = data["train_data"].strip()
+    num_train_epochs = data["num_train_epochs"]
+    learning_rate = data["learning_rate"]
+    resolution = data["resolution"]
+    save_steps = data["save_steps"] 
+    gradient_accumulation_steps = data["gradient_accumulation_steps"]
+    save_image_steps = data["save_image_steps"]
+    lr_scheduler = data["learning_function"]
+    output = os.path.join(get_outputs_dir(), f"models/unconditional/{name}")
+    pathlib.Path(output).mkdir(parents=True, exist_ok=True)
+
+    thread = threading.Thread(target=unconditional, args=(name, train_data, output, num_train_epochs, learning_rate, resolution,
+    gradient_accumulation_steps, save_steps, save_image_steps, lr_scheduler))
     thread.start()
     thread.join()
     gen_thread = None
