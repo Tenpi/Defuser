@@ -437,6 +437,40 @@ def encode_prompt_xl(text_encoders, tokenizers, prompt, text_input_ids_list=None
     pooled_prompt_embeds = pooled_prompt_embeds.view(bs_embed, -1)
     return prompt_embeds, pooled_prompt_embeds
 
+def create_unet():
+    return UNet2DConditionModel(
+        sample_size = 64,
+        in_channels = 4,
+        out_channels = 4,
+        center_input_sample = False,
+        flip_sin_to_cos = True,
+        freq_shift = 0,
+        layers_per_block = 2,
+        block_out_channels=(320, 640, 1280, 1280),
+        act_fn = "silu",
+        cross_attention_dim = 768,
+        down_block_types=(
+            "CrossAttnDownBlock2D", 
+            "CrossAttnDownBlock2D", 
+            "CrossAttnDownBlock2D", 
+            "DownBlock2D"
+        ),
+        mid_block_type = "UNetMidBlock2DCrossAttn",
+        up_block_types=(
+            "UpBlock2D", 
+            "CrossAttnUpBlock2D", 
+            "CrossAttnUpBlock2D", 
+            "CrossAttnUpBlock2D"
+        ),
+        only_cross_attention = False,
+        downsample_padding = 1,
+        mid_block_scale_factor = 1.0,
+        dropout = 0.0,
+        norm_num_groups = 32,
+        norm_eps = 1e-5,
+        transformer_layers_per_block = 1
+    )
+
 def main(args):
     global pipeline
     name = args.instance_prompt
@@ -558,13 +592,19 @@ def main(args):
     # Load scheduler and models
     noise_scheduler = pipeline.scheduler #DDPMScheduler.from_config(pipeline.scheduler.config)
     text_encoder_one = pipeline.text_encoder #CLIPTextModel(pipeline.text_encoder.config)
+    if args.new_text_encoder:
+        text_encoder_one = CLIPTextModel(pipeline.text_encoder.config)
     text_encoder_two = None
     if xl:
         text_encoder_two = pipeline.text_encoder_2
+        if args.new_text_encoder:
+            text_encoder_two = CLIPTextModel(pipeline.text_encoder_2.config)
 
     vae = pipeline.vae
     vae_scaling_factor = vae.config.scaling_factor
     unet = pipeline.unet
+    if args.new_unet:
+        unet = create_unet()
 
     if args.train_text_encoder_ti:
         # we parse the provided token identifier (or identifiers) into a list. s.t. - "TOK" -> ["TOK"], "TOK,
@@ -1450,7 +1490,7 @@ class DotDict(dict):
     __delattr__ = dict.__delitem__
 
 def train_dreambooth(images, model_name, train_data, instance_prompt, output, num_train_epochs, learning_rate, text_encoder_lr, resolution, save_steps, 
-    gradient_accumulation_steps, validation_prompt, validation_steps, lr_scheduler):
+    gradient_accumulation_steps, validation_prompt, validation_steps, lr_scheduler, new_unet, new_text_encoder):
 
     if not model_name: model_name = ""
     if not train_data: train_data = ""
@@ -1465,6 +1505,8 @@ def train_dreambooth(images, model_name, train_data, instance_prompt, output, nu
     if not validation_prompt: validation_prompt = ""
     if not lr_scheduler: lr_scheduler = "constant"
     if not gradient_accumulation_steps: gradient_accumulation_steps = 1
+    if not new_unet: new_unet = False
+    if not new_text_encoder: new_text_encoder = False
 
     steps_per_epoch = math.ceil(len(images) / gradient_accumulation_steps)
     max_train_steps = num_train_epochs * steps_per_epoch
@@ -1475,5 +1517,7 @@ def train_dreambooth(images, model_name, train_data, instance_prompt, output, nu
     gradient_accumulation_steps, validation_prompt, validation_steps, lr_scheduler)
 
     options.sources = get_sources(train_data)
+    options.new_unet = new_unet
+    options.new_text_encoder = new_text_encoder
 
     main(options)

@@ -6,7 +6,6 @@ from .textual_inversion import train_textual_inversion
 from .hypernetwork import train_hypernetwork
 from .lora import train_lora
 from .dreambooth import train_dreambooth
-from .checkpoint import train_checkpoint
 from .checkpoint_merger import merge
 from .info import show_in_folder
 from pysaucenao import SauceNao
@@ -306,12 +305,12 @@ def start_lora():
     return "done"
 
 def dreambooth(images, model_name, train_data, instance_prompt, output, num_train_epochs, learning_rate, text_encoder_lr, resolution, save_steps, 
-    gradient_accumulation_steps, validation_prompt, validation_steps, lr_scheduler):
+    gradient_accumulation_steps, validation_prompt, validation_steps, lr_scheduler, new_unet, new_text_encoder):
     global gen_thread 
     gen_thread = threading.get_ident()
     socketio.emit("train starting")
     train_dreambooth(images, model_name, train_data, instance_prompt, output, num_train_epochs, learning_rate, text_encoder_lr, resolution, save_steps, 
-    gradient_accumulation_steps, validation_prompt, validation_steps, lr_scheduler)
+    gradient_accumulation_steps, validation_prompt, validation_steps, lr_scheduler, new_unet, new_text_encoder)
     socketio.emit("train complete")
     show_in_folder("", f"{output}/{instance_prompt}.ckpt")
     return "done"
@@ -333,51 +332,14 @@ def start_dreambooth():
     validation_prompt = data["validation_prompt"]
     validation_steps = data["validation_steps"]
     lr_scheduler = data["learning_function"]
+    new_unet = data["new_unet"]
+    new_text_encoder = data["new_text_encoder"]
     output = os.path.join(get_outputs_dir(), f"models/dreambooth/{instance_prompt}")
     pathlib.Path(output).mkdir(parents=True, exist_ok=True)
     model_name = os.path.join(get_models_dir(), f"diffusion/{model_name}")
 
     thread = threading.Thread(target=dreambooth, args=(images, model_name, train_data, instance_prompt, output, num_train_epochs, learning_rate, text_encoder_lr, resolution, save_steps, 
-    gradient_accumulation_steps, validation_prompt, validation_steps, lr_scheduler))
-    thread.start()
-    thread.join()
-    gen_thread = None
-    return "done"
-
-def checkpoint(images, model_name, train_data, instance_prompt, output, num_train_epochs, learning_rate, text_encoder_lr, resolution, save_steps, 
-    gradient_accumulation_steps, validation_prompt, validation_steps, lr_scheduler):
-    global gen_thread 
-    gen_thread = threading.get_ident()
-    socketio.emit("train starting")
-    train_checkpoint(images, model_name, train_data, instance_prompt, output, num_train_epochs, learning_rate, text_encoder_lr, resolution, save_steps, 
-    gradient_accumulation_steps, validation_prompt, validation_steps, lr_scheduler)
-    socketio.emit("train complete")
-    show_in_folder("", f"{output}/{instance_prompt}.ckpt")
-    return "done"
-
-@app.route("/train-checkpoint", methods=["POST"])
-def start_checkpoint():
-    global gen_thread
-    data = flask.request.json
-    images = data["images"]
-    model_name = data["model_name"]
-    train_data = data["train_data"].strip()
-    instance_prompt = data["instance_prompt"]
-    num_train_epochs = data["num_train_epochs"]
-    learning_rate = data["learning_rate"]
-    text_encoder_lr = data["text_encoder_lr"]
-    resolution = data["resolution"]
-    save_steps = data["save_steps"] 
-    gradient_accumulation_steps = data["gradient_accumulation_steps"]
-    validation_prompt = data["validation_prompt"]
-    validation_steps = data["validation_steps"]
-    lr_scheduler = data["learning_function"]
-    output = os.path.join(get_outputs_dir(), f"models/checkpoint/{instance_prompt}")
-    pathlib.Path(output).mkdir(parents=True, exist_ok=True)
-    model_name = os.path.join(get_models_dir(), f"diffusion/{model_name}")
-
-    thread = threading.Thread(target=checkpoint, args=(images, model_name, train_data, instance_prompt, output, num_train_epochs, learning_rate, text_encoder_lr, resolution, save_steps, 
-    gradient_accumulation_steps, validation_prompt, validation_steps, lr_scheduler))
+    gradient_accumulation_steps, validation_prompt, validation_steps, lr_scheduler, new_unet, new_text_encoder))
     thread.start()
     thread.join()
     gen_thread = None

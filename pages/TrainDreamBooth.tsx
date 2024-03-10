@@ -11,6 +11,8 @@ import xIcon from "../assets/icons/x.png"
 import xIconHover from "../assets/icons/x-hover.png"
 import functions from "../structures/Functions"
 import folder from "../assets/icons/folder.png"
+import checkboxChecked from "../assets/icons/checkbox2-checked.png"
+import checkbox from "../assets/icons/checkbox2.png"
 import TrainImage from "../components/TrainImage"
 import "./styles/traintag.less"
 import axios from "axios"
@@ -55,6 +57,8 @@ const TrainDreamBooth: React.FunctionComponent = (props) => {
     const [sliceIndex, setSliceIndex] = useState(0)
     const [hover, setHover] = useState(false)
     const [xHover, setXHover] = useState(false)
+    const [newUnet, setNewUnet] = useState(false)
+    const [newTextEncoder, setNewTextEncoder] = useState(false)
     const progressBarRef = useRef(null) as React.RefObject<HTMLDivElement>
     const ref = useRef<HTMLCanvasElement>(null)
     const history = useHistory()
@@ -101,6 +105,18 @@ const TrainDreamBooth: React.FunctionComponent = (props) => {
         }
         return jsx
     }
+
+    useEffect(() => {
+        const savedNewUnet = localStorage.getItem("newUnet")
+        if (savedNewUnet) setNewUnet(savedNewUnet === "true")
+        const savedNewTextEncoder = localStorage.getItem("newTextEncoder")
+        if (savedNewTextEncoder) setNewTextEncoder(savedNewTextEncoder === "true")
+    }, [])
+
+    useEffect(() => {
+        localStorage.setItem("newUnet", String(newUnet))
+        localStorage.setItem("newTextEncoder", String(newTextEncoder))
+    }, [newUnet, newTextEncoder])
 
     useEffect(() => {
         if (!socket) return
@@ -230,6 +246,8 @@ const TrainDreamBooth: React.FunctionComponent = (props) => {
         json.validation_steps = Number(previewSteps)
         json.validation_prompt = previewPrompt
         json.learning_function = learningFunction
+        json.new_unet = newUnet
+        json.new_text_encoder = newTextEncoder
         await axios.post("/train-dreambooth", json)
     }
 
@@ -256,6 +274,8 @@ const TrainDreamBooth: React.FunctionComponent = (props) => {
         setGradientAccumulationSteps("1")
         setResolution("256")
         setLearningFunction("constant")
+        setNewUnet(false)
+        setNewTextEncoder(false)
     }
 
     const getLearningFunction = () => {
@@ -293,6 +313,14 @@ const TrainDreamBooth: React.FunctionComponent = (props) => {
                     <div className="train-tag-settings-box">
                         <span className="train-tag-settings-title">Gradient Accumulation Steps:</span>
                         <input className="train-tag-settings-input" type="text" spellCheck={false} value={gradientAccumulationSteps} onChange={(event) => setGradientAccumulationSteps(event.target.value)}/>
+                    </div>
+                    <div className="train-tag-settings-box">
+                        <span className="train-tag-settings-title">New Unet:</span>
+                        <img className="train-tag-settings-img" src={newUnet ? checkboxChecked : checkbox} onClick={() => setNewUnet((prev: boolean) => !prev)} style={{filter: getFilter()}}/>
+                    </div>
+                    <div className="train-tag-settings-box">
+                        <span className="train-tag-settings-title">New Text Encoder:</span>
+                        <img className="train-tag-settings-img" src={newTextEncoder ? checkboxChecked : checkbox} onClick={() => setNewTextEncoder((prev: boolean) => !prev)} style={{filter: getFilter()}}/>
                     </div>
                 </div>
                 <div className="train-tag-settings-column">
