@@ -8,6 +8,7 @@ import random
 import shutil
 import warnings
 from pathlib import Path
+import deepcopy
 
 import numpy as np
 import PIL
@@ -23,6 +24,7 @@ from torch.utils.data import Dataset
 from torchvision import transforms
 from tqdm.auto import tqdm
 from transformers import CLIPTextModel, CLIPTokenizer
+from einops import repeat
 
 import diffusers
 from diffusers import (
@@ -122,13 +124,14 @@ def log_validation(text_encoder, tokenizer, unet, vae, options, accelerator, wei
     torch.cuda.empty_cache()
     return images
 
-def save_progress(text_encoder, placeholder_token_ids, accelerator, options, save_path, save_data):
+def save_progress(text_encoder, placeholder_token_ids, accelerator, options, save_path, save_path_neg, save_data):
     logger.info("Saving embeddings")
     learned_embeds = (
         accelerator.unwrap_model(text_encoder)
         .get_input_embeddings()
         .weight[min(placeholder_token_ids) : max(placeholder_token_ids) + 1]
     )
+    print(learned_embeds)
     learned_embeds_dict = {
         options.placeholder_token: learned_embeds.detach().cpu(),
         "name": save_data.name,
@@ -142,7 +145,21 @@ def save_progress(text_encoder, placeholder_token_ids, accelerator, options, sav
         "learning_function": save_data.learning_function,
         "sources": save_data.sources
     }
+    learned_embeds_neg_dict = {
+        options.placeholder_token: learned_embeds.detach().cpu(),
+        "name": save_data.name + "-neg",
+        "vectors": save_data.neg_vectors,
+        "steps": save_data.steps,
+        "epochs": save_data.epochs,
+        "checkpoint": save_data.checkpoint,
+        "images": save_data.images,
+        "learning_rate": save_data.learning_rate,
+        "gradient_accumulation_steps": save_data.gradient_accumulation_steps,
+        "learning_function": save_data.learning_function,
+        "sources": save_data.sources
+    }
     torch.save(learned_embeds_dict, save_path)
+    torch.save(learned_embeds_neg_dict, save_path_neg)
 
 def is_image(filename):
     ext = pathlib.Path(filename).suffix.lower().replace(".", "")
@@ -227,11 +244,41 @@ class TextualInversionDataset(Dataset):
         example["pixel_values"] = torch.from_numpy(image).permute(2, 0, 1)
         return example
 
+class DreamArtist():
+    def __init__(self, cfg_scale, cfg_func, num_train_timesteps):
+        self.cfg_low = cfg_scale
+        self.cfg_high = cfg_scale
+        self.cfg_func = cfg_func
+        self.num_train_timesteps=num_train_timesteps
+
+    def pre(self, noisy_latents, timesteps):
+        self.t_raw = timesteps
+        noisy_latents = repeat(noisy_latents, "b c h w -> (pn b) c h w", pn=2)
+        timesteps = timesteps.repeat(2)
+        return noisy_latents, timesteps
+
+    def post(self, model_pred):
+        e_t_uncond, e_t = model_pred.chunk(2)
+        if self.cfg_low != self.cfg_high:
+            rate = self.t_raw / (self.num_train_timesteps - 1)
+            if self.cfg_func == "cos":
+                rate = torch.cos((rate - 1) * math.pi / 2)
+            elif self.cfg_func == "cos2":
+                rate = 1 - torch.cos(rate * math.pi / 2)
+            elif self.cfg_func == "ln":
+                pass
+            else:
+                rate = eval(self.cfg_func)
+            rate = rate.view(-1,1,1,1)
+        else:
+            rate = 1
+        model_pred = e_t_uncond + ((self.cfg_high - self.cfg_low) * rate + self.cfg_low) * (e_t - e_t_uncond)
+        return model_pred
 
 def main(options):
     global pipeline
     name = options.initializer_token
-    neg_name = options.initializer_token + "-neg"
+    name_neg = options.initializer_token + "-neg"
 
     xl = False
     if "XL" in options.model:
@@ -282,6 +329,7 @@ def main(options):
 
     noise_scheduler = generator.scheduler
     text_encoder = generator.text_encoder
+    text_encoder_neg = deepcopy(generator.text_encoder)
     vae = generator.vae
     unet = generator.unet
     text_encoder_2 = None
@@ -301,16 +349,21 @@ def main(options):
     placeholder_tokens += additional_tokens
 
     token_ids = tokenizer.encode(options.initializer_token, add_special_tokens=False)
+    token_ids_neg = tokenizer.encode(options.initializer_token + "-neg", add_special_tokens=False)
 
     initializer_token_id = token_ids[0]
+    initializer_token_id_neg = token_ids_neg[0]
     placeholder_token_ids = tokenizer.convert_tokens_to_ids(placeholder_tokens)
 
     text_encoder.resize_token_embeddings(len(tokenizer))
+    text_encoder_neg.resize_token_embeddings(len(tokenizer))
 
     token_embeds = text_encoder.get_input_embeddings().weight.data
+    token_embeds_neg = text_encoder_neg.get_input_embeddings().weight.data
     with torch.no_grad():
         for token_id in placeholder_token_ids:
             token_embeds[token_id] = token_embeds[initializer_token_id].clone()
+            token_embeds_neg[token_id] = token_embeds_neg[initializer_token_id_neg].clone()
 
     vae.requires_grad_(False)
     unet.requires_grad_(False)
@@ -319,10 +372,14 @@ def main(options):
     text_encoder.text_model.encoder.requires_grad_(False)
     text_encoder.text_model.final_layer_norm.requires_grad_(False)
     text_encoder.text_model.embeddings.position_embedding.requires_grad_(False)
+    text_encoder_neg.text_model.encoder.requires_grad_(False)
+    text_encoder_neg.text_model.final_layer_norm.requires_grad_(False)
+    text_encoder_neg.text_model.embeddings.position_embedding.requires_grad_(False)
 
     if options.gradient_checkpointing:
         unet.train()
         text_encoder.gradient_checkpointing_enable()
+        text_encoder_neg.gradient_checkpointing_enable()
         unet.enable_gradient_checkpointing()
 
     if options.scale_lr:
@@ -330,9 +387,10 @@ def main(options):
             options.learning_rate * options.gradient_accumulation_steps * options.train_batch_size * accelerator.num_processes
         )
 
-    optimizer = torch.optim.AdamW(
-        text_encoder.get_input_embeddings().parameters(),
-        lr=options.learning_rate,
+    optimizer = torch.optim.AdamW([
+        {"params": text_encoder.get_input_embeddings().parameters()},
+        {"params": text_encoder_neg.get_input_embeddings().parameters(), "lr": options.learning_rate * options.negative_weight}
+        ], lr=options.learning_rate,
         betas=(options.adam_beta1, options.adam_beta2),
         weight_decay=options.adam_weight_decay,
         eps=options.adam_epsilon,
@@ -378,8 +436,8 @@ def main(options):
         power=power
     )
 
-    text_encoder, optimizer, train_dataloader, lr_scheduler = accelerator.prepare(
-        text_encoder, optimizer, train_dataloader, lr_scheduler
+    text_encoder, text_encoder_neg, optimizer, train_dataloader, lr_scheduler = accelerator.prepare(
+        text_encoder, text_encoder_neg, optimizer, train_dataloader, lr_scheduler
     )
 
     weight_dtype = torch.float32
@@ -434,13 +492,15 @@ def main(options):
             resume_step = resume_global_step % (num_update_steps_per_epoch * options.gradient_accumulation_steps)
             global_step = resume_global_step
 
-    progress_bar = tqdm(range(0, options.max_train_steps), initial=global_step, disable=not accelerator.is_local_main_process)
+    progress_bar = tqdm(range(global_step, options.max_train_steps), disable=not accelerator.is_local_main_process)
     progress_bar.set_description("Steps")
 
     orig_embeds_params = accelerator.unwrap_model(text_encoder).get_input_embeddings().weight.data.clone()
+    orig_embeds_params_neg = accelerator.unwrap_model(text_encoder_neg).get_input_embeddings().weight.data.clone()
 
     for epoch in range(first_epoch, options.num_train_epochs):
         text_encoder.train()
+        text_encoder_neg.train()
         for step, batch in enumerate(train_dataloader):
             socketio.emit("train progress", {"step": global_step + 1, "total_step": options.max_train_steps, "epoch": epoch + 1, "total_epoch": options.num_train_epochs})
             if options.resume_from_checkpoint and epoch == first_epoch and step < resume_step:
@@ -484,11 +544,17 @@ def main(options):
                     added_cond_kwargs = {"text_embeds": encoder_output_2[0], "time_ids": add_time_ids}
                     encoder_hidden_states = torch.cat([encoder_hidden_states, encoder_hidden_states_2], dim=-1)
 
+                dreamartist = DreamArtist(options.cfg_scale, options.cfg_func, noise_scheduler.config.num_train_timesteps)
+
                 model_pred = None
                 if xl:
+                    noisy_latents, timesteps = dreamartist.pre(noisy_latents, timesteps)
                     model_pred = unet(noisy_latents, timesteps, encoder_hidden_states, added_cond_kwargs=added_cond_kwargs).sample
+                    model_pred = dreamartist.post(model_pred)
                 else:
+                    noisy_latents, timesteps = dreamartist.pre(noisy_latents, timesteps)
                     model_pred = unet(noisy_latents, timesteps, encoder_hidden_states).sample
+                    model_pred = dreamartist.post(model_pred)
 
                 if noise_scheduler.config.prediction_type == "epsilon":
                     target = noise
@@ -511,6 +577,9 @@ def main(options):
                     accelerator.unwrap_model(text_encoder).get_input_embeddings().weight[
                         index_no_updates
                     ] = orig_embeds_params[index_no_updates]
+                    accelerator.unwrap_model(text_encoder_neg).get_input_embeddings().weight[
+                        index_no_updates
+                    ] = orig_embeds_params_neg[index_no_updates]
 
             if accelerator.sync_gradients:
                 images = []
@@ -518,6 +587,7 @@ def main(options):
                 global_step += 1
                 if global_step % options.save_steps == 0:
                     save_path = os.path.join(options.output_dir, f"{name}-{epoch + 1}.bin")
+                    save_path_neg = os.path.join(options.output_dir, f"{name}-{epoch + 1}-neg.bin")
                     save_data = {
                         "name": name,
                         "vectors": options.num_vectors,
@@ -528,12 +598,13 @@ def main(options):
                         "learning_rate": options.learning_rate,
                         "gradient_accumulation_steps": options.gradient_accumulation_steps,
                         "learning_function": learning_function,
+                        "cfg": options.cfg_scale,
                         "sources": options.sources
                     }
                     options.name = name
                     options.steps = global_step
                     options.epochs = epoch
-                    save_progress(text_encoder, placeholder_token_ids, accelerator, options, save_path, DotDict(save_data))
+                    save_progress(text_encoder, text_encoder_neg, placeholder_token_ids, accelerator, options, save_path, save_path_neg, DotDict(save_data))
 
                 if accelerator.is_main_process:
                     if global_step % options.checkpointing_steps == 0:
@@ -598,6 +669,7 @@ def main(options):
             pipeline.tokenizer = tokenizer
             pipeline.save_pretrained(options.output_dir)
         save_path = os.path.join(options.output_dir, f"{name}.bin")
+        save_path_neg = os.path.join(options.output_dir, f"{name}-neg.bin")
         save_data = {
             "name": name,
             "vectors": options.num_vectors,
@@ -608,14 +680,18 @@ def main(options):
             "learning_rate": options.learning_rate,
             "gradient_accumulation_steps": options.gradient_accumulation_steps,
             "learning_function": learning_function,
+            "cfg": options.cfg_scale,
             "sources": options.sources
         }
-        save_progress(text_encoder, placeholder_token_ids, accelerator, options, save_path, DotDict(save_data))
+        save_progress(text_encoder, text_encoder_neg, placeholder_token_ids, accelerator, options, save_path, save_path_neg, DotDict(save_data))
     accelerator.end_training()
 
 def get_options(model_name, train_data, initializer_token, output_dir, max_train_steps, learning_rate, resolution,
-    save_steps, num_vectors, gradient_accumulation_steps, validation_prompt, validation_steps, lr_scheduler):
+    save_steps, num_vectors, gradient_accumulation_steps, validation_prompt, validation_steps, lr_scheduler, cfg_scale, negative_weight):
     options = {}
+    options["cfg_scale"] = cfg_scale
+    options["negative_weight"] = negative_weight
+    options["cfg_func"] = "ln"
     options["save_steps"] = save_steps
     options["save_as_full_pipeline"] = False
     options["num_vectors"] = num_vectors
@@ -660,8 +736,8 @@ class DotDict(dict):
     __setattr__ = dict.__setitem__
     __delattr__ = dict.__delitem__
 
-def train_textual_inversion(images, model_name, train_data, token, output, num_train_epochs, learning_rate, resolution, save_epochs, num_vectors, 
-    gradient_accumulation_steps, validation_prompt, validation_epochs, lr_scheduler):
+def train_dreamartist(images, model_name, train_data, token, output, num_train_epochs, learning_rate, resolution, save_epochs, num_vectors, 
+    gradient_accumulation_steps, validation_prompt, validation_epochs, lr_scheduler, cfg_scale, negative_weight):
 
     if not model_name: model_name = ""
     if not train_data: train_data = ""
@@ -676,6 +752,8 @@ def train_textual_inversion(images, model_name, train_data, token, output, num_t
     if not lr_scheduler: lr_scheduler = "constant"
     if not num_vectors: num_vectors = 1
     if not gradient_accumulation_steps: gradient_accumulation_steps = 1
+    if not cfg_scale: cfg_scale = 3.0
+    if not negative_weight: negative_weight = 1.0
 
     steps_per_epoch = math.ceil(len(images) / gradient_accumulation_steps)
     max_train_steps = num_train_epochs * steps_per_epoch
@@ -683,7 +761,7 @@ def train_textual_inversion(images, model_name, train_data, token, output, num_t
     validation_steps = validation_epochs * steps_per_epoch
 
     options = get_options(model_name, train_data, token, output, max_train_steps, learning_rate, resolution, save_steps, num_vectors, 
-    gradient_accumulation_steps, validation_prompt, validation_steps, lr_scheduler)
+    gradient_accumulation_steps, validation_prompt, validation_steps, lr_scheduler, cfg_scale, negative_weight)
 
     options.sources = get_sources(train_data)
 

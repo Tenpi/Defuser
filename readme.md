@@ -13,7 +13,7 @@ models is supported. It aims to be simple and fast to use.
 - Segmentate (remove background) from images.
 - Extract lineart from images.
 - Load checkpoints, vae, textual inversions, hypernetworks, and lora.
-- Train textual inversions, hypernetworks, lora, dreambooth, and new checkpoints.
+- Train textual inversions, hypernetworks, lora, dreambooth, dreamartist, and new checkpoints.
 - Merge two or three checkpoints together.
 - Interrogate images with WDTagger, DeepBooru, or BLIP.
 - Auto tag and source images with interrogator and saucenao.

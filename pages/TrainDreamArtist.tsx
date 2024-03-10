@@ -19,7 +19,7 @@ let timer = null as any
 let clicking = false
 let scrollLock = false
 
-const TrainTextualInversion: React.FunctionComponent = (props) => {
+const TrainDreamArtist: React.FunctionComponent = (props) => {
     const {enableDrag, setEnableDrag} = useContext(EnableDragContext)
     const {mobile, setMobile} = useContext(MobileContext)
     const {siteHue, setSiteHue} = useContext(SiteHueContext)
@@ -39,6 +39,8 @@ const TrainTextualInversion: React.FunctionComponent = (props) => {
     const {trainCompleted, setTrainCompleted} = useContext(TrainCompletedContext)
     const {modelName, setModelName} = useContext(ModelNameContext)
     const [vectors, setVectors] = useState("3")
+    const [negativeVectors, setNegativeVectors] = useState("6")
+    const [cfgScale, setCFGScale] = useState("3")
     const {epochs, setEpochs} = useContext(EpochsContext)
     const {saveEpochs, setSaveEpochs} = useContext(SaveEpochsContext)
     const {previewEpochs, setPreviewEpochs} = useContext(PreviewEpochsContext)
@@ -105,11 +107,17 @@ const TrainTextualInversion: React.FunctionComponent = (props) => {
     useEffect(() => {
         const savedVectors = localStorage.getItem("vectors")
         if (savedVectors) setVectors(savedVectors)
+        const savedNegativeVectors = localStorage.getItem("negativeVectors")
+        if (savedNegativeVectors) setNegativeVectors(savedNegativeVectors)
+        const savedCFG = localStorage.getItem("dreamartistCFG")
+        if (savedCFG) setCFGScale(savedCFG)
     }, [])
 
     useEffect(() => {
         localStorage.setItem("vectors", String(vectors))
-    }, [vectors])
+        localStorage.setItem("negativeVectors", String(negativeVectors))
+        localStorage.setItem("dreamartistCFG", String(cfgScale))
+    }, [vectors, negativeVectors])
 
     useEffect(() => {
         if (!socket) return
@@ -231,6 +239,8 @@ const TrainTextualInversion: React.FunctionComponent = (props) => {
         json.train_data = folderLocation
         json.token = trainName
         json.num_vectors = Number(vectors)
+        json.num_neg_vectors = Number(negativeVectors)
+        json.cfg_scale = Number(cfgScale)
         json.num_train_epochs = Number(epochs)
         json.learning_rate = Number(learningRate)
         json.gradient_accumulation_steps = Number(gradientAccumulationSteps)
@@ -239,7 +249,7 @@ const TrainTextualInversion: React.FunctionComponent = (props) => {
         json.validation_epochs = Number(previewEpochs)
         json.validation_prompt = previewPrompt
         json.learning_function = learningFunction
-        await axios.post("/train-textual-inversion", json)
+        await axios.post("/train-dreamartist", json)
     }
 
     const interruptTrain = async () => {
@@ -251,12 +261,14 @@ const TrainTextualInversion: React.FunctionComponent = (props) => {
     }
 
     const openFolder = async () => {
-        await axios.post("/open-folder", {path: `outputs/models/textual inversion/${trainName}`})
+        await axios.post("/open-folder", {path: `outputs/models/dreamartist/${trainName}`})
     }
 
     const reset = () => {
         setTrainName("")
         setVectors("3")
+        setNegativeVectors("6")
+        setCFGScale("3")
         setEpochs("20")
         setSaveEpochs("5")
         setPreviewEpochs("5")
@@ -290,6 +302,14 @@ const TrainTextualInversion: React.FunctionComponent = (props) => {
                     <div className="train-tag-settings-box">
                         <span className="train-tag-settings-title">Vectors:</span>
                         <input className="train-tag-settings-input" type="text" spellCheck={false} value={vectors} onChange={(event) => setVectors(event.target.value)}/>
+                    </div>
+                    <div className="train-tag-settings-box">
+                        <span className="train-tag-settings-title">Negative Vectors:</span>
+                        <input className="train-tag-settings-input" type="text" spellCheck={false} value={negativeVectors} onChange={(event) => setNegativeVectors(event.target.value)}/>
+                    </div>
+                    <div className="train-tag-settings-box">
+                        <span className="train-tag-settings-title">CFG:</span>
+                        <input className="train-tag-settings-input" type="text" spellCheck={false} value={cfgScale} onChange={(event) => setCFGScale(event.target.value)}/>
                     </div>
                     <div className="train-tag-settings-box">
                         <span className="train-tag-settings-title">Epochs:</span>
@@ -354,4 +374,4 @@ const TrainTextualInversion: React.FunctionComponent = (props) => {
     )
 }
 
-export default TrainTextualInversion
+export default TrainDreamArtist

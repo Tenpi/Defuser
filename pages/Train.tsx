@@ -14,6 +14,7 @@ import TrainTextualInversion from "./TrainTextualInversion"
 import TrainHypernetwork from "./TrainHypernetwork"
 import TrainLora from "./TrainLora"
 import TrainDreamBooth from "./TrainDreamBooth"
+import TrainDreamArtist from "./TrainDreamArtist"
 import TrainMerge from "./TrainMerge"
 import TrainCrop from "./TrainCrop"
 import "./styles/generate.less"
@@ -119,9 +120,9 @@ const Train: React.FunctionComponent = (props) => {
                 <div className="train-tab-container" onClick={() => setTrainTab("dreambooth")}>
                     <span className={trainTab === "dreambooth" ? "train-tab-text-selected" : "train-tab-text"}>DreamBooth</span>
                 </div>
-                {/* <div className="train-tab-container" onClick={() => setTrainTab("dreamartist")}>
+                <div className="train-tab-container" onClick={() => setTrainTab("dreamartist")}>
                     <span className={trainTab === "dreamartist" ? "train-tab-text-selected" : "train-tab-text"}>DreamArtist</span>
-                </div> */}
+                </div>
                 <div className="train-tab-container" onClick={() => setTrainTab("merge")}>
                     <span className={trainTab === "merge" ? "train-tab-text-selected" : "train-tab-text"}>Merge</span>
                 </div>
@@ -145,7 +146,7 @@ const Train: React.FunctionComponent = (props) => {
         } else if (trainTab === "dreambooth") {
             return <TrainDreamBooth/>
         } else if (trainTab === "dreamartist") {
-            return
+            return <TrainDreamArtist/>
         } else if (trainTab === "merge") {
             return <TrainMerge/>
         }
