@@ -2,7 +2,7 @@
 
 ![Image](https://github.com/Tenpi/Defuser/blob/main/assets/images/readme.png?raw=true)
 
-Defuser is an UI for diffusers (an image generation library). The inferencing and training of diffusion 
+Defusers is an UI for diffusers (an image generation library). The inferencing and training of diffusion 
 models is supported. It aims to be simple and fast to use.
 
 ### Features
