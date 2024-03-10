@@ -7,6 +7,8 @@ from .simplify_sketch import SketchSimplificationModel
 from .shade_sketch import shade_sketch
 from .colorize_sketch import colorize_sketch
 from .layer_divide import layer_divide
+from .model_convert import model_convert
+from .convert_to_ckpt import convert_to_ckpt
 from transformers import BeitFeatureExtractor, BeitForImageClassification
 from PIL import Image
 import os
@@ -272,5 +274,22 @@ def start_convert_embedding():
         file = select_file()
         output_path = os.path.join(os.path.dirname(file), f"{pathlib.Path(file).stem}XL{pathlib.Path(file).suffix}")
         convert_embedding(file, output_path)
+        show_in_folder("", output_path)
+    return "done"
+
+@app.route("/model-convert", methods=["POST"])
+def start_model_conversion():
+    data = flask.request.json
+    format = data["format"]
+    mode = data["mode"]
+    if mode == "diffusers":
+        folder = select_folder()
+        output_path = os.path.join(os.path.dirname(folder), f"{pathlib.Path(folder).stem}.{format}")
+        convert_to_ckpt(folder, output_path)
+        show_in_folder("", output_path)
+    else:
+        file = select_file()
+        output_path = os.path.join(os.path.dirname(file), f"{pathlib.Path(file).stem}.{format}")
+        model_convert(file, output_path)
         show_in_folder("", output_path)
     return "done"

@@ -1,7 +1,7 @@
-import argparse
 import os.path as osp
 import re
 import torch
+import pathlib
 from safetensors.torch import load_file, save_file
 
 unet_conversion_map = [
@@ -298,6 +298,9 @@ def convert_to_ckpt(model_path, checkpoint_path, half=True, safetensors=False, m
     if half:
         state_dict = {k: v.half() for k, v in state_dict.items()}
 
+    if pathlib.Path(checkpoint_path).suffix == ".safetensors":
+        safetensors = True
+        
     if safetensors:
         save_file(state_dict, checkpoint_path, metadata=metadata)
     else:

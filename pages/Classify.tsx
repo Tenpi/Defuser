@@ -10,6 +10,7 @@ import functions from "../structures/Functions"
 import CheckpointBar from "../components/CheckpointBar"
 import TrainClassifier from "./TrainClassifier"
 import AIDetector from "./AIDetector"
+import ModelConvert from "./ModelConvert"
 import ConvertEmbedding from "./ConvertEmbedding"
 import "./styles/generate.less"
 
@@ -78,6 +79,9 @@ const Classify: React.FunctionComponent = (props) => {
                 <div className="train-tab-container" onClick={() => setClassifyTab("train classifier")}>
                     <span className={classifyTab === "train classifier" ? "train-tab-text-selected" : "train-tab-text"}>Train Classifier</span>
                 </div>
+                <div className="train-tab-container" onClick={() => setClassifyTab("model convert")}>
+                    <span className={classifyTab === "model convert" ? "train-tab-text-selected" : "train-tab-text"}>Model Convert</span>
+                </div>
                 <div className="train-tab-container" onClick={() => setClassifyTab("convert embedding")}>
                     <span className={classifyTab === "convert embedding" ? "train-tab-text-selected" : "train-tab-text"}>Convert Embedding</span>
                 </div>
@@ -90,6 +94,8 @@ const Classify: React.FunctionComponent = (props) => {
             return <TrainClassifier/>
         } else if (classifyTab === "ai detector") {
             return <AIDetector/>
+        } else if (classifyTab === "model convert") {
+            return <ModelConvert/>
         } else if (classifyTab === "convert embedding") {
             return <ConvertEmbedding/>
         }
