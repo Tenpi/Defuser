@@ -14,6 +14,7 @@ import SavedPrompts from "./SavedPrompts"
 import Watermark from "./Watermark"
 import Misc from "./Misc"
 import Classify from "./Classify"
+import UpdateDialog from "../components/UpdateDialog"
 
 const MainPage: React.FunctionComponent = (props) => {
     const [ignored, forceUpdate] = useReducer(x => x + 1, 0)
@@ -57,6 +58,7 @@ const MainPage: React.FunctionComponent = (props) => {
         <div>
         <DragAndDrop/>
         <ExpandDialog/>
+        <UpdateDialog/>
         <Draw/>
         <Preview/>
         <TitleBar rerender={forceUpdate}/>

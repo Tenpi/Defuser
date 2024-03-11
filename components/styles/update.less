@@ -1,0 +1,99 @@
+@import "../../index.less";
+
+.update-dialog {
+    opacity: 0;
+    transition: opacity 2s;
+    position: fixed;
+    z-index: 8000;
+    display: flex;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    background-color: var(--titlebarBG);
+    right: 0px;
+    width: 400px;
+    margin-top: 10px;
+    margin-right: 10px;
+    border-radius: 10px;
+}
+
+.update-dialog-show {
+    opacity: 1;
+    transition: opacity 2s;
+}
+
+.update-dialog-row {
+    display: flex;
+    flex-direction: row;
+    margin-top: 5px;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    &:last-child {
+        justify-content: space-evenly;
+        margin-bottom: 5px;
+    }
+}
+
+.update-dialog-text-container {
+    display: flex;
+    width: 100%;
+    justify-content: center;
+    align-items: center;
+    padding-left: 10px;
+    padding-right: 10px;
+    cursor: move;
+}
+
+.update-dialog-text {
+    font-family: Tahoma, sans-serif;
+    font-weight: normal;
+    font-size: 20px;
+    color: var(--inputText);
+}
+
+.update-dialog-text-bold {
+    font-family: Tahoma, sans-serif;
+    font-weight: bold;
+    font-size: 20px;
+    margin-left: 5px;
+    margin-right: 5px;
+    color: var(--text);
+}
+
+.update-dialog-row-button-reject {
+    border: none;
+    padding-top: 2px;
+    padding-bottom: 2px;
+    padding-left: 3px;
+    padding-right: 3px;
+    color: black;
+    font-weight: bold;
+    font-size: 17px;
+    font-family: Tahoma, sans-serif;
+    background-color: var(--text);
+    border: 2px solid black;
+    &:hover {
+        filter: brightness(130%);
+        cursor: pointer;
+    }
+}
+
+.update-dialog-row-button-accept {
+    border: none;
+    padding-top: 2px;
+    padding-bottom: 2px;
+    padding-left: 3px;
+    padding-right: 3px;
+    color: black;
+    font-weight: bold;
+    font-size: 17px;
+    font-family: Tahoma, sans-serif;
+    background-color: var(--text-alt);
+    border: 2px solid black;
+    &:hover {
+        filter: brightness(130%);
+        cursor: pointer;
+    }
+}

@@ -2,7 +2,8 @@ import flask
 from __main__ import app, socketio
 import os
 import torch
-from .functions import next_index, is_nsfw, get_normalized_dimensions, is_image, get_number_from_filename, get_seed, append_info, upscale, get_models_dir, get_outputs_dir, analyze_checkpoint
+from .functions import next_index, is_nsfw, get_normalized_dimensions, is_image, get_number_from_filename, \
+get_seed, append_info, upscale, get_models_dir, get_outputs_dir, analyze_checkpoint, check_for_updates
 from .invisiblewatermark import encode_watermark
 from .info import get_diffusion_models, get_vae_models, get_clip_model
 from diffusers import StableDiffusionPipeline, StableDiffusionImg2ImgPipeline, StableDiffusionInpaintPipeline, StableDiffusionControlNetImg2ImgPipeline, \
@@ -30,6 +31,7 @@ import gc
 
 device = "mps" if torch.backends.mps.is_available() else "cuda" if torch.cuda.is_available() else "cpu"
 
+update_dismissed = False
 gen_thread = None
 generator = None
 generator_name = None
@@ -211,6 +213,23 @@ def get_generator(model_name: str = "", vae: str = "", mode: str = "text", clip_
     generator = generator.to(device=device, dtype=dtype)
     generator.safety_checker = None
     return generator
+
+@socketio.on("check update")
+def check_update():
+    global update_dismissed
+    if update_dismissed: return
+    update_available, new_version = check_for_updates()
+    if update_available:
+        socketio.emit("update available", {"version": new_version})
+    else:
+        update_dismissed = True
+    return "done"
+
+@app.route("/dismiss-update", methods=["POST"])
+def dismiss_update():
+    global update_dismissed
+    update_dismissed = True
+    return "done"
 
 @socketio.on("load diffusion model")
 def load_diffusion_model(model_name, vae_name, clip_skip, processing, generator_type):

@@ -17,6 +17,7 @@ import piexif.helper
 import subprocess
 import safetensors.torch
 import torch
+import requests
 
 dirname = os.path.dirname(__file__)
 if "_internal" in dirname: dirname = os.path.join(dirname, "../")
@@ -345,3 +346,27 @@ def subprocess_args(include_stdout=True):
                 "startupinfo": si,
                 "env": env })
     return ret
+
+def version_changed(v1, v2):
+    v1_reverse = v1.split(".")[::-1]
+    v2_reverse = v2.split(".")[::-1]
+    v1_val = 0
+    for i, item in enumerate(v1_reverse):
+        v1_val += int(item) * (10**i)
+    v2_val = 0
+    for i2, item2 in enumerate(v2_reverse):
+        v2_val += int(item2) * (10**i2)
+    return v2_val > v1_val, v2
+
+def check_for_updates():
+    package_path = os.path.normpath(os.path.join(dirname, "../package.json"))
+    with open(package_path) as f:
+        data = json.load(f)
+    current_version = data["version"]
+    repo_key = data["repository"]["url"].replace("https://github.com/", "")
+    url = f"https://raw.githubusercontent.com/{repo_key}/main/package.json"
+
+    data = requests.get(url).content
+    new_package = json.loads(data)
+    new_version = new_package["version"]
+    return version_changed(current_version, new_version)

@@ -96,6 +96,7 @@ const App: React.FunctionComponent = (props) => {
             socket.emit("load interrogate model", interrogatorName)
             socket.emit("load diffusion model", modelName, vaeName, clipSkip, processing, generator)
             socket.emit("load control models")
+            socket.emit("check update")
         }, 200)
     }, [socket])
 
@@ -144,8 +145,10 @@ const App: React.FunctionComponent = (props) => {
 
     useEffect(() => {
         if (updateImages) {
-            processImageUpdate()
-            setUpdateImages(false)
+            setTimeout(() => {
+                processImageUpdate()
+                setUpdateImages(false)
+            }, 200)
         }
     }, [updateImages])
 
