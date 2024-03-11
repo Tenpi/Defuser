@@ -348,6 +348,7 @@ def generate(request_data, request_files):
     ip_adapter = data["ip_adapter"] if "ip_adapter" in data else "None"
     ip_processor = data["ip_processor"] if "ip_processor" in data else "off"
     ip_weight = float(data["ip_weight"]) if "ip_weight" in data else 0.5
+    frames = int(data["frames"]) if "frames" in data else 8
 
     xl, cascade = analyze_checkpoint(model_name, device)
     if xl:
@@ -833,11 +834,11 @@ def generate(request_data, request_files):
                 if not nsfw_enabled:
                     socketio.emit("image complete", {"image": "", "needs_watermark": False})
                     return images
-            # num_frames
             frames = generator(
                 prompt_embeds=conditioning,
                 negative_prompt_embeds=negative_conditioning,
                 num_inference_steps=steps,
+                num_frames=frames,
                 guidance_scale=cfg,
                 generator=torch.manual_seed(seed),
                 callback_on_step_end=step_progress,

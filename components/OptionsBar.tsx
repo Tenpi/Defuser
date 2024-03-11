@@ -4,7 +4,7 @@ import {HashLink as Link} from "react-router-hash-link"
 import favicon from "../assets/icons/favicon.png"
 import {EnableDragContext, MobileContext, SiteHueContext, SiteSaturationContext, SiteLightnessContext, StepsContext, ModelNameContext,
 CFGContext, SizeContext, DenoiseContext, SamplerContext, SeedContext, InterrogateTextContext, ClipSkipContext, GeneratorContext, 
-ModelNamesContext, XAdaptModelContext, FreeUContext} from "../Context"
+ModelNamesContext, XAdaptModelContext, FreeUContext, FramesContext, FormatContext} from "../Context"
 import functions from "../structures/Functions"
 import {Dropdown, DropdownButton} from "react-bootstrap"
 import stepsIcon from "../assets/icons/steps.png"
@@ -13,6 +13,7 @@ import sizeIcon from "../assets/icons/size.png"
 import denoiseIcon from "../assets/icons/denoise.png"
 import seedIcon from "../assets/icons/seed.png"
 import clipSkipIcon from "../assets/icons/clipskip.png"
+import framesIcon from "../assets/icons/frames.png"
 import checkbox from "../assets/icons/checkbox2.png"
 import checkboxChecked from "../assets/icons/checkbox2-checked.png"
 import Slider from "react-slider"
@@ -37,6 +38,8 @@ const OptionsBar: React.FunctionComponent = (props) => {
     const {modelName, setModelName} = useContext(ModelNameContext)
     const {modelNames, setModelNames} = useContext(ModelNamesContext)
     const {xAdaptModel, setXAdaptModel} = useContext(XAdaptModelContext)
+    const {format, setFormat} = useContext(FormatContext)
+    const {frames, setFrames} = useContext(FramesContext)
     const {freeU, setFreeU} = useContext(FreeUContext)
     const ref = useRef<HTMLCanvasElement>(null)
     const history = useHistory()
@@ -52,6 +55,8 @@ const OptionsBar: React.FunctionComponent = (props) => {
         if (savedCFG) setCFG(Number(savedCFG))
         const savedSize = localStorage.getItem("size")
         if (savedSize) setSize(Number(savedSize))
+        const savedFrames = localStorage.getItem("frames")
+        if (savedFrames) setFrames(Number(savedFrames))
         const savedDenoise = localStorage.getItem("denoise")
         if (savedDenoise) setDenoise(Number(savedDenoise))
         const savedSeed = localStorage.getItem("seed")
@@ -72,6 +77,7 @@ const OptionsBar: React.FunctionComponent = (props) => {
         localStorage.setItem("steps", String(steps))
         localStorage.setItem("cfg", String(cfg))
         localStorage.setItem("size", String(size))
+        localStorage.setItem("frames", String(frames))
         localStorage.setItem("denoise", String(denoise))
         localStorage.setItem("seed", String(seed))
         localStorage.setItem("sampler", String(sampler))
@@ -79,7 +85,7 @@ const OptionsBar: React.FunctionComponent = (props) => {
         localStorage.setItem("interrogateText", String(interrogateText))
         localStorage.setItem("xAdaptModel", String(xAdaptModel))
         localStorage.setItem("freeU", String(freeU))
-    }, [steps, cfg, size, denoise, seed, sampler, clipSkip, interrogateText, xAdaptModel, freeU])
+    }, [steps, cfg, size, frames, denoise, seed, sampler, clipSkip, interrogateText, xAdaptModel, freeU])
 
     const getSampler = () => {
         if (sampler === "euler a") return "Euler A"
@@ -184,6 +190,13 @@ const OptionsBar: React.FunctionComponent = (props) => {
                     <Slider className="options-slider" trackClassName="options-slider-track" thumbClassName="options-slider-thumb" onChange={(value) => setClipSkip(value)} min={1} max={4} step={1} value={clipSkip}/>
                     <span className="options-option-text-value">{clipSkip}</span>
                 </div>
+                {format === "gif" ?
+                <div className="options-bar-option-row">
+                    <span className="options-option-text">Frames</span>
+                    <img className="options-option-icon" src={framesIcon} style={{filter: getFilter()}}/>
+                    <Slider className="options-slider" trackClassName="options-slider-track" thumbClassName="options-slider-thumb" onChange={(value) => setFrames(value)} min={1} max={32} step={1} value={frames}/>
+                    <span className="options-option-text-value">{frames}</span>
+                </div> : null}
                 <div className="options-bar-option-row">
                     <span className="options-option-text">Seed</span>
                     <img className="options-option-icon" src={seedIcon} style={{filter: getFilter()}}/>

@@ -11,7 +11,7 @@ ControlInvertContext, StyleFidelityContext, ControlReferenceImageContext, Horizo
 ExpandImageContext, ExpandMaskContext, StartedContext, SocketContext, LoopModeContext, SavedPromptsContext, WatermarkContext, NSFWTabContext,
 InvisibleWatermarkContext, SauceNaoAPIKeyContext, RandomPromptModeContext, GeneratorContext, NovelAITokenContext, HolaraAICookieContext,
 SavedPromptsNovelAIContext, SavedPromptsHolaraAIContext, ModelDirContext, OutputDirContext, XAdaptModelContext, FreeUContext, IPAdapterContext,
-IPProcessorContext, IPImageContext, IPWeightContext, IPMaskImageContext} from "../Context"
+IPProcessorContext, IPImageContext, IPWeightContext, IPMaskImageContext, FramesContext} from "../Context"
 import functions from "../structures/Functions"
 import checkbox from "../assets/icons/checkbox2.png"
 import checkboxChecked from "../assets/icons/checkbox2-checked.png"
@@ -31,6 +31,7 @@ const GenerateBar: React.FunctionComponent = (props) => {
     const {siteLightness, setSiteLightness} = useContext(SiteLightnessContext)
     const {steps, setSteps} = useContext(StepsContext)
     const {cfg, setCFG} = useContext(CFGContext)
+    const {frames, setFrames} = useContext(FramesContext)
     const {size, setSize} = useContext(SizeContext)
     const {denoise, setDenoise} = useContext(DenoiseContext)
     const {seed, setSeed} = useContext(SeedContext)
@@ -333,7 +334,7 @@ const GenerateBar: React.FunctionComponent = (props) => {
         const ip_adapter = ipAdapter
         const ip_processor = ipProcessor
         const ip_weight = ipWeight
-        const json = {prompt, negative_prompt, steps, cfg, width, height, denoise, seed, sampler, amount, model_name, vae_name, 
+        const json = {prompt, negative_prompt, steps, cfg, frames, width, height, denoise, seed, sampler, amount, model_name, vae_name, 
         clip_skip, processing, format, textual_inversions, hypernetworks, loras, control_processor, control_scale, guess_mode,
         control_start, control_end, style_fidelity, control_reference_image, upscaler, nsfw_tab, watermark, invisible_watermark,
         generator, novelai_token, holara_cookie, x_adapt_model, freeu, ip_adapter, ip_processor, ip_weight}

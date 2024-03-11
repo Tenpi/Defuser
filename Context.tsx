@@ -17,6 +17,7 @@ export const SizeContext = React.createContext<any>(null)
 export const DenoiseContext = React.createContext<any>(null)
 export const SeedContext = React.createContext<any>(null)
 export const SamplerContext = React.createContext<any>(null)
+export const FramesContext = React.createContext<any>(null)
 export const InterrogateTextContext = React.createContext<any>(null)
 export const InterrogatorNameContext = React.createContext<any>(null)
 export const PromptContext = React.createContext<any>(null)
@@ -152,6 +153,7 @@ const Context: React.FunctionComponent = (props: any) => {
     const [steps, setSteps] = useState(20)
     const [cfg, setCFG] = useState(7)
     const [size, setSize] = useState(0)
+    const [frames, setFrames] = useState(8)
     const [denoise, setDenoise] = useState(0.5)
     const [seed, setSeed] = useState("-1")
     const [sampler, setSampler] = useState("euler a")
@@ -258,6 +260,7 @@ const Context: React.FunctionComponent = (props: any) => {
 
     return (
         <>  
+            <FramesContext.Provider value={{frames, setFrames}}>
             <IPMaskDataContext.Provider value={{ipMaskData, setIPMaskData}}>
             <IPMaskImageContext.Provider value={{ipMaskImage, setIPMaskImage}}>
             <IPDrawImageContext.Provider value={{ipDrawImage, setIPDrawImage}}>
@@ -487,6 +490,7 @@ const Context: React.FunctionComponent = (props: any) => {
             </IPDrawImageContext.Provider>
             </IPMaskImageContext.Provider>
             </IPMaskDataContext.Provider>
+            </FramesContext.Provider>
         </>
     )
 }
