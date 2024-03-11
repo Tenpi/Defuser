@@ -58,7 +58,6 @@ from diffusers.utils.import_utils import is_xformers_available
 import functools
 import copy
 
-dirname = os.path.dirname(__file__)
 logger = get_logger(__name__)
 pipeline = None
 

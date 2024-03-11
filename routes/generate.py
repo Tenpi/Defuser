@@ -5,7 +5,7 @@ import torch
 from .functions import next_index, is_nsfw, get_normalized_dimensions, is_image, get_number_from_filename, get_seed, append_info, upscale, get_models_dir, get_outputs_dir, analyze_checkpoint
 from .invisiblewatermark import encode_watermark
 from .info import get_diffusion_models, get_vae_models, get_clip_model
-from diffusers import StableDiffusionPipeline, StableDiffusionImg2ImgPipeline, StableDiffusionInpaintPipeline,StableDiffusionControlNetImg2ImgPipeline, \
+from diffusers import StableDiffusionPipeline, StableDiffusionImg2ImgPipeline, StableDiffusionInpaintPipeline, StableDiffusionControlNetImg2ImgPipeline, \
 StableDiffusionControlNetInpaintPipeline, StableDiffusionControlNetPipeline, ControlNetModel, EulerAncestralDiscreteScheduler, EulerDiscreteScheduler, LCMScheduler, \
 DDPMScheduler, DDIMScheduler, UniPCMultistepScheduler, DEISMultistepScheduler, DPMSolverMultistepScheduler, HeunDiscreteScheduler, AutoencoderKL, MotionAdapter, AnimateDiffPipeline
 from diffusers.utils import export_to_gif
@@ -28,7 +28,6 @@ import threading
 import asyncio
 import gc
 
-dirname = os.path.dirname(__file__)
 device = "mps" if torch.backends.mps.is_available() else "cuda" if torch.cuda.is_available() else "cpu"
 
 gen_thread = None
@@ -281,6 +280,7 @@ def update_precision():
 
 async def clear_step_frames():
     step_dir = os.path.join(get_outputs_dir(), f"local/steps")
+    pathlib.Path(step_dir).mkdir(parents=True, exist_ok=True)
     images = os.listdir(step_dir)
     images = list(filter(lambda file: is_image(file, False), images))
     images = sorted(images, key=lambda x: get_number_from_filename(x), reverse=False)
@@ -290,6 +290,7 @@ async def clear_step_frames():
 
 async def generate_step_animation():
     step_dir = os.path.join(get_outputs_dir(), f"local/steps")
+    pathlib.Path(step_dir).mkdir(parents=True, exist_ok=True)
     images = os.listdir(step_dir)
     images = list(filter(lambda file: is_image(file, False), images))
     images = sorted(images, key=lambda x: get_number_from_filename(x), reverse=False)

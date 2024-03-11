@@ -25,7 +25,6 @@ from PIL import Image
 import cv2
 
 gen_thread = None
-dirname = os.path.dirname(__file__)
 
 @app.route("/show-text", methods=["POST"])
 def show_text():

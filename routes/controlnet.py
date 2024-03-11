@@ -1,10 +1,9 @@
 import flask               
 from __main__ import app, socketio
 from io import BytesIO
-from .generate import upscale
 import os
 import torch
-from .functions import next_index, get_models_dir, get_outputs_dir
+from .functions import next_index, get_models_dir, get_outputs_dir, upscale
 from PIL import Image
 from controlnet_aux import CannyDetector, MidasDetector, LineartDetector, LineartAnimeDetector, HEDdetector
 from .lineart_manga import LineartMangaDetector

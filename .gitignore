@@ -1,6 +1,10 @@
 node_modules
 dist
+tmp
+build
+venv
 .DS_Store
+server.spec
 routes/__pycache__
 models/interrogator/deepbooru/*
 models/interrogator/wdtagger/*

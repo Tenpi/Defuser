@@ -11,7 +11,6 @@ from .functions import get_models_dir, get_normalized_dimensions
 
 topk = 4
 Norm = nn.BatchNorm2d
-dirname = os.path.dirname(__file__)
 device = "mps" if torch.backends.mps.is_available() else "cuda" if torch.cuda.is_available() else "cpu"
 
 colorize_model = None

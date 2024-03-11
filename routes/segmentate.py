@@ -11,7 +11,6 @@ import torch.nn as nn
 import torch.nn.functional as F
 from PIL import Image
 
-dirname = os.path.dirname(__file__)
 device = "mps" if torch.backends.mps.is_available() else "cuda" if torch.cuda.is_available() else "cpu"
 
 segmentate_model = None

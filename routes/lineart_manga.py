@@ -7,7 +7,6 @@ import numpy as np
 import cv2
 import PIL
 
-dirname = os.path.dirname(__file__)
 device = "mps" if torch.backends.mps.is_available() else "cuda" if torch.cuda.is_available() else "cpu"
 
 class _bn_relu_conv(nn.Module):

@@ -12,7 +12,6 @@ import zipfile
 from io import BytesIO
 import re
 
-dirname = os.path.dirname(__file__)
 infinite = False
 upscaling = True
 

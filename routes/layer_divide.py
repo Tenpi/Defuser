@@ -21,6 +21,7 @@ import pathlib
 import shutil
 
 dirname = os.path.dirname(__file__)
+if "_internal" in dirname: dirname = os.path.join(dirname, "../")
 device = "mps" if torch.backends.mps.is_available() else "cuda" if torch.cuda.is_available() else "cpu"
 
 def assign_tile(row, tile_width, tile_height):
@@ -491,7 +492,7 @@ def save_psd(input_image, layers, names, modes, output_dir, layer_mode):
   return f"{output_dir}/{name}.psd"
 
 def divide_folder(psd_path, mode):
-  assets_dir = os.path.join(dirname, "../assets/images")
+  assets_dir = os.path.join(dirname, "../dist/assets/images")
   with open(f"{assets_dir}/empty.psd", "rb") as fd:
     psd_base = PSD.read(fd)
   with open(psd_path, "rb") as fd:

@@ -1,6 +1,7 @@
 import flask
 from __main__ import app
-from .functions import get_number_from_filename, is_image, is_unwanted, is_dir, is_file, get_models_dir, get_outputs_dir, update_models_dir
+from .functions import get_number_from_filename, is_image, is_unwanted, is_dir, is_file, \
+get_models_dir, get_outputs_dir, update_models_dir, update_outputs_dir, subprocess_args
 from .invisiblewatermark import decode_watermark, encode_watermark
 import os
 import platform
@@ -14,6 +15,7 @@ import piexif
 import json
 
 dirname = os.path.dirname(__file__)
+if "_internal" in dirname: dirname = os.path.join(dirname, "../")
 
 @app.route("/diffusion-models")
 def get_diffusion_models():
@@ -177,22 +179,22 @@ def show_in_folder(path, absolute):
     if not absolute:
         absolute = os.path.join(dirname, f"../{path}")
     if platform.system() == "Windows":
-        subprocess.Popen(f'explorer /select, "{absolute}"')
+        subprocess.call(["explorer", "/select", absolute])
     elif platform.system() == "Darwin":
         subprocess.call(["open", "-R", absolute])
     else:
-        subprocess.Popen(["xdg-open", absolute])
+        subprocess.call(["xdg-open", absolute])
     return "done"
 
 def open_folder(path, absolute):
     if not absolute:
         absolute = os.path.join(dirname, f"../{path}")
     if platform.system() == "Windows":
-        subprocess.Popen(f'explorer "{absolute}"')
+        subprocess.call(["explorer", absolute])
     elif platform.system() == "Darwin":
         subprocess.call(["open", absolute])
     else:
-        subprocess.Popen(["xdg-open", absolute])
+        subprocess.call(["xdg-open", absolute])
     return "done"
 
 @app.route("/show-in-folder", methods=["POST"])
@@ -320,26 +322,28 @@ def save_watermark():
     return "done"
 
 def select_file():
+    global executable
     program = os.path.join(dirname, "../dialog/dialog")
     if platform.system() == "Windows":
         program = os.path.join(dirname, "../dialog/dialog.exe")
     if platform.system() == "Darwin":
         program = os.path.join(dirname, "../dialog/dialog.app")
-    process = subprocess.Popen([program, "-o"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    file_selected, err = process.communicate()
+    program = os.path.normpath(program)
+    file_selected = subprocess.check_output([program, "-o"], **subprocess_args(False))
     file_selected = file_selected.decode("utf-8")
     if "None" in file_selected:
         file_selected = ""
     return file_selected.strip()
 
 def select_folder():
+    global executable
     program = os.path.join(dirname, "../dialog/dialog")
     if platform.system() == "Windows":
         program = os.path.join(dirname, "../dialog/dialog.exe")
     if platform.system() == "Darwin":
         program = os.path.join(dirname, "../dialog/dialog.app")
-    process = subprocess.Popen([program, "-d"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    folder_selected, err = process.communicate()
+    program = os.path.normpath(program)
+    folder_selected = subprocess.check_output([program, "-d"], **subprocess_args(False))
     folder_selected = folder_selected.decode("utf-8")
     if "None" in folder_selected:
         folder_selected = ""
@@ -449,4 +453,11 @@ def update_model_dir():
     data = flask.request.json
     model_dir = data["model_dir"]
     update_models_dir(model_dir)
+    return "done"
+
+@app.route("/update-output-dir", methods=["POST"])
+def update_output_dir():
+    data = flask.request.json
+    output_dir = data["output_dir"]
+    update_outputs_dir(output_dir)
     return "done"

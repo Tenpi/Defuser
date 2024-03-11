@@ -50,8 +50,7 @@ from diffusers.models.embeddings import (
     Timesteps,
 )
 from diffusers.models.modeling_utils import ModelMixin
-from diffusers.models.unets.unet_2d_blocks import get_down_block, get_up_block
-from diffusers.models.unet_2d_blocks import UNetMidBlock2DCrossAttn, UNetMidBlock2DSimpleCrossAttn
+from diffusers.models.unets.unet_2d_blocks import get_down_block, get_up_block, UNetMidBlock2DCrossAttn, UNetMidBlock2DSimpleCrossAttn
 import safetensors.torch
 
 if is_invisible_watermark_available():

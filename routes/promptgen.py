@@ -4,7 +4,6 @@ from transformers import GPT2Tokenizer, GPT2LMHeadModel, pipeline
 from .functions import get_models_dir
 import os
 
-dirname = os.path.dirname(__file__)
 tokenizer = None
 model = None
 

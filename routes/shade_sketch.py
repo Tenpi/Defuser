@@ -4,8 +4,6 @@ import numpy as np
 import cv2
 import os
 
-dirname = os.path.dirname(__file__)
-
 shader_model = None
 norm_model = None
 smoother_model = None

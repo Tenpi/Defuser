@@ -19,7 +19,6 @@ import pathlib
 import asyncio
 import gc
 
-dirname = os.path.dirname(__file__)
 device = "mps" if torch.backends.mps.is_available() else "cuda" if torch.cuda.is_available() else "cpu"
 
 gen_thread = None

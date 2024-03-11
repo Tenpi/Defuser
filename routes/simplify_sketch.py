@@ -7,7 +7,6 @@ from .functions import get_models_dir
 import torch
 import os
 
-dirname = os.path.dirname(__file__)
 device = "mps" if torch.backends.mps.is_available() else "cuda" if torch.cuda.is_available() else "cpu"
 
 class SketchSimplificationModel():

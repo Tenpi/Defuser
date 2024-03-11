@@ -26,6 +26,7 @@ import safetensors.torch
 gen_thread = None
 simplify_model = None
 dirname = os.path.dirname(__file__)
+if "_internal" in dirname: dirname = os.path.join(dirname, "../")
 
 def _async_raise(tid, exctype):
     '''Raises an exception in the threads with id tid'''
