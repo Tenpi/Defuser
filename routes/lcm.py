@@ -18,6 +18,7 @@ import numpy as np
 import torch
 import torch.nn.functional as F
 import torch.utils.checkpoint
+import deepcopy
 from accelerate import Accelerator
 from accelerate.logging import get_logger
 from accelerate.utils import ProjectConfiguration, set_seed
@@ -607,8 +608,7 @@ def main(args):
 
     # 8. Create target student U-Net. This will be updated via EMA updates (polyak averaging).
     # Initialize from (online) unet
-    target_unet = UNet2DConditionModel.from_config(unet.config)
-    target_unet.load_state_dict(unet.state_dict())
+    target_unet = deepcopy(unet)
     target_unet.train()
     target_unet.requires_grad_(False)
 
