@@ -463,7 +463,7 @@ def add_psd(psd, img, name, mode):
 
 def load_masks(output_dir):
   pkl_path = os.path.join(output_dir, "tmp", "sorted_masks.pkl")
-  with open(pkl_path, "rb") as f:
+  with open(os.path.normpath(pkl_path), "rb") as f:
     masks = pickle.load(f)
   return masks
 
@@ -486,16 +486,16 @@ def save_psd(input_image, layers, names, modes, output_dir, layer_mode):
       psd = add_psd(psd, layers[4][idx], names[4] + str(idx), modes[4])
 
   name = f"image{next_index(output_dir)}"
-  with open(f"{output_dir}/{name}.psd", "wb") as fd2:
+  with open(os.path.normpath(f"{output_dir}/{name}.psd"), "wb") as fd2:
       psd.write(fd2)
 
   return f"{output_dir}/{name}.psd"
 
 def divide_folder(psd_path, mode):
   assets_dir = os.path.join(dirname, "../dist/assets/images")
-  with open(f"{assets_dir}/empty.psd", "rb") as fd:
+  with open(os.path.normpath(f"{assets_dir}/empty.psd"), "rb") as fd:
     psd_base = PSD.read(fd)
-  with open(psd_path, "rb") as fd:
+  with open(os.path.normpath(psd_path), "rb") as fd:
     psd_image = PSD.read(fd)
 
   if mode == "normal":
@@ -529,7 +529,7 @@ def divide_folder(psd_path, mode):
           channel_list.append(folder_channel)
 
   psd_image.layer_and_mask_information.layer_info.channel_image_data =  psd_tools.psd.layer_and_mask.ChannelImageData(channel_list)
-  with open(psd_path, "wb") as fd:
+  with open(os.path.normpath(psd_path), "wb") as fd:
       psd_image.write(fd)
 
   return psd_path
@@ -560,7 +560,7 @@ def show_anns(image, masks, output_dir):
     if len(masks) == 0:
         return
     sorted_masks = sorted(masks, key=(lambda x: x["area"]), reverse=True)
-    with open(f"{output_dir}/tmp/sorted_masks.pkl", "wb") as f:
+    with open(os.path.normpath(f"{output_dir}/tmp/sorted_masks.pkl"), "wb") as f:
         pickle.dump(sorted_masks, f)
     polygons = []
     color = []

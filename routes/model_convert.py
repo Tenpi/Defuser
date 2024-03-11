@@ -4,11 +4,12 @@ from collections import OrderedDict
 import pathlib
 import struct
 import json
+import os
 
 device = "mps" if torch.backends.mps.is_available() else "cuda" if torch.cuda.is_available() else "cpu"
 
 def get_safetensors_metadata(filename):
-    with open(filename, "rb") as f:
+    with open(os.path.normpath(filename), "rb") as f:
         safe_bytes = f.read()
     metadata_size = struct.unpack("<Q", safe_bytes[0:8])[0]
     metadata_as_bytes = safe_bytes[8:8+metadata_size]

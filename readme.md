@@ -42,6 +42,12 @@ models is supported. It aims to be simple and fast to use.
 - Stable Diffusion XL ("XL" in checkpoint name)
 - Stable Cascade ("SC" in checkpoint name)
 
+### Precompiled Binaries
+
+There are precompiled binaries for MacOS arm64 and Windows x64 
+that don't require compiling the project from source. \
+https://github.com/Tenpi/Defuzers/releases 
+
 ### Requirements
 
 Node.js: https://nodejs.org/en \
@@ -74,17 +80,24 @@ npm install
 pip3 install -r requirements.txt
 ```
 
-Install pytorch nightly for latest features. 
-https://pytorch.org/get-started/locally/
-
 ### Running
 
-Start the server with the following command.
+Compile and start the server with the following command.
 ```sh
 npm start
 ```
 
-By default, it will be available at http://localhost:8084.
+By default, it will be available at http://localhost:8084. The 
+host and port can be changed in config.json.
+
+### MacOS
+
+To run executables on MacOS you may need to remove the quarantine flag. 
+
+```
+xattr -d com.apple.quarantine server
+xattr -d com.apple.quarantine dialog/dialog.app
+```
 
 ### Animeface
 

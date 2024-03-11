@@ -109,7 +109,7 @@ def get_normalized_dimensions(img, dim=512):
     return {"width": width, "height": height}
 
 def get_safetensors_metadata(filename):
-    with open(filename, "rb") as f:
+    with open(os.path.normpath(filename), "rb") as f:
         safe_bytes = f.read()
     metadata_size = struct.unpack("<Q", safe_bytes[0:8])[0]
     metadata_as_bytes = safe_bytes[8:8+metadata_size]
@@ -120,7 +120,7 @@ def get_images(folder, resolution=512, center_crop=True, repeats=1):
     files = os.listdir(folder.strip())
     image_files = list(filter(lambda file: is_image(file), files))
     image_files = sorted(image_files, key=lambda x: get_number_from_filename(x), reverse=False)
-    image_files = list(map(lambda file: Image.open(os.path.join(folder, file)).convert("RGB"), image_files))
+    image_files = list(map(lambda file: Image.open(os.path.join(folder, file)).convert("RGB")), image_files)
     images = []
     for image in image_files:
         images.extend(itertools.repeat(image, repeats))
@@ -151,7 +151,7 @@ def get_captions(folder, default="", repeats=1):
 
     captions = []
     for text in texts:
-        f = open(os.path.join(folder, text))
+        f = open(os.path.normpath(os.path.join(folder, text)))
         captions.append(f.read())
         f.close()
     return captions
@@ -163,7 +163,7 @@ def get_sources(folder):
 
     sources = []
     for source in source_files:
-        f = open(os.path.join(folder, source))
+        f = open(os.path.normpath(os.path.join(folder, source)))
         sources.append(f.read())
         f.close()
     return sources

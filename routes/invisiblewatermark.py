@@ -7,6 +7,7 @@ import io
 import time
 import struct
 import pywt
+import os
 from enum import Enum
 
 class SubsampleOptions(Enum):
@@ -331,7 +332,7 @@ def encode_watermark(input, output, watermark, quality = 100):
     watermark = watermark if watermark else "SDV2"
     quality = int(quality) if quality else 100
     ext = pathlib.Path(output).suffix
-    img = io.BytesIO(open(input, "rb").read())
+    img = io.BytesIO(open(os.path.normpath(input), "rb").read())
     watermark_bytes = apply_watermark(img.read(), quality, watermark)
     if ext == ".jpg" or ext == ".jpeg":
         image = Image.open(watermark_bytes[0])
@@ -345,8 +346,8 @@ def encode_watermark(input, output, watermark, quality = 100):
 
 def decode_watermark(input, output, length):
     length = int(length) if length else 4
-    img = io.BytesIO(open(input, "rb").read())
+    img = io.BytesIO(open(os.path.normpath(input), "rb").read())
     decoded = decode_wm(img, wm_length=length * 8)
-    file = open(output, "w")
+    file = open(os.path.normpath(output), "w")
     file.write(decoded)
     file.close()

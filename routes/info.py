@@ -143,7 +143,7 @@ def get_all_image_outputs():
     image_outputs = get_outputs("image")
     image_nsfw_outputs = get_outputs("image nsfw")
     all_outputs = image_outputs + image_nsfw_outputs
-    return sorted(all_outputs, key=lambda x: os.path.getmtime(x), reverse=True)
+    return sorted(all_outputs, key=lambda x: os.path.getmtime(os.path.join(get_outputs_dir(), x.replace("outputs/", ""))), reverse=True)
 
 @app.route("/all-novelai-outputs")
 def get_all_novelai_outputs():
@@ -158,7 +158,7 @@ def get_all_novelai_image_outputs():
     image_outputs = get_novelai_outputs("image")
     image_nsfw_outputs = get_novelai_outputs("image nsfw")
     all_outputs = image_outputs + image_nsfw_outputs
-    return sorted(all_outputs, key=lambda x: os.path.getmtime(x), reverse=True)
+    return sorted(all_outputs, key=lambda x: os.path.getmtime(os.path.join(get_outputs_dir(), x.replace("outputs/", ""))), reverse=True)
 
 @app.route("/all-holara-outputs")
 def get_all_holara_outputs():
@@ -173,7 +173,7 @@ def get_all_holara_image_outputs():
     image_outputs = get_holara_outputs("image")
     image_nsfw_outputs = get_holara_outputs("image nsfw")
     all_outputs = image_outputs + image_nsfw_outputs
-    return sorted(all_outputs, key=lambda x: os.path.getmtime(x), reverse=True)
+    return sorted(all_outputs, key=lambda x: os.path.getmtime(os.path.join(get_outputs_dir(), x.replace("outputs/", ""))), reverse=True)
 
 def show_in_folder(path, absolute):
     if not absolute:
@@ -382,7 +382,7 @@ def save_images():
         location = os.path.join(get_outputs_dir(), "novel ai/saved.json")
     if generator_type == "holara ai":
         location = os.path.join(get_outputs_dir(), "holara ai/saved.json")
-    with open(location, "w") as f:
+    with open(os.path.normpath(location), "w") as f:
         json.dump(saved, f, indent=4)
     return "done"
 
@@ -390,7 +390,7 @@ def save_images():
 def saved_local_images():
     location = os.path.join(get_outputs_dir(), "local/saved.json")
     if not os.path.exists(location): return []
-    with open(location) as f:
+    with open(os.path.normpath(location)) as f:
         data = json.load(f)
     return data
 
@@ -398,7 +398,7 @@ def saved_local_images():
 def saved_novelai_images():
     location = os.path.join(get_outputs_dir(), "novel ai/saved.json")
     if not os.path.exists(location): return []
-    with open(location) as f:
+    with open(os.path.normpath(location)) as f:
         data = json.load(f)
     return data
 
@@ -406,7 +406,7 @@ def saved_novelai_images():
 def saved_holara_images():
     location = os.path.join(get_outputs_dir(), "holara ai/saved.json")
     if not os.path.exists(location): return []
-    with open(location) as f:
+    with open(os.path.normpath(location)) as f:
         data = json.load(f)
     return data
 
@@ -420,7 +420,7 @@ def save_prompts():
         location = os.path.join(get_outputs_dir(), "novel ai/prompts.txt")
     if generator_type == "holara ai":
         location = os.path.join(get_outputs_dir(), "holara ai/prompts.txt")
-    with open(location, "w") as f:
+    with open(os.path.normpath(location), "w") as f:
         f.write("\n".join(prompts))
     return "done"
 
@@ -428,7 +428,7 @@ def save_prompts():
 def saved_local_prompts():
     location = os.path.join(get_outputs_dir(), "local/prompts.txt")
     if not os.path.exists(location): return []
-    with open(location) as f:
+    with open(os.path.normpath(location)) as f:
         data = f.read().split("\n")
     return data
 
@@ -436,7 +436,7 @@ def saved_local_prompts():
 def saved_novelai_prompts():
     location = os.path.join(get_outputs_dir(), "novel ai/prompts.txt")
     if not os.path.exists(location): return []
-    with open(location) as f:
+    with open(os.path.normpath(location)) as f:
         data = f.read().split("\n")
     return data
 
@@ -444,7 +444,7 @@ def saved_novelai_prompts():
 def saved_holara_prompts():
     location = os.path.join(get_outputs_dir(), "holara ai/prompts.txt")
     if not os.path.exists(location): return []
-    with open(location) as f:
+    with open(os.path.normpath(location)) as f:
         data = f.read().split("\n")
     return data
 

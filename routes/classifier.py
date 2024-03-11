@@ -398,7 +398,7 @@ def main(args):
         if accelerator.is_main_process:
             image_processor.save_pretrained(args.output_dir)
             all_results = {f"eval_{k}": v for k, v in eval_metric.items()}
-            with open(os.path.join(args.output_dir, "all_results.json"), "w") as f:
+            with open(os.path.normpath(os.path.join(args.output_dir, "all_results.json")), "w") as f:
                 json.dump(all_results, f)
 
 class DotDict(dict):

@@ -148,7 +148,7 @@ class DreamBoothDataset(Dataset):
             text_files = sorted(text_files, key=lambda x: get_number_from_filename(x), reverse=False)
             custom_instance_prompts = []
             for text_file in text_files:
-                f = open(os.path.join(dataset_name, text_file))
+                f = open(os.path.normpath(os.path.join(dataset_name, text_file)))
                 caption = f.read()
                 custom_instance_prompts.append(caption)
                 f.close()

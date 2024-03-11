@@ -34,11 +34,11 @@ def show_text():
     dest = f"{name}.txt"
     if os.path.exists(dest):
         if platform.system() == "Windows":
-            subprocess.Popen(["notepad.exe", dest])
+            subprocess.call(["notepad.exe", dest])
         elif platform.system() == "Darwin":
             subprocess.call(["open", "-a", "TextEdit", dest])
         else:
-            subprocess.Popen(["xdg-open", dest])
+            subprocess.call(["xdg-open", dest])
     return "done"
 
 @app.route("/show-source", methods=["POST"])
@@ -49,11 +49,11 @@ def show_source():
     dest = f"{name}.source.txt"
     if os.path.exists(dest):
         if platform.system() == "Windows":
-            subprocess.Popen(["notepad.exe", dest])
+            subprocess.call(["notepad.exe", dest])
         elif platform.system() == "Darwin":
             subprocess.call(["open", "-a", "TextEdit", dest])
         else:
-            subprocess.Popen(["xdg-open", dest])
+            subprocess.call(["xdg-open", dest])
     return "done"
 
 def _async_raise(tid, exctype):
@@ -98,7 +98,7 @@ def tag(images, model_name, append):
         result = ", ".join(new_tag_arr)
         name, ext = os.path.splitext(image)
         dest = f"{name}.txt"
-        f = open(dest, "w")
+        f = open(os.path.normpath(dest), "w")
         f.write(result)
         f.close()
         socketio.emit("train progress", {"step": i+1, "total_step": len(images)})
@@ -154,7 +154,7 @@ async def source(images, saucenao_key):
                     result = f"https://www.pixiv.net/en/artworks/{match.group()}"
             name, ext = os.path.splitext(image)
             dest = f"{name}.source.txt"
-            f = open(dest, "w")
+            f = open(os.path.normpath(dest), "w")
             f.write(result)
             f.close()
         socketio.emit("train progress", {"step": i+1, "total_step": len(images)})

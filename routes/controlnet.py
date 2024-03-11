@@ -145,7 +145,7 @@ def control_image():
         output_image.save(out_path)
         socketio.emit("image upscaling")
         upscale(out_path, upscaler)
-        compressed = Image.open(out_path)
+        compressed = Image.open(os.path.normpath(out_path))
         if invert == "true":
             compressed = PIL.ImageOps.invert(compressed)
         compressed.save(out_path, quality=90, optimize=True)

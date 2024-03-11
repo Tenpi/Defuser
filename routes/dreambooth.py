@@ -255,13 +255,13 @@ class DreamBoothDataset(Dataset):
             files = os.listdir(dataset_name)
             image_files = list(filter(lambda file: is_image(file), files))
             image_files = sorted(image_files, key=lambda x: get_number_from_filename(x), reverse=False)
-            instance_images = list(map(lambda file: Image.open(os.path.join(dataset_name, file)), image_files))
+            instance_images = list(map(lambda file: Image.open(os.path.join(dataset_name, file))), image_files)
 
             text_files = list(filter(lambda file: is_text(file), files))
             text_files = sorted(text_files, key=lambda x: get_number_from_filename(x), reverse=False)
             custom_instance_prompts = []
             for text_file in text_files:
-                f = open(os.path.join(dataset_name, text_file))
+                f = open(os.path.normpath(os.path.join(dataset_name, text_file)))
                 caption = f.read()
                 custom_instance_prompts.append(caption)
                 f.close()
