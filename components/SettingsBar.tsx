@@ -38,6 +38,7 @@ const SettingsBar: React.FunctionComponent = (props) => {
     const {holaraAICookie, setHolaraAICookie} = useContext(HolaraAICookieContext)
     const {modelDir, setModelDir} = useContext(ModelDirContext)
     const {outputDir, setOutputDir} = useContext(OutputDirContext)
+    const [unloadTrigger, setUnloadTrigger] = useState(false)
     const ref = useRef<HTMLCanvasElement>(null)
     const history = useHistory()
 
@@ -130,7 +131,11 @@ const SettingsBar: React.FunctionComponent = (props) => {
     }
 
     const unloadModels = () => {
+        setUnloadTrigger(true)
         axios.post("/unload-models")
+        setTimeout(() => {
+            setUnloadTrigger(false)
+        }, 1000)
     }
 
     return (
@@ -256,7 +261,7 @@ const SettingsBar: React.FunctionComponent = (props) => {
                 <input className="settings-bar-input" spellCheck={false} value={holaraAICookie} onChange={(event) => setHolaraAICookie(event.target.value)}/>
             </div>
             <div className="settings-bar-row">
-                <button className="settings-bar-button" onClick={() => unloadModels()}>Unload Models</button>
+                <button className="settings-bar-button" onClick={() => unloadModels()} style={{backgroundColor: unloadTrigger ? "var(--buttonBGStop)" : "var(--buttonBG)"}}>{unloadTrigger ? "Done!" : "Unload Models"}</button>
             </div>
         </div>
     )

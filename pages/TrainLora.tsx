@@ -303,7 +303,7 @@ const TrainLora: React.FunctionComponent = (props) => {
                         <input className="train-tag-settings-input" type="text" spellCheck={false} value={learningRate} onChange={(event) => setLearningRate(event.target.value)}/>
                     </div>
                     <div className="train-tag-settings-box">
-                        <span className="train-tag-settings-title">Text Learning Rate:</span>
+                        <span className="train-tag-settings-title">Text Encoder Learning Rate:</span>
                         <input className="train-tag-settings-input" type="text" spellCheck={false} value={learningRateTE} onChange={(event) => setLearningRateTE(event.target.value)}/>
                     </div>
                     <div className="train-tag-settings-box">

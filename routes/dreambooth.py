@@ -1266,7 +1266,7 @@ def main(args):
                             "learning_function": learning_function,
                             "sources": args.sources
                         }
-                        convert_to_ckpt(temp, f"{args.output_dir}/{name}-{epoch + 1}.ckpt", metadata=metadata)
+                        convert_to_ckpt(temp, f"{args.output_dir}/{name}-{global_step}.ckpt", metadata=metadata)
                         shutil.rmtree(temp)
 
             logs = {"loss": loss.detach().item(), "lr": lr_scheduler.get_last_lr()[0]}

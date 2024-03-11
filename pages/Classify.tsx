@@ -13,6 +13,7 @@ import AIDetector from "./AIDetector"
 import ModelConvert from "./ModelConvert"
 import ConvertEmbedding from "./ConvertEmbedding"
 import TrainUnconditional from "./TrainUnconditional"
+import TrainLCM from "./TrainLCM"
 import "./styles/generate.less"
 
 const Classify: React.FunctionComponent = (props) => {
@@ -68,6 +69,8 @@ const Classify: React.FunctionComponent = (props) => {
     }, [])
 
     useEffect(() => {
+        localStorage.setItem("folderLocation", String(folderLocation))
+        localStorage.setItem("trainName", String(trainName))
         localStorage.setItem("classifyFolderLocation", String(classifyFolderLocation))
         localStorage.setItem("classifyTab", String(classifyTab))
         localStorage.setItem("epochs", String(epochs))
@@ -78,7 +81,7 @@ const Classify: React.FunctionComponent = (props) => {
         localStorage.setItem("resolution", String(resolution))
         localStorage.setItem("learningFunction", String(learningFunction))
         localStorage.setItem("learningRateTE", String(learningRateTE))
-    }, [classifyFolderLocation, classifyTab, epochs, saveSteps, previewSteps, learningRate, 
+    }, [folderLocation, trainName, classifyFolderLocation, classifyTab, epochs, saveSteps, previewSteps, learningRate, 
         gradientAccumulationSteps, learningFunction, resolution, learningRateTE])
 
     const classifyTabsJSX = () => {
@@ -118,7 +121,7 @@ const Classify: React.FunctionComponent = (props) => {
         } else if (classifyTab === "unconditional") {
             return <TrainUnconditional/>
         } else if (classifyTab === "lcm") {
-            return
+            return <TrainLCM/>
         }
     }
 

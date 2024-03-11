@@ -1,11 +1,11 @@
 import React, {useContext, useEffect, useState, useRef} from "react"
 import {useHistory} from "react-router-dom"
 import {EnableDragContext, MobileContext, SiteHueContext, SiteSaturationContext, SiteLightnessContext, 
-TrainTabContext, FolderLocationContext, SocketContext, TrainStartedContext, TrainProgressContext,
-TrainProgressTextContext, TrainCompletedContext, TrainImagesContext, ModelNameContext, EpochsContext,
-SaveStepsContext, PreviewStepsContext, PreviewPromptContext, LearningRateContext, GradientAccumulationStepsContext,
-ResolutionContext, LearningFunctionContext, ImageBrightnessContext, ImageContrastContext, PreviewImageContext,
-TrainRenderImageContext, TrainNameContext, LearningRateTEContext, ReverseSortContext, ImageHueContext, ImageSaturationContext} from "../Context"
+FolderLocationContext, SocketContext, TrainStartedContext, TrainProgressContext, TrainProgressTextContext, 
+TrainCompletedContext, TrainImagesContext, ModelNameContext, EpochsContext, SaveStepsContext, PreviewStepsContext, 
+PreviewPromptContext, LearningRateContext, GradientAccumulationStepsContext, ResolutionContext, LearningFunctionContext, 
+ImageBrightnessContext, ImageContrastContext, PreviewImageContext, TrainRenderImageContext, TrainNameContext, ReverseSortContext, 
+ImageHueContext, ImageSaturationContext} from "../Context"
 import {ProgressBar, Dropdown, DropdownButton} from "react-bootstrap"
 import xIcon from "../assets/icons/x.png"
 import xIconHover from "../assets/icons/x-hover.png"
@@ -21,7 +21,7 @@ let timer = null as any
 let clicking = false
 let scrollLock = false
 
-const TrainDreamBooth: React.FunctionComponent = (props) => {
+const TrainLCM: React.FunctionComponent = (props) => {
     const {enableDrag, setEnableDrag} = useContext(EnableDragContext)
     const {mobile, setMobile} = useContext(MobileContext)
     const {siteHue, setSiteHue} = useContext(SiteHueContext)
@@ -32,7 +32,6 @@ const TrainDreamBooth: React.FunctionComponent = (props) => {
     const {imageHue, setImageHue} = useContext(ImageHueContext)
     const {imageSaturation, setImageSaturation} = useContext(ImageSaturationContext)
     const {socket, setSocket} = useContext(SocketContext)
-    const {trainTab, setTrainTab} = useContext(TrainTabContext)
     const {folderLocation, setFolderLocation} = useContext(FolderLocationContext)
     const {trainImages, setTrainImages} = useContext(TrainImagesContext)
     const {trainProgress, setTrainProgress} = useContext(TrainProgressContext)
@@ -51,14 +50,13 @@ const TrainDreamBooth: React.FunctionComponent = (props) => {
     const {previewImage, setPreviewImage} = useContext(PreviewImageContext)
     const {trainRenderImage, setTrainRenderImage} = useContext(TrainRenderImageContext)
     const {trainName, setTrainName} = useContext(TrainNameContext)
-    const {learningRateTE, setLearningRateTE} = useContext(LearningRateTEContext)
     const {reverseSort, setReverseSort} = useContext(ReverseSortContext)
     const [slice, setSlice] = useState([])
     const [sliceIndex, setSliceIndex] = useState(0)
     const [hover, setHover] = useState(false)
     const [xHover, setXHover] = useState(false)
-    const [newUnet, setNewUnet] = useState(false)
-    const [newTextEncoder, setNewTextEncoder] = useState(false)
+    const [rank, setRank] = useState("32")
+    const [saveLora, setSaveLora] = useState(true)
     const progressBarRef = useRef(null) as React.RefObject<HTMLDivElement>
     const ref = useRef<HTMLCanvasElement>(null)
     const history = useHistory()
@@ -107,16 +105,16 @@ const TrainDreamBooth: React.FunctionComponent = (props) => {
     }
 
     useEffect(() => {
-        const savedNewUnet = localStorage.getItem("newUnet")
-        if (savedNewUnet) setNewUnet(savedNewUnet === "true")
-        const savedNewTextEncoder = localStorage.getItem("newTextEncoder")
-        if (savedNewTextEncoder) setNewTextEncoder(savedNewTextEncoder === "true")
+        const savedLora = localStorage.getItem("lcmLora")
+        if (savedLora) setSaveLora(savedLora === "true")
+        const savedRank = localStorage.getItem("lcmRank")
+        if (savedRank) setRank(savedRank)
     }, [])
 
     useEffect(() => {
-        localStorage.setItem("newUnet", String(newUnet))
-        localStorage.setItem("newTextEncoder", String(newTextEncoder))
-    }, [newUnet, newTextEncoder])
+        localStorage.setItem("lcmLora", String(saveLora))
+        localStorage.setItem("lcmRank", String(rank))
+    }, [saveLora, rank])
 
     useEffect(() => {
         if (!socket) return
@@ -234,21 +232,20 @@ const TrainDreamBooth: React.FunctionComponent = (props) => {
     const train = async () => {
         const json = {} as any
         json.images = trainImages.map((i: string) => i.replace("/retrieve?path=", "").split("&")[0])
+        json.name = trainName
         json.model_name = modelName
         json.train_data = folderLocation
-        json.instance_prompt = trainName
         json.num_train_epochs = Number(epochs)
         json.learning_rate = Number(learningRate)
-        json.text_encoder_lr = Number(learningRateTE)
         json.gradient_accumulation_steps = Number(gradientAccumulationSteps)
         json.resolution = Number(resolution)
         json.save_steps = Number(saveSteps)
         json.validation_steps = Number(previewSteps)
         json.validation_prompt = previewPrompt
         json.learning_function = learningFunction
-        json.new_unet = newUnet
-        json.new_text_encoder = newTextEncoder
-        await axios.post("/train-dreambooth", json)
+        json.save_lora = saveLora
+        json.rank = Number(rank)
+        await axios.post("/train-lcm", json)
     }
 
     const openImageLocation = async () => {
@@ -256,11 +253,11 @@ const TrainDreamBooth: React.FunctionComponent = (props) => {
     }
 
     const openFolder = async () => {
-        await axios.post("/open-folder", {path: `outputs/models/dreambooth/${trainName}`})
+        await axios.post("/open-folder", {path: `outputs/models/lcm/${trainName}`})
     }
 
     const interruptTrain = async () => {
-        axios.post("/interrupt-train")
+        axios.post("/interrupt-misc")
     }
 
     const reset = () => {
@@ -270,12 +267,11 @@ const TrainDreamBooth: React.FunctionComponent = (props) => {
         setPreviewSteps("1000")
         setPreviewPrompt("")
         setLearningRate("1e-4")
-        setLearningRateTE("5e-6")
         setGradientAccumulationSteps("1")
         setResolution("256")
         setLearningFunction("constant")
-        setNewUnet(false)
-        setNewTextEncoder(false)
+        setRank("32")
+        setSaveLora(true)
     }
 
     const getLearningFunction = () => {
@@ -307,20 +303,16 @@ const TrainDreamBooth: React.FunctionComponent = (props) => {
                         <input className="train-tag-settings-input" type="text" spellCheck={false} value={learningRate} onChange={(event) => setLearningRate(event.target.value)}/>
                     </div>
                     <div className="train-tag-settings-box">
-                        <span className="train-tag-settings-title">Text Encoder Learning Rate:</span>
-                        <input className="train-tag-settings-input" type="text" spellCheck={false} value={learningRateTE} onChange={(event) => setLearningRateTE(event.target.value)}/>
-                    </div>
-                    <div className="train-tag-settings-box">
                         <span className="train-tag-settings-title">Gradient Accumulation Steps:</span>
                         <input className="train-tag-settings-input" type="text" spellCheck={false} value={gradientAccumulationSteps} onChange={(event) => setGradientAccumulationSteps(event.target.value)}/>
                     </div>
                     <div className="train-tag-settings-box">
-                        <span className="train-tag-settings-title">New Unet:</span>
-                        <img className="train-tag-settings-img" src={newUnet ? checkboxChecked : checkbox} onClick={() => setNewUnet((prev: boolean) => !prev)} style={{filter: getFilter()}}/>
+                        <span className="train-tag-settings-title">Rank:</span>
+                        <input className="train-tag-settings-input" type="text" spellCheck={false} value={rank} onChange={(event) => setRank(event.target.value)}/>
                     </div>
                     <div className="train-tag-settings-box">
-                        <span className="train-tag-settings-title">New Text Encoder:</span>
-                        <img className="train-tag-settings-img" src={newTextEncoder ? checkboxChecked : checkbox} onClick={() => setNewTextEncoder((prev: boolean) => !prev)} style={{filter: getFilter()}}/>
+                        <span className="train-tag-settings-title">Save LoRA:</span>
+                        <img className="train-tag-settings-img" src={saveLora ? checkboxChecked : checkbox} onClick={() => setSaveLora((prev: boolean) => !prev)} style={{filter: getFilter()}}/>
                     </div>
                 </div>
                 <div className="train-tag-settings-column">
@@ -373,4 +365,4 @@ const TrainDreamBooth: React.FunctionComponent = (props) => {
     )
 }
 
-export default TrainDreamBooth
+export default TrainLCM

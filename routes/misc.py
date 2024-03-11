@@ -10,6 +10,7 @@ from .layer_divide import layer_divide
 from .model_convert import model_convert
 from .convert_to_ckpt import convert_to_ckpt
 from .unconditional import train_unconditional
+from .lcm import train_lcm
 from transformers import BeitFeatureExtractor, BeitForImageClassification
 from PIL import Image
 import os
@@ -330,4 +331,44 @@ def start_model_conversion():
         output_path = os.path.join(os.path.dirname(file), f"{pathlib.Path(file).stem}.{format}")
         model_convert(file, output_path)
         show_in_folder("", output_path)
+    return "done"
+
+def lcm(images, name, model_name, train_data, output, num_train_epochs, learning_rate, resolution, save_steps, 
+    gradient_accumulation_steps, validation_prompt, validation_steps, lr_scheduler, save_lora, rank):
+    global gen_thread 
+    gen_thread = threading.get_ident()
+    socketio.emit("train starting")
+    train_lcm(images, name, model_name, train_data, output, num_train_epochs, learning_rate, resolution, save_steps, 
+    gradient_accumulation_steps, validation_prompt, validation_steps, lr_scheduler, save_lora, rank)
+    socketio.emit("train complete")
+    show_in_folder("", f"{output}/{name}.ckpt")
+    return "done"
+
+@app.route("/train-lcm", methods=["POST"])
+def start_lcm():
+    global gen_thread
+    data = flask.request.json
+    name = data["name"]
+    images = data["images"]
+    model_name = data["model_name"]
+    train_data = data["train_data"].strip()
+    num_train_epochs = data["num_train_epochs"]
+    learning_rate = data["learning_rate"]
+    resolution = data["resolution"]
+    save_steps = data["save_steps"] 
+    gradient_accumulation_steps = data["gradient_accumulation_steps"]
+    validation_prompt = data["validation_prompt"]
+    validation_steps = data["validation_steps"]
+    lr_scheduler = data["learning_function"]
+    save_lora = data["save_lora"]
+    rank = data["rank"]
+    output = os.path.join(get_outputs_dir(), f"models/lcm/{name}")
+    pathlib.Path(output).mkdir(parents=True, exist_ok=True)
+    model_name = os.path.join(get_models_dir(), f"diffusion/{model_name}")
+
+    thread = threading.Thread(target=lcm, args=(images, name, model_name, train_data, output, num_train_epochs, learning_rate, resolution, save_steps, 
+    gradient_accumulation_steps, validation_prompt, validation_steps, lr_scheduler, save_lora, rank))
+    thread.start()
+    thread.join()
+    gen_thread = None
     return "done"

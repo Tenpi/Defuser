@@ -140,7 +140,7 @@ const TitleBar: React.FunctionComponent<Props> = (props) => {
     const getMarginLeft = () => {
         if (typeof window === "undefined") return "0px"
         let px = window.innerWidth / 2
-        let offset = 70
+        let offset = -35
         return `${px + offset}px`
     }
 
