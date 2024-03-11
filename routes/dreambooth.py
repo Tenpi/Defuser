@@ -1505,8 +1505,8 @@ def train_dreambooth(images, model_name, train_data, instance_prompt, output, nu
     if not validation_prompt: validation_prompt = ""
     if not lr_scheduler: lr_scheduler = "constant"
     if not gradient_accumulation_steps: gradient_accumulation_steps = 1
-    if not new_unet: new_unet = False
-    if not new_text_encoder: new_text_encoder = False
+    if new_unet is None: new_unet = False
+    if new_text_encoder is None: new_text_encoder = False
 
     steps_per_epoch = math.ceil(len(images) / gradient_accumulation_steps)
     max_train_steps = num_train_epochs * steps_per_epoch

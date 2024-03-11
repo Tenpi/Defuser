@@ -298,9 +298,7 @@ def log_validation(vae, unet, args, accelerator, weight_dtype, step, name="targe
         pipeline.fuse_lora()
 
     pipeline = pipeline.to(accelerator.device, dtype=weight_dtype)
-
-    if args.enable_xformers_memory_efficient_attention:
-        pipeline.enable_xformers_memory_efficient_attention()
+    pipeline.enable_attention_slicing()
 
     if args.seed is None:
         generator = None
@@ -578,6 +576,13 @@ def main(args):
     unet.load_state_dict(teacher_unet.state_dict(), strict=False)
     unet.train()
 
+    # 8. Create target student U-Net. This will be updated via EMA updates (polyak averaging).
+    # Initialize from (online) unet
+    target_unet = UNet2DConditionModel.from_config(unet.config)
+    target_unet.load_state_dict(unet.state_dict())
+    target_unet.train()
+    target_unet.requires_grad_(False)
+
     if args.save_lora:
         if args.lora_target_modules is not None:
             lora_target_modules = [module_key.strip() for module_key in args.lora_target_modules.split(",")]
@@ -604,13 +609,7 @@ def main(args):
             lora_alpha=args.lora_alpha,
             lora_dropout=args.lora_dropout,
         )
-        unet = get_peft_model(unet, lora_config)
-
-    # 8. Create target student U-Net. This will be updated via EMA updates (polyak averaging).
-    # Initialize from (online) unet
-    target_unet = copy.deepcopy(unet)
-    target_unet.train()
-    target_unet.requires_grad_(False)
+        target_unet = get_peft_model(target_unet, lora_config)
 
     low_precision_error_string = (
         " Please make sure to always have all model weights in full float32 precision when starting training - even if"
@@ -1042,44 +1041,8 @@ def main(args):
                         accelerator.save_state(save_path)
                         logger.info(f"Saved state to {save_path}")
 
-                        unet = accelerator.unwrap_model(unet)
-                        if xl:
-                            pipeline = StableDiffusionXLPipeline.from_single_file(
-                                args.pretrained_teacher_model,
-                                unet=unet,
-                                torch_dtype=weight_dtype
-                            )
-                        else:
-                            pipeline = StableDiffusionPipeline.from_single_file(
-                                args.pretrained_teacher_model,
-                                unet=unet,
-                                torch_dtype=weight_dtype
-                            )
-                        scheduler_args = {}
-                        if "variance_type" in pipeline.scheduler.config:
-                            variance_type = pipeline.scheduler.config.variance_type
-                            if variance_type in ["learned", "learned_range"]:
-                                variance_type = "fixed_small"
-                            scheduler_args["variance_type"] = variance_type
-                        pipeline.scheduler = pipeline.scheduler.from_config(pipeline.scheduler.config, **scheduler_args)
-
-                        temp = f"{args.output_dir}/temp"
-                        pipeline.save_pretrained(temp)
-                        metadata = {
-                            "name": name,
-                            "steps": str(global_step),
-                            "epochs": str(epoch),
-                            "checkpoint": os.path.basename(args.pretrained_teacher_model),
-                            "images": str(len(train_dataloader)),
-                            "learning_rate": str(args.learning_rate),
-                            "gradient_accumulation_steps": str(args.gradient_accumulation_steps),
-                            "learning_function": learning_function,
-                            "sources": args.sources
-                        }
-                        convert_to_ckpt(temp, f"{args.output_dir}/{name}-{global_step}.ckpt", metadata=metadata)
-                        shutil.rmtree(temp)
-
                         if args.save_lora:
+                            unet = accelerator.unwrap_model(unet)
                             unet_lora_layers = convert_state_dict_to_diffusers(get_peft_model_state_dict(unet))
                             if xl:
                                 StableDiffusionXLPipeline.save_lora_weights(
@@ -1108,6 +1071,43 @@ def main(args):
                             }
                             safetensors.torch.save_file(kohya_state_dict, f"{args.output_dir}/{name}-{global_step}.safetensors", metadata=metadata)
                             os.remove(temp_file)
+                        else:
+                            unet = accelerator.unwrap_model(unet)
+                            if xl:
+                                pipeline = StableDiffusionXLPipeline.from_single_file(
+                                    args.pretrained_teacher_model,
+                                    unet=unet,
+                                    torch_dtype=weight_dtype
+                                )
+                            else:
+                                pipeline = StableDiffusionPipeline.from_single_file(
+                                    args.pretrained_teacher_model,
+                                    unet=unet,
+                                    torch_dtype=weight_dtype
+                                )
+                            scheduler_args = {}
+                            if "variance_type" in pipeline.scheduler.config:
+                                variance_type = pipeline.scheduler.config.variance_type
+                                if variance_type in ["learned", "learned_range"]:
+                                    variance_type = "fixed_small"
+                                scheduler_args["variance_type"] = variance_type
+                            pipeline.scheduler = pipeline.scheduler.from_config(pipeline.scheduler.config, **scheduler_args)
+
+                            temp = f"{args.output_dir}/temp"
+                            pipeline.save_pretrained(temp)
+                            metadata = {
+                                "name": name,
+                                "steps": str(global_step),
+                                "epochs": str(epoch),
+                                "checkpoint": os.path.basename(args.pretrained_teacher_model),
+                                "images": str(len(train_dataloader)),
+                                "learning_rate": str(args.learning_rate),
+                                "gradient_accumulation_steps": str(args.gradient_accumulation_steps),
+                                "learning_function": learning_function,
+                                "sources": args.sources
+                            }
+                            convert_to_ckpt(temp, f"{args.output_dir}/{name}-{global_step}.ckpt", metadata=metadata)
+                            shutil.rmtree(temp)
 
                     if global_step % args.validation_steps == 0:
                         images = log_validation(vae, target_unet, args, accelerator, weight_dtype, global_step, "target")
@@ -1126,44 +1126,8 @@ def main(args):
     # Create the pipeline using using the trained modules and save it.
     accelerator.wait_for_everyone()
     if accelerator.is_main_process:
-        unet = accelerator.unwrap_model(unet)
-        if xl:
-            pipeline = StableDiffusionXLPipeline.from_single_file(
-                args.pretrained_teacher_model,
-                unet=accelerator.unwrap_model(unet),
-                torch_dtype=weight_dtype
-            )
-        else:
-            pipeline = StableDiffusionPipeline.from_single_file(
-                args.pretrained_teacher_model,
-                unet=accelerator.unwrap_model(unet),
-                torch_dtype=weight_dtype
-            )
-        scheduler_args = {}
-        if "variance_type" in pipeline.scheduler.config:
-            variance_type = pipeline.scheduler.config.variance_type
-            if variance_type in ["learned", "learned_range"]:
-                variance_type = "fixed_small"
-            scheduler_args["variance_type"] = variance_type
-        pipeline.scheduler = pipeline.scheduler.from_config(pipeline.scheduler.config, **scheduler_args)
-
-        temp = f"{args.output_dir}/temp"
-        pipeline.save_pretrained(temp)
-        metadata = {
-            "name": name,
-            "steps": str(global_step),
-            "epochs": str(epoch),
-            "checkpoint": os.path.basename(args.pretrained_teacher_model),
-            "images": str(len(train_dataloader)),
-            "learning_rate": str(args.learning_rate),
-            "gradient_accumulation_steps": str(args.gradient_accumulation_steps),
-            "learning_function": learning_function,
-            "sources": args.sources
-        }
-        convert_to_ckpt(temp, f"{args.output_dir}/{name}.ckpt", metadata=metadata)
-        shutil.rmtree(temp)
-
         if args.save_lora:
+            unet = accelerator.unwrap_model(unet)
             unet_lora_layers = convert_state_dict_to_diffusers(get_peft_model_state_dict(unet))
             if xl:
                 StableDiffusionXLPipeline.save_lora_weights(
@@ -1192,6 +1156,43 @@ def main(args):
             }
             safetensors.torch.save_file(kohya_state_dict, f"{args.output_dir}/{name}.safetensors", metadata=metadata)
             os.remove(temp_file)
+        else:
+            unet = accelerator.unwrap_model(unet)
+            if xl:
+                pipeline = StableDiffusionXLPipeline.from_single_file(
+                    args.pretrained_teacher_model,
+                    unet=unet,
+                    torch_dtype=weight_dtype
+                )
+            else:
+                pipeline = StableDiffusionPipeline.from_single_file(
+                    args.pretrained_teacher_model,
+                    unet=unet,
+                    torch_dtype=weight_dtype
+                )
+            scheduler_args = {}
+            if "variance_type" in pipeline.scheduler.config:
+                variance_type = pipeline.scheduler.config.variance_type
+                if variance_type in ["learned", "learned_range"]:
+                    variance_type = "fixed_small"
+                scheduler_args["variance_type"] = variance_type
+            pipeline.scheduler = pipeline.scheduler.from_config(pipeline.scheduler.config, **scheduler_args)
+
+            temp = f"{args.output_dir}/temp"
+            pipeline.save_pretrained(temp)
+            metadata = {
+                "name": name,
+                "steps": str(global_step),
+                "epochs": str(epoch),
+                "checkpoint": os.path.basename(args.pretrained_teacher_model),
+                "images": str(len(train_dataloader)),
+                "learning_rate": str(args.learning_rate),
+                "gradient_accumulation_steps": str(args.gradient_accumulation_steps),
+                "learning_function": learning_function,
+                "sources": args.sources
+            }
+            convert_to_ckpt(temp, f"{args.output_dir}/{name}.ckpt", metadata=metadata)
+            shutil.rmtree(temp)
     accelerator.end_training()
 
 class DotDict(dict):
@@ -1278,7 +1279,7 @@ def train_lcm(images, name, model_name, train_data, output, num_train_epochs, le
     if not validation_prompt: validation_prompt = ""
     if not lr_scheduler: lr_scheduler = "constant"
     if not gradient_accumulation_steps: gradient_accumulation_steps = 1
-    if not save_lora: save_lora = True
+    if save_lora is None: save_lora = True
     if not rank: rank = 32
 
     steps_per_epoch = math.ceil(len(images) / gradient_accumulation_steps)
