@@ -323,11 +323,11 @@ def save_watermark():
 
 def select_file():
     global executable
-    program = os.path.join(dirname, "../dialog/dialog")
+    program = os.path.join(dirname, "../dialog/dialog.AppImage")
     if platform.system() == "Windows":
         program = os.path.join(dirname, "../dialog/dialog.exe")
     if platform.system() == "Darwin":
-        program = os.path.join(dirname, "../dialog/dialog.app")
+        program = os.path.join(dirname, "../dialog/dialog")
     program = os.path.normpath(program)
     file_selected = subprocess.check_output([program, "-o"], **subprocess_args(False))
     file_selected = file_selected.decode("utf-8")
@@ -337,11 +337,11 @@ def select_file():
 
 def select_folder():
     global executable
-    program = os.path.join(dirname, "../dialog/dialog")
+    program = os.path.join(dirname, "../dialog/dialog.AppImage")
     if platform.system() == "Windows":
         program = os.path.join(dirname, "../dialog/dialog.exe")
     if platform.system() == "Darwin":
-        program = os.path.join(dirname, "../dialog/dialog.app")
+        program = os.path.join(dirname, "../dialog/dialog")
     program = os.path.normpath(program)
     folder_selected = subprocess.check_output([program, "-d"], **subprocess_args(False))
     folder_selected = folder_selected.decode("utf-8")

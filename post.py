@@ -66,11 +66,13 @@ if __name__ == "__main__":
     package_path = os.path.join(dirname, "package.json")
     config_path = os.path.join(dirname, build_dir, name, "config.json")
     version = ""
+    repo_url = ""
     with open(package_path) as pkg:
         json_data = json.load(pkg)
         version = json_data["version"]
+        repo_url = json_data["repository"]["url"]
     with open(config_path, "r+") as cfg:
-        json_dict = {"version": version}
+        json_dict = {"version": version, "repository": {"url": repo_url}}
         json_data = json.load(cfg)
         for key, value in json_data.items():
             json_dict[key] = value

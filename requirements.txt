@@ -1,6 +1,5 @@
 accelerate==0.27.2
 animeface==2.0.2
-bitsandbytes==0.42.0
 compel==2.0.2
 controlnet_aux @ git+https://github.com/Tenpi/controlnet_aux
 diffusers @ git+https://github.com/huggingface/diffusers
