@@ -179,7 +179,11 @@ def show_in_folder(path, absolute):
     if not absolute:
         absolute = os.path.join(dirname, f"../{path}")
     if platform.system() == "Windows":
-        subprocess.run(fr'explorer /select, "{absolute}"')
+        curr_shell = subprocess.check_output("(dir 2>&1 *`|echo CMD);&<# rem #>echo PowerShell", shell=True).decode("utf-8")
+        if curr_shell == "CMD":
+            subprocess.run(fr'C:\Windows\explorer.exe /select, "{absolute}"')
+        else:
+            subprocess.run(fr'Start-Process -FilePath C:\Windows\explorer.exe -ArgumentList "/select, "{absolute}""')
     elif platform.system() == "Darwin":
         subprocess.call(["open", "-R", absolute])
     else:
