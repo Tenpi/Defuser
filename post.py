@@ -1,6 +1,7 @@
 import shutil
 import os
 import platform
+import json
 
 dirname = os.path.dirname(__file__)
 
@@ -61,6 +62,17 @@ if __name__ == "__main__":
         data = data.replace("styles.css", "dist/styles.css")
         index.seek(0)
         index.write(data)
+
+    package_path = os.path.join(dirname, "package.json")
+    config_path = os.path.join(dirname, build_dir, name, "config.json")
+    version = ""
+    with open(package_path) as pkg:
+        json_data = json.load(pkg)
+        version = json_data["version"]
+    with open(config_path, "w") as cfg:
+        json_data = json.load(cfg)
+        json_data["version"] = version
+        json.dump(json_data, cfg, indent=4)
 
     shutil.make_archive(name, "zip", os.path.join(dirname, build_dir), name)
     shutil.move(os.path.join(dirname, f"{name}.zip"), os.path.join(dirname, build_dir, f"{name}.zip"))

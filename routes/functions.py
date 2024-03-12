@@ -360,6 +360,8 @@ def version_changed(v1, v2):
 
 def check_for_updates():
     package_path = os.path.normpath(os.path.join(dirname, "../package.json"))
+    if not os.path.exists(package_path):
+        package_path = os.path.normpath(os.path.join(dirname, "../config.json"))
     with open(package_path) as f:
         data = json.load(f)
     current_version = data["version"]

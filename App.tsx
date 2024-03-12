@@ -11,6 +11,7 @@ import MainPage from "./pages/MainPage"
 import "./index.less"
 
 require.context("./assets/icons", true)
+require.context("./assets/images", true)
 
 const App: React.FunctionComponent = (props) => {
     const [ignored, forceUpdate] = useReducer(x => x + 1, 0)
