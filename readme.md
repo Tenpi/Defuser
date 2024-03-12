@@ -79,7 +79,7 @@ git clone https://huggingface.co/defuzers/models
 Install the code dependencies.
 ```sh
 npm install
-pip3 install -r requirements-mac.txt
+pip3 install -r requirements.txt
 ```
 
 ### Running
