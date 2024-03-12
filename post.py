@@ -2,6 +2,7 @@ import shutil
 import os
 import platform
 import json
+import zipfile
 
 dirname = os.path.dirname(__file__)
 
@@ -38,6 +39,32 @@ make_dirs = [
     "models/upscaler",
     "models/vae"
 ]
+
+def zip_file(input_dir, output_zip):
+    """Zip up a directory and preserve symlinks and empty directories"""
+    zip_out = zipfile.ZipFile(output_zip, "w", compression=zipfile.ZIP_DEFLATED)
+    rootLen = len(os.path.dirname(input_dir))
+    def _ArchiveDirectory(parentDirectory):
+        contents = os.listdir(parentDirectory)
+        if not contents:
+            archiveRoot = parentDirectory[rootLen:].replace("\\", "/").lstrip("/")
+            zipInfo = zipfile.ZipInfo(archiveRoot+"/")
+            zip_out.writestr(zipInfo, "")
+        for item in contents:
+            fullPath = os.path.join(parentDirectory, item)
+            if os.path.isdir(fullPath) and not os.path.islink(fullPath):
+                _ArchiveDirectory(fullPath)
+            else:
+                archiveRoot = fullPath[rootLen:].replace("\\", "/").lstrip("/")
+                if os.path.islink(fullPath):
+                    zipInfo = zipfile.ZipInfo(archiveRoot)
+                    zipInfo.create_system = 3
+                    zipInfo.external_attr = 2716663808
+                    zip_out.writestr(zipInfo, os.readlink(fullPath))
+                else:
+                    zip_out.write(fullPath, archiveRoot, zipfile.ZIP_DEFLATED)
+    _ArchiveDirectory(input_dir)
+    zip_out.close()
 
 if __name__ == "__main__":
     os.remove(os.path.join(dirname, "main.spec"))
@@ -81,5 +108,4 @@ if __name__ == "__main__":
         cfg.seek(0)
         json.dump(json_dict, cfg, indent=4)
 
-    shutil.make_archive(name, "zip", os.path.join(dirname, build_dir), name)
-    shutil.move(os.path.join(dirname, f"{name}.zip"), os.path.join(dirname, build_dir, f"{name}.zip"))
+    zip_file(os.path.join(dirname, build_dir, name), os.path.join(dirname, build_dir, f"{name}.zip"))
