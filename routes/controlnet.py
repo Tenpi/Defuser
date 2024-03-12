@@ -9,6 +9,7 @@ from controlnet_aux import CannyDetector, MidasDetector, LineartDetector, Linear
 from .lineart_manga import LineartMangaDetector
 import PIL.ImageOps 
 import cv2
+import gc
 
 dirname = os.path.dirname(__file__)
 device = "mps" if torch.backends.mps.is_available() else "cuda" if torch.cuda.is_available() else "cpu"
@@ -107,6 +108,10 @@ def control_image():
         socketio.emit("image starting")
 
     image = Image.open(file).convert("RGB")
+
+    gc.collect()
+    torch.mps.empty_cache()
+    torch.cuda.empty_cache()
 
     output_image = None
     if processor == "canny":

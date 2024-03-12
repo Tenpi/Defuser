@@ -1256,4 +1256,8 @@ def train_hypernetwork(images, model_name, train_data, instance_prompt, output, 
     options.sources = get_sources(train_data)
     options.sizes = sizes
 
+    gc.collect()
+    torch.mps.empty_cache()
+    torch.cuda.empty_cache()
+
     main(options)

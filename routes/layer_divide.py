@@ -9,6 +9,7 @@ from tqdm import tqdm
 from segment_anything import sam_model_registry, SamAutomaticMaskGenerator
 import os
 import copy
+import gc
 import pickle
 import psd_tools
 from psd_tools.psd import PSD
@@ -692,6 +693,10 @@ def layer_divide(input_image, output_dir, divide_mode, loops, clusters, cluster_
     alpha = 100
     th_rate = 0.1
     split_bg = True
+
+    gc.collect()
+    torch.mps.empty_cache()
+    torch.cuda.empty_cache()
 
     output = ""
     if divide_mode == "color_base_mode":

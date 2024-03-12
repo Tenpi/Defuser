@@ -64,8 +64,9 @@ def index():
 def load_config():
     global host
     global port
-    if os.path.exists("config.json"):
-        with open("config.json") as config:
+    config_path = os.path.normpath(os.path.join(dirname, "config.json"))
+    if os.path.exists(config_path):
+        with open(config_path) as config:
             data = json.load(config)
         host = data["host"]
         port = data["port"]

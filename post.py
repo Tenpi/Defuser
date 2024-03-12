@@ -69,10 +69,13 @@ if __name__ == "__main__":
     with open(package_path) as pkg:
         json_data = json.load(pkg)
         version = json_data["version"]
-    with open(config_path, "w") as cfg:
+    with open(config_path, "r+") as cfg:
+        json_dict = {"version": version}
         json_data = json.load(cfg)
-        json_data["version"] = version
-        json.dump(json_data, cfg, indent=4)
+        for key, value in json_data.items():
+            json_dict[key] = value
+        cfg.seek(0)
+        json.dump(json_dict, cfg, indent=4)
 
     shutil.make_archive(name, "zip", os.path.join(dirname, build_dir), name)
     shutil.move(os.path.join(dirname, f"{name}.zip"), os.path.join(dirname, build_dir, f"{name}.zip"))

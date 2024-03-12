@@ -7,6 +7,7 @@ import os
 import random
 from typing import Optional, Iterable
 import numpy as np
+import gc
 import torch
 import torch.nn.functional as F
 import torch.utils.checkpoint
@@ -871,5 +872,9 @@ def train_dreamartist(images, model_name, train_data, token, output, num_train_e
     num_neg_vectors, gradient_accumulation_steps, validation_prompt, validation_steps, lr_scheduler, cfg_scale)
 
     options.sources = get_sources(train_data)
+
+    gc.collect()
+    torch.mps.empty_cache()
+    torch.cuda.empty_cache()
 
     main(options)

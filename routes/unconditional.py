@@ -1,6 +1,7 @@
 from __main__ import app, socketio
 from .functions import is_image, get_number_from_filename
 import os
+import gc
 from PIL import Image
 from torchvision import transforms
 from accelerate import Accelerator
@@ -265,5 +266,9 @@ def train_unconditional(name, train_data, output, num_train_epochs, learning_rat
 
     config.num_epochs = num_train_epochs
     unet = create_unet(resolution)
+    
+    gc.collect()
+    torch.mps.empty_cache()
+    torch.cuda.empty_cache()
 
     main(config, unet, images)

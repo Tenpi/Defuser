@@ -4,6 +4,7 @@ import argparse
 import logging
 import math
 import os
+import gc
 import random
 import shutil
 import warnings
@@ -686,5 +687,9 @@ def train_textual_inversion(images, model_name, train_data, token, output, num_t
     gradient_accumulation_steps, validation_prompt, validation_steps, lr_scheduler)
 
     options.sources = get_sources(train_data)
+
+    gc.collect()
+    torch.mps.empty_cache()
+    torch.cuda.empty_cache()
 
     main(options)

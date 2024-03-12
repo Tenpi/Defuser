@@ -3,15 +3,15 @@ import {Switch, Route, Redirect, useHistory, useLocation} from "react-router-dom
 import Context, {EnableDragContext, MobileContext, SocketContext, ImagesContext, UpdateImagesContext, TextualInversionsContext,
 HypernetworksContext, LorasContext, ReverseSortContext, NSFWImagesContext, ImageInputImagesContext, NovelAIImagesContext,
 NovelAINSFWImagesContext, NovelAIImageInputImagesContext, HolaraAIImagesContext, HolaraAINSFWImagesContext, HolaraAIImageInputImagesContext, 
-GeneratorContext, SavedPromptsContext, SavedPromptsNovelAIContext, SavedPromptsHolaraAIContext, ModelDirContext, OutputDirContext} from "./Context"
+GeneratorContext, SavedPromptsContext, SavedPromptsNovelAIContext, SavedPromptsHolaraAIContext, ModelDirContext, OutputDirContext, CheckForUpdatesContext} from "./Context"
 import axios from "axios"
 import {io} from "socket.io-client"
 import functions from "./structures/Functions"
 import MainPage from "./pages/MainPage"
+import emptyPSD from "./assets/images/empty.psd"
 import "./index.less"
 
 require.context("./assets/icons", true)
-require.context("./assets/images", true)
 
 const App: React.FunctionComponent = (props) => {
     const [ignored, forceUpdate] = useReducer(x => x + 1, 0)
@@ -39,6 +39,7 @@ const App: React.FunctionComponent = (props) => {
     const [savedPromptsHolaraAI, setSavedPromptsHolaraAI] = useState([])
     const [modelDir, setModelDir] = useState("models")
     const [outputDir, setOutputDir] = useState("outputs")
+    const [checkForUpdates, setCheckForUpdates] = useState(true)
 
     useEffect(() => {
         functions.preventDragging()
@@ -94,10 +95,14 @@ const App: React.FunctionComponent = (props) => {
             const clipSkip = localStorage.getItem("clipSkip")
             const processing = localStorage.getItem("processing")
             const generator = localStorage.getItem("generator")
+            const checkForUpdates = localStorage.getItem("checkForUpdates")
             socket.emit("load interrogate model", interrogatorName)
             socket.emit("load diffusion model", modelName, vaeName, clipSkip, processing, generator)
             socket.emit("load control models")
-            socket.emit("check update")
+            setCheckForUpdates(checkForUpdates === "true")
+            if (checkForUpdates === "true") {
+                socket.emit("check update")
+            }
         }, 200)
     }, [socket])
 
@@ -178,6 +183,7 @@ const App: React.FunctionComponent = (props) => {
 
     return (
         <div className={`app ${!loaded ? "stop-transitions" : ""}`}>
+            <CheckForUpdatesContext.Provider value={{checkForUpdates, setCheckForUpdates}}>
             <OutputDirContext.Provider value={{outputDir, setOutputDir}}>
             <ModelDirContext.Provider value={{modelDir, setModelDir}}>
             <SavedPromptsContext.Provider value={{savedPrompts, setSavedPrompts}}>
@@ -230,6 +236,7 @@ const App: React.FunctionComponent = (props) => {
             </SavedPromptsContext.Provider>
             </ModelDirContext.Provider>
             </OutputDirContext.Provider>
+            </CheckForUpdatesContext.Provider>
         </div>
     )
 }

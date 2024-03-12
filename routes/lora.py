@@ -1561,4 +1561,8 @@ def train_lora(images, model_name, train_data, instance_prompt, output, num_trai
 
     options.sources = get_sources(train_data)
 
+    gc.collect()
+    torch.mps.empty_cache()
+    torch.cuda.empty_cache()
+
     main(options)

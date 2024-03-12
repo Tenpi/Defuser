@@ -15,6 +15,7 @@ from PIL import Image
 from PIL.ImageOps import exif_transpose
 from peft import LoraConfig, get_peft_model, get_peft_model_state_dict
 import numpy as np
+import gc
 import torch
 import torch.nn.functional as F
 import torch.utils.checkpoint
@@ -1290,5 +1291,9 @@ def train_lcm(images, name, model_name, train_data, output, num_train_epochs, le
     gradient_accumulation_steps, validation_prompt, validation_steps, lr_scheduler, save_lora, rank)
 
     options.sources = get_sources(train_data)
+
+    gc.collect()
+    torch.mps.empty_cache()
+    torch.cuda.empty_cache()
 
     main(options)

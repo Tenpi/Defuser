@@ -5,7 +5,7 @@ import favicon from "../assets/icons/favicon.png"
 import {EnableDragContext, MobileContext, SiteHueContext, SiteSaturationContext, SiteLightnessContext, NegativePromptContext, ProcessingContext,
 InterrogatorNameContext, DeletionContext, FormatContext, PrecisionContext, LoopModeContext, WatermarkContext, UpscalerContext, NSFWTabContext,
 InvisibleWatermarkContext, SauceNaoAPIKeyContext, RandomPromptModeContext, GeneratorContext, NovelAITokenContext, HolaraAICookieContext, 
-ModelDirContext, OutputDirContext} from "../Context"
+ModelDirContext, OutputDirContext, CheckForUpdatesContext} from "../Context"
 import functions from "../structures/Functions"
 import {Dropdown, DropdownButton} from "react-bootstrap"
 import checkbox from "../assets/icons/checkbox2.png"
@@ -38,6 +38,7 @@ const SettingsBar: React.FunctionComponent = (props) => {
     const {holaraAICookie, setHolaraAICookie} = useContext(HolaraAICookieContext)
     const {modelDir, setModelDir} = useContext(ModelDirContext)
     const {outputDir, setOutputDir} = useContext(OutputDirContext)
+    const {checkForUpdates, setCheckForUpdates} = useContext(CheckForUpdatesContext)
     const [unloadTrigger, setUnloadTrigger] = useState(false)
     const ref = useRef<HTMLCanvasElement>(null)
     const history = useHistory()
@@ -83,6 +84,8 @@ const SettingsBar: React.FunctionComponent = (props) => {
         if (savedModelDir) setModelDir(savedModelDir)
         const savedOutputDir = localStorage.getItem("outputDir")
         if (savedOutputDir) setOutputDir(savedOutputDir)
+        const savedCheckForUpdates = localStorage.getItem("checkForUpdates")
+        if (savedCheckForUpdates) setCheckForUpdates(savedCheckForUpdates)
     }, [])
 
     useEffect(() => {
@@ -104,9 +107,10 @@ const SettingsBar: React.FunctionComponent = (props) => {
         localStorage.setItem("holaraAICookie", String(holaraAICookie))
         localStorage.setItem("modelDir", String(modelDir))
         localStorage.setItem("outputDir", String(outputDir))
+        localStorage.setItem("checkForUpdates", String(checkForUpdates))
     }, [negativePrompt, interrogatorName, processing, format, deletion, precision, loopMode, 
         upscaler, nsfwTab, invisibleWatermark, watermark, saucenaoAPIKey, randomPromptMode,
-        generator, novelAIToken, holaraAICookie, modelDir, outputDir])
+        generator, novelAIToken, holaraAICookie, modelDir, outputDir, checkForUpdates])
 
     const resetNegativePrompt = () => {
         setNegativePrompt("")
@@ -237,6 +241,13 @@ const SettingsBar: React.FunctionComponent = (props) => {
                 <DropdownButton title={deletion} drop="down" className="checkpoint-selector">
                     <Dropdown.Item active={deletion === "trash"} onClick={() => setDeletion("trash")}>trash</Dropdown.Item>
                     <Dropdown.Item active={deletion === "permanent"} onClick={() => setDeletion("permanent")}>permanent</Dropdown.Item>
+                </DropdownButton>
+            </div>
+            <div className="settings-bar-row">
+                <span className="settings-bar-text">Check For Updates:</span>
+                <DropdownButton title={checkForUpdates ? "Yes" : "No"} drop="down" className="checkpoint-selector">
+                    <Dropdown.Item active={checkForUpdates} onClick={() => setCheckForUpdates(true)}>Yes</Dropdown.Item>
+                    <Dropdown.Item active={!checkForUpdates} onClick={() => setCheckForUpdates(false)}>No</Dropdown.Item>
                 </DropdownButton>
             </div>
             <div className="settings-bar-row">

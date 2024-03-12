@@ -140,6 +140,7 @@ export const IPAdapterNamesContext = React.createContext<any>(null)
 export const IPDrawImageContext = React.createContext<any>(null)
 export const IPMaskImageContext = React.createContext<any>(null)
 export const IPMaskDataContext = React.createContext<any>(null)
+export const CheckForUpdatesContext = React.createContext<any>(null)
 
 const Context: React.FunctionComponent = (props: any) => {
     const [theme, setTheme] = useState("light")

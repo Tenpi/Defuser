@@ -1520,4 +1520,8 @@ def train_dreambooth(images, model_name, train_data, instance_prompt, output, nu
     options.new_unet = new_unet
     options.new_text_encoder = new_text_encoder
 
+    gc.collect()
+    torch.mps.empty_cache()
+    torch.cuda.empty_cache()
+
     main(options)
