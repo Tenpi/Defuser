@@ -930,9 +930,12 @@ def generate_xl(data, request_files, get_controlnet=None, clear_step_frames=None
             socketio.emit("image complete", {"image": f"/outputs/local/{folder}/{os.path.basename(out_path)}", "needs_watermark": watermark})
             images.append(out_path)
             seed += 1
-    gc.collect()
-    torch.mps.empty_cache()
-    torch.cuda.empty_cache()
+    try:
+        gc.collect()
+        torch.cuda.empty_cache()
+        torch.mps.empty_cache()
+    except:
+        pass
     if infinite:
         socketio.emit("repeat generation")
     return images

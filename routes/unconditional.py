@@ -267,8 +267,11 @@ def train_unconditional(name, train_data, output, num_train_epochs, learning_rat
     config.num_epochs = num_train_epochs
     unet = create_unet(resolution)
     
-    gc.collect()
-    torch.mps.empty_cache()
-    torch.cuda.empty_cache()
+    try:
+        gc.collect()
+        torch.cuda.empty_cache()
+        torch.mps.empty_cache()
+    except:
+        pass
 
     main(config, unet, images)

@@ -111,9 +111,12 @@ def control_image():
 
     image = Image.open(file).convert("RGB")
 
-    gc.collect()
-    torch.mps.empty_cache()
-    torch.cuda.empty_cache()
+    try:
+        gc.collect()
+        torch.cuda.empty_cache()
+        torch.mps.empty_cache()
+    except:
+        pass
 
     output_image = None
     if processor == "canny":

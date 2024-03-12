@@ -126,8 +126,12 @@ def log_validation(text_encoder, tokenizer, unet, vae, options, accelerator, wei
         image = pipeline(options.validation_prompt, negative_prompt=negative_prompt, num_inference_steps=10, generator=generator, callback_on_step_end=step_progress).images[0]
         images.append(image)
     del pipeline
-    torch.mps.empty_cache()
-    torch.cuda.empty_cache()
+    try:
+        gc.collect()
+        torch.cuda.empty_cache()
+        torch.mps.empty_cache()
+    except:
+        pass
     return images
 
 def add_tokens_and_get_placeholder_token(args, token_ids, tokenizer, text_encoder, num_vec_per_token, original_placeholder_token, is_random=False, is_negative=False):
@@ -197,8 +201,12 @@ class EMAModel:
             else:
                 s_param.copy_(param)
 
-        torch.cuda.empty_cache()
-        torch.mps.empty_cache()
+        try:
+            gc.collect()
+            torch.cuda.empty_cache()
+            torch.mps.empty_cache()
+        except:
+            pass
 
     def copy_to(self, parameters: Iterable[torch.nn.Parameter]) -> None:
         """
@@ -873,8 +881,11 @@ def train_dreamartist(images, model_name, train_data, token, output, num_train_e
 
     options.sources = get_sources(train_data)
 
-    gc.collect()
-    torch.mps.empty_cache()
-    torch.cuda.empty_cache()
+    try:
+        gc.collect()
+        torch.cuda.empty_cache()
+        torch.mps.empty_cache()
+    except:
+        pass
 
     main(options)

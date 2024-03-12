@@ -457,8 +457,11 @@ def train_classifier(train_dir, output_dir, num_train_epochs, learning_rate, gra
     args = get_args(train_dir, output_dir, num_train_epochs, learning_rate, gradient_accumulation_steps, 
     lr_scheduler_type, save_steps, resolution, architecture)
 
-    gc.collect()
-    torch.mps.empty_cache()
-    torch.cuda.empty_cache()
+    try:
+        gc.collect()
+        torch.cuda.empty_cache()
+        torch.mps.empty_cache()
+    except:
+        pass
 
     main(args)

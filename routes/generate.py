@@ -259,9 +259,12 @@ def unload_models():
     unload_interrogate_models()
     unload_models_xl()
     unload_models_cascade()
-    gc.collect()
-    torch.mps.empty_cache()
-    torch.cuda.empty_cache()
+    try:
+        gc.collect()
+        torch.cuda.empty_cache()
+        torch.mps.empty_cache()
+    except:
+        pass
     return "done"
 
 @app.route("/update-infinite", methods=["POST"])
@@ -871,9 +874,12 @@ def generate(request_data, request_files):
             socketio.emit("image complete", {"image": f"/outputs/local/{folder}/{os.path.basename(out_path)}", "needs_watermark": watermark})
             images.append(out_path)
             seed += 1
-    gc.collect()
-    torch.mps.empty_cache()
-    torch.cuda.empty_cache()
+    try:
+        gc.collect()
+        torch.cuda.empty_cache()
+        torch.mps.empty_cache()
+    except:
+        pass
     if infinite:
         socketio.emit("repeat generation")
     return images

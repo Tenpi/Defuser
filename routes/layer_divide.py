@@ -694,9 +694,12 @@ def layer_divide(input_image, output_dir, divide_mode, loops, clusters, cluster_
     th_rate = 0.1
     split_bg = True
 
-    gc.collect()
-    torch.mps.empty_cache()
-    torch.cuda.empty_cache()
+    try:
+        gc.collect()
+        torch.cuda.empty_cache()
+        torch.mps.empty_cache()
+    except:
+        pass
 
     output = ""
     if divide_mode == "color_base_mode":

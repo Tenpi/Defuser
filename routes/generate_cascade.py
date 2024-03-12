@@ -212,9 +212,12 @@ def generate_cascade(data, request_files, clear_step_frames=None, generate_step_
         socketio.emit("image complete", {"image": f"/outputs/local/{folder}/{os.path.basename(out_path)}", "needs_watermark": watermark})
         images.append(out_path)
         seed += 1
-    gc.collect()
-    torch.mps.empty_cache()
-    torch.cuda.empty_cache()
+    try:
+        gc.collect()
+        torch.cuda.empty_cache()
+        torch.mps.empty_cache()
+    except:
+        pass
     if infinite:
         socketio.emit("repeat generation")
     return images

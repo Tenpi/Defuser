@@ -119,8 +119,12 @@ def log_validation(text_encoder, tokenizer, unet, vae, options, accelerator, wei
         image = pipeline(options.validation_prompt, num_inference_steps=10, generator=generator, callback_on_step_end=step_progress).images[0]
         images.append(image)
     del pipeline
-    torch.mps.empty_cache()
-    torch.cuda.empty_cache()
+    try:
+        gc.collect()
+        torch.cuda.empty_cache()
+        torch.mps.empty_cache()
+    except:
+        pass
     return images
 
 def save_progress(text_encoder, placeholder_token_ids, accelerator, options, save_path, save_data):
@@ -688,8 +692,11 @@ def train_textual_inversion(images, model_name, train_data, token, output, num_t
 
     options.sources = get_sources(train_data)
 
-    gc.collect()
-    torch.mps.empty_cache()
-    torch.cuda.empty_cache()
+    try:
+        gc.collect()
+        torch.cuda.empty_cache()
+        torch.mps.empty_cache()
+    except:
+        pass
 
     main(options)

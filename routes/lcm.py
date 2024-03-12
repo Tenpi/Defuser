@@ -312,9 +312,12 @@ def log_validation(vae, unet, args, accelerator, weight_dtype, step, name="targe
         generator=generator,
         callback_on_step_end=step_progress
     ).images
-    gc.collect()
-    torch.cuda.empty_cache()
-    torch.mps.empty_cache()
+    try:
+        gc.collect()
+        torch.cuda.empty_cache()
+        torch.mps.empty_cache()
+    except:
+        pass
     return images
 
 # From LatentConsistencyModel.get_guidance_scale_embedding
@@ -1292,8 +1295,11 @@ def train_lcm(images, name, model_name, train_data, output, num_train_epochs, le
 
     options.sources = get_sources(train_data)
 
-    gc.collect()
-    torch.mps.empty_cache()
-    torch.cuda.empty_cache()
+    try:
+        gc.collect()
+        torch.cuda.empty_cache()
+        torch.mps.empty_cache()
+    except:
+        pass
 
     main(options)

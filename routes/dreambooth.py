@@ -560,8 +560,12 @@ def main(args):
                     image.save(image_filename)
 
             del pipeline
-            torch.mps.empty_cache()
-            torch.cuda.empty_cache()
+            try:
+                gc.collect()
+                torch.cuda.empty_cache()
+                torch.mps.empty_cache()
+            except:
+                pass
 
     # Handle the repository creation
     if accelerator.is_main_process:
@@ -840,9 +844,12 @@ def main(args):
     # Clear the memory here
     if freeze_text_encoder and not train_dataset.custom_instance_prompts:
         del tokenizers, text_encoders
-        gc.collect()
-        torch.mps.empty_cache()
-        torch.cuda.empty_cache()
+        try:
+            gc.collect()
+            torch.cuda.empty_cache()
+            torch.mps.empty_cache()
+        except:
+            pass
 
     # if --train_text_encoder_ti we need add_special_tokens to be True for textual inversion
     add_special_tokens = True if args.train_text_encoder_ti else False
@@ -896,8 +903,12 @@ def main(args):
 
         if args.validation_prompt is None:
             del vae
-            torch.mps.empty_cache()
-            torch.cuda.empty_cache()
+            try:
+                gc.collect()
+                torch.cuda.empty_cache()
+                torch.mps.empty_cache()
+            except:
+                pass
 
     # Scheduler and math around the number of training steps.
     overrode_max_train_steps = False
@@ -1348,8 +1359,12 @@ def main(args):
                     socketio.emit("train image complete", {"image": save_path})
 
                 del pipeline
-                torch.mps.empty_cache()
-                torch.cuda.empty_cache()
+                try:
+                    gc.collect()
+                    torch.cuda.empty_cache()
+                    torch.mps.empty_cache()
+                except:
+                    pass
 
     # Save the model
     accelerator.wait_for_everyone()
@@ -1520,8 +1535,11 @@ def train_dreambooth(images, model_name, train_data, instance_prompt, output, nu
     options.new_unet = new_unet
     options.new_text_encoder = new_text_encoder
 
-    gc.collect()
-    torch.mps.empty_cache()
-    torch.cuda.empty_cache()
+    try:
+        gc.collect()
+        torch.cuda.empty_cache()
+        torch.mps.empty_cache()
+    except:
+        pass
 
     main(options)
