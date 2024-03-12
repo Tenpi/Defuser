@@ -9,10 +9,10 @@ name = "defuzers"
 tmp_dir = "tmp"
 build_dir = "build"
 dist_dir = "dist"
-app_dir = "server"
-app = "server"
+app_dir = "main"
+app = "main"
 if platform.system() == "Windows":
-    app = "server.exe"
+    app = "main.exe"
 
 make_dirs = [
     "outputs",
@@ -40,12 +40,14 @@ make_dirs = [
 ]
 
 if __name__ == "__main__":
-    os.remove(os.path.join(dirname, "server.spec"))
+    os.remove(os.path.join(dirname, "main.spec"))
     shutil.rmtree(os.path.join(dirname, tmp_dir))
     shutil.copytree(os.path.join(dirname, dist_dir), os.path.join(dirname, build_dir, name, dist_dir))
     shutil.copytree(os.path.join(dirname, "dialog"), os.path.join(dirname, build_dir, name, "dialog"))
     shutil.move(os.path.join(dirname, build_dir, app_dir), os.path.join(dirname, build_dir, name, app_dir))
     shutil.copy(os.path.join(dirname, "config.json"), os.path.join(dirname, build_dir, name, "config.json"))
+    os.remove(os.path.join(dirname, build_dir, name, dist_dir, "assets/images/patch.png"))
+    os.remove(os.path.join(dirname, build_dir, name, dist_dir, "assets/images/readme.png"))
 
     for dir in make_dirs:
         os.makedirs(os.path.join(dirname, build_dir, name, dir), exist_ok=True)

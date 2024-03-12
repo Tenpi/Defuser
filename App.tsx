@@ -8,10 +8,10 @@ import axios from "axios"
 import {io} from "socket.io-client"
 import functions from "./structures/Functions"
 import MainPage from "./pages/MainPage"
-import emptyPSD from "./assets/images/empty.psd"
 import "./index.less"
 
 require.context("./assets/icons", true)
+require.context("./assets/images", true)
 
 const App: React.FunctionComponent = (props) => {
     const [ignored, forceUpdate] = useReducer(x => x + 1, 0)

@@ -85,7 +85,7 @@ const SettingsBar: React.FunctionComponent = (props) => {
         const savedOutputDir = localStorage.getItem("outputDir")
         if (savedOutputDir) setOutputDir(savedOutputDir)
         const savedCheckForUpdates = localStorage.getItem("checkForUpdates")
-        if (savedCheckForUpdates) setCheckForUpdates(savedCheckForUpdates)
+        if (savedCheckForUpdates) setCheckForUpdates(savedCheckForUpdates === "true")
     }, [])
 
     useEffect(() => {

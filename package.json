@@ -3,9 +3,9 @@
   "version": "0.0.1",
   "description": "Image generation UI for diffusers",
   "scripts": {
-    "start": "git pull && npm run clean && webpack && cross-env PYTORCH_ENABLE_MPS_FALLBACK=1 python3 server.py",
-    "start-unlim": "git pull && npm run clean && webpack && cross-env PYTORCH_MPS_HIGH_WATERMARK_RATIO=0.0 python3 server.py",
-    "build": "npm run clean ./build ./tmp server.spec && webpack && pyinstaller --onedir --distpath 'build' --workpath 'tmp' --runtime-hook 'pre.py' --icon 'assets/icons/favicon.ico' server.py && python3 post.py",
+    "start": "git pull && npm run clean && webpack && cross-env PYTORCH_ENABLE_MPS_FALLBACK=1 python3 main.py",
+    "start-unlim": "git pull && npm run clean && webpack && cross-env PYTORCH_MPS_HIGH_WATERMARK_RATIO=0.0 python3 main.py",
+    "build": "npm run clean ./build ./tmp main.spec && webpack && pyinstaller --onedir --distpath 'build' --workpath 'tmp' --runtime-hook 'pre.py' --icon 'assets/icons/favicon.ico' main.py && python3 post.py",
     "clean": "del-cli ./dist"
   },
   "repository": {
