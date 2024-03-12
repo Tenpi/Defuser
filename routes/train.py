@@ -10,7 +10,6 @@ from .dreamartist import train_dreamartist
 from .checkpoint_merger import merge
 from .info import show_in_folder
 from pysaucenao import SauceNao
-import animeface
 import asyncio
 import time
 import os
@@ -416,21 +415,39 @@ def merge_route():
     gen_thread = None
     return "done"
 
+def crop_anime_face_fallback(images, size=512):
+    cascade_path = os.path.join(get_models_dir(), "misc/lbpcascade_animeface.xml")
+    face_detector = cv2.CascadeClassifier(cascade_path)
+
+    for i, img_path in enumerate(images):
+        img = cv2.imread(img_path)
+        img_h, img_w, img_c = img.shape
+        faces = face_detector.detectMultiScale(img)
+        for x, y, w, h in faces:
+            x, x1, y, y1 = resize_box(x, x + w, y, y + h, img_w, img_h, size)
+            face_img = img[int(y):int(y1), int(x):int(x1)]
+            cv2.imwrite(img_path, face_img)
+        socketio.emit("train progress", {"step": i+1, "total_step": len(images)})
+
 def crop_anime_face(images, size=512):
     global gen_thread 
     gen_thread = threading.get_ident()
     socketio.emit("train starting")
-    for i, img_path in enumerate(images):
-        if (".DS_Store" in img_path): return
-        img = cv2.imread(img_path)
-        img_h, img_w, img_c = img.shape
-        faces = animeface.detect(Image.open(img_path))
-        if len(faces):
-            pos = faces[0].face.pos
-            x, x1, y, y1 = resize_box(pos.x, pos.x + pos.width, pos.y, pos.y + pos.height, img_w, img_h, size)
-            face_img = img[int(y):int(y1), int(x):int(x1)]
-            cv2.imwrite(img_path, face_img)
-        socketio.emit("train progress", {"step": i+1, "total_step": len(images)})
+    try:
+        import animeface
+        for i, img_path in enumerate(images):
+            if (".DS_Store" in img_path): return
+            img = cv2.imread(img_path)
+            img_h, img_w, img_c = img.shape
+            faces = animeface.detect(Image.open(img_path))
+            if len(faces):
+                pos = faces[0].face.pos
+                x, x1, y, y1 = resize_box(pos.x, pos.x + pos.width, pos.y, pos.y + pos.height, img_w, img_h, size)
+                face_img = img[int(y):int(y1), int(x):int(x1)]
+                cv2.imwrite(img_path, face_img)
+            socketio.emit("train progress", {"step": i+1, "total_step": len(images)})
+    except ImportError:
+        crop_anime_face_fallback(images, size)
     socketio.emit("train complete")
     return "done"
 

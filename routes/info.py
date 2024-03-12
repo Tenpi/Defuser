@@ -358,6 +358,7 @@ def list_files():
     data = flask.request.json
     folder = data["folder"]
     folder = folder.strip()
+    if not os.path.exists(folder): return []
     files = os.listdir(folder)
     files = list(filter(lambda file: not is_unwanted(file) and is_image(file), files))
     files = sorted(files, key=lambda x: get_number_from_filename(x), reverse=False)
@@ -368,6 +369,7 @@ def list_folders():
     data = flask.request.json
     folder = data["folder"]
     folder = folder.strip()
+    if not os.path.exists(folder): return []
     files = os.listdir(folder)
     files = list(filter(lambda file: file != ".DS_Store" and os.path.isdir(os.path.join(folder, file)), files))
     return files

@@ -55,6 +55,8 @@ Python: https://www.python.org/downloads/ \
 Git: https://git-scm.com/downloads \
 Git LFS: https://git-lfs.com
 
+(Tested on Python 3.11, Node 20.11)
+
 ### Installation
 
 Clone the repository.
@@ -92,7 +94,7 @@ host and port can be changed in config.json.
 
 ### MacOS
 
-To run executables on MacOS you may need to remove the quarantine flag. 
+To run executables on MacOS, you may need to remove the quarantine flag. 
 
 ```
 xattr -d com.apple.quarantine server
@@ -109,6 +111,7 @@ cd python-animeface/third_party/nvxs-1.0.2
 make
 sudo make install
 ```
+It will fallback to `lbpcascade_animeface` if you don't have it which is slightly worse.
 
 ### ControlNet
 
