@@ -179,7 +179,7 @@ def show_in_folder(path, absolute):
     if not absolute:
         absolute = os.path.join(dirname, f"../{path}")
     if platform.system() == "Windows":
-        subprocess.Popen(fr"explorer /select, {absolute}")
+        subprocess.Popen(fr'explorer /select, "{absolute}"')
     elif platform.system() == "Darwin":
         subprocess.call(["open", "-R", absolute])
     else:
