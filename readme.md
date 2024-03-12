@@ -45,8 +45,8 @@ models is supported. It aims to be simple and fast to use.
 ### Precompiled Binaries
 
 There are precompiled binaries for MacOS arm64 and Windows x64 
-that don't require compiling the project from source. \
-https://github.com/Tenpi/Defuzers/releases 
+that don't require compiling the project from source. However, updates 
+will be pushed out slower. https://github.com/Tenpi/Defuzers/releases 
 
 ### Requirements
 
@@ -97,7 +97,7 @@ host and port can be changed in config.json.
 To run executables on MacOS, you may need to remove the quarantine flag. 
 
 ```
-xattr -d com.apple.quarantine server
+xattr -d com.apple.quarantine main
 xattr -d com.apple.quarantine dialog/dialog.app
 ```
 
