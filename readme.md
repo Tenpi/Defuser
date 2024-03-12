@@ -94,9 +94,10 @@ host and port can be changed in config.json.
 
 ### MacOS
 
-To run executables on MacOS, you may need to remove the quarantine flag. 
+To run on MacOS, you may need to remove the quarantine flags. 
 
 ```
+/usr/bin/xattr -rd com.apple.quarantine _internal
 xattr -d com.apple.quarantine main
 xattr -d com.apple.quarantine dialog/dialog
 ```
