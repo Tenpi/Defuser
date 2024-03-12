@@ -183,7 +183,7 @@ def show_in_folder(path, absolute):
         if curr_shell == "CMD":
             subprocess.run(fr'C:\Windows\explorer.exe /select, "{absolute}"')
         else:
-            subprocess.run(fr'Start-Process -FilePath C:\Windows\explorer.exe -ArgumentList "/select, ""{absolute}"')
+            subprocess.run(fr'$file="{absolute}"; Start-Process -FilePath C:\Windows\explorer.exe -ArgumentList "/select, ""$file"""')
     elif platform.system() == "Darwin":
         subprocess.call(["open", "-R", absolute])
     else:
