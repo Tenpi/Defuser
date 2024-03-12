@@ -98,7 +98,7 @@ To run executables on MacOS, you may need to remove the quarantine flag.
 
 ```
 xattr -d com.apple.quarantine main
-xattr -d com.apple.quarantine dialog/dialog.app
+xattr -d com.apple.quarantine dialog/dialog
 ```
 
 ### Animeface
