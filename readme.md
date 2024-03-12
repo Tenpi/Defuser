@@ -36,7 +36,7 @@ models is supported. It aims to be simple and fast to use.
 - Cross adapt SD1.5 lora to use in SDXL.
 - Change the generation source (local, Novel AI, Holara AI)
 
-### Supported Architectures/Services
+### Supported Architectures
 - Stable Diffusion 1
 - Stable Diffusion 2 ("V2" in checkpoint name)
 - Stable Diffusion XL ("XL" in checkpoint name)
