@@ -1,7 +1,7 @@
 from __main__ import app, socketio
 import os
 import torch
-from .functions import next_index, is_nsfw, get_normalized_dimensions, get_seed, append_info, upscale, get_models_dir, get_outputs_dir
+from .functions import next_index, is_nsfw, get_normalized_dimensions, get_seed, get_seed_generator, append_info, upscale, get_models_dir, get_outputs_dir
 from .invisiblewatermark import encode_watermark
 from .info import get_diffusion_models, get_vae_models
 from diffusers import StableCascadePriorPipeline, StableCascadeDecoderPipeline, DDPMWuerstchenScheduler
@@ -181,7 +181,7 @@ def generate_cascade(data, request_files, clear_step_frames=None, generate_step_
             guidance_scale=cfg,
             num_inference_steps=steps,
             num_images_per_prompt=1,
-            generator=torch.manual_seed(seed),
+            generator=get_seed_generator(seed, device),
             callback_on_step_end=step_progress_prior
         )
         image = decoder(
@@ -191,7 +191,7 @@ def generate_cascade(data, request_files, clear_step_frames=None, generate_step_
             guidance_scale=0.0,
             num_inference_steps=10,
             num_images_per_prompt=1,
-            generator=torch.manual_seed(seed),
+            generator=get_seed_generator(seed, device),
             callback_on_step_end=step_progress
         ).images[0]
         dir_path = os.path.join(get_outputs_dir(), f"local/{folder}")

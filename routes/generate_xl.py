@@ -1,7 +1,7 @@
 from __main__ import app, socketio
 import os
 import torch
-from .functions import next_index, is_nsfw, get_normalized_dimensions, get_seed, append_info, upscale, get_models_dir, get_outputs_dir
+from .functions import next_index, is_nsfw, get_normalized_dimensions, get_seed, get_seed_generator, append_info, upscale, get_models_dir, get_outputs_dir
 from .invisiblewatermark import encode_watermark
 from .info import get_diffusion_models, get_vae_models
 from diffusers import StableDiffusionPipeline, StableDiffusionXLPipeline, StableDiffusionXLImg2ImgPipeline, StableDiffusionXLInpaintPipeline, \
@@ -552,7 +552,7 @@ def generate_xl(data, request_files, get_controlnet=None, clear_step_frames=None
                     num_inference_steps=steps,
                     guidance_scale=cfg,
                     num_images_per_prompt=1,
-                    generator=torch.manual_seed(seed),
+                    generator=get_seed_generator(seed, device),
                     callback=step_progress,
                     cross_attention_kwargs=cross_attention_kwargs,
                     prompt_embeds_sd1_5=conditioning_sd1, 
@@ -575,7 +575,7 @@ def generate_xl(data, request_files, get_controlnet=None, clear_step_frames=None
                     num_inference_steps=steps,
                     guidance_scale=cfg,
                     num_images_per_prompt=1,
-                    generator=torch.manual_seed(seed),
+                    generator=get_seed_generator(seed, device),
                     clip_skip=clip_skip,
                     callback_on_step_end=step_progress,
                     cross_attention_kwargs=cross_attention_kwargs
@@ -617,7 +617,7 @@ def generate_xl(data, request_files, get_controlnet=None, clear_step_frames=None
                 negative_pooled_prompt_embeds=negative_pooled,
                 num_inference_steps=steps,
                 guidance_scale=cfg,
-                generator=torch.manual_seed(seed),
+                generator=get_seed_generator(seed, device),
                 clip_skip=clip_skip,
                 callback_on_step_end=step_progress,
                 cross_attention_kwargs=cross_attention_kwargs
@@ -664,7 +664,7 @@ def generate_xl(data, request_files, get_controlnet=None, clear_step_frames=None
                 negative_pooled_prompt_embeds=negative_pooled,
                 num_inference_steps=steps,
                 guidance_scale=cfg,
-                generator=torch.manual_seed(seed),
+                generator=get_seed_generator(seed, device),
                 clip_skip=clip_skip,
                 callback_on_step_end=step_progress,
                 cross_attention_kwargs=cross_attention_kwargs
@@ -706,7 +706,7 @@ def generate_xl(data, request_files, get_controlnet=None, clear_step_frames=None
                     negative_pooled_prompt_embeds=negative_pooled,
                     num_inference_steps=steps,
                     guidance_scale=cfg,
-                    generator=torch.manual_seed(seed),
+                    generator=get_seed_generator(seed, device),
                     callback=step_progress,
                     cross_attention_kwargs=cross_attention_kwargs,
                     controlnet_conditioning_scale=control_scale,
@@ -731,7 +731,7 @@ def generate_xl(data, request_files, get_controlnet=None, clear_step_frames=None
                     ip_adapter_image=ip_adapter_image,
                     num_inference_steps=steps,
                     guidance_scale=cfg,
-                    generator=torch.manual_seed(seed),
+                    generator=get_seed_generator(seed, device),
                     clip_skip=clip_skip,
                     callback_on_step_end=step_progress,
                     cross_attention_kwargs=cross_attention_kwargs,
@@ -779,7 +779,7 @@ def generate_xl(data, request_files, get_controlnet=None, clear_step_frames=None
                     negative_pooled_prompt_embeds=negative_pooled,
                     num_inference_steps=steps,
                     guidance_scale=cfg,
-                    generator=torch.manual_seed(seed),
+                    generator=get_seed_generator(seed, device),
                     callback=step_progress,
                     cross_attention_kwargs=cross_attention_kwargs,
                     controlnet_conditioning_scale=control_scale,
@@ -806,7 +806,7 @@ def generate_xl(data, request_files, get_controlnet=None, clear_step_frames=None
                     negative_pooled_prompt_embeds=negative_pooled,
                     num_inference_steps=steps,
                     guidance_scale=cfg,
-                    generator=torch.manual_seed(seed),
+                    generator=get_seed_generator(seed, device),
                     clip_skip=clip_skip,
                     callback_on_step_end=step_progress,
                     cross_attention_kwargs=cross_attention_kwargs,
@@ -857,7 +857,7 @@ def generate_xl(data, request_files, get_controlnet=None, clear_step_frames=None
                 negative_pooled_prompt_embeds=negative_pooled,
                 num_inference_steps=steps,
                 guidance_scale=cfg,
-                generator=torch.manual_seed(seed),
+                generator=get_seed_generator(seed, device),
                 clip_skip=clip_skip,
                 callback_on_step_end=step_progress,
                 cross_attention_kwargs=cross_attention_kwargs,
@@ -904,7 +904,7 @@ def generate_xl(data, request_files, get_controlnet=None, clear_step_frames=None
                 negative_pooled_prompt_embeds=negative_pooled,
                 num_inference_steps=steps,
                 guidance_scale=cfg,
-                generator=torch.manual_seed(seed),
+                generator=get_seed_generator(seed, device),
                 callback=step_progress,
                 cross_attention_kwargs=cross_attention_kwargs,
                 style_fidelity=style_fidelity,

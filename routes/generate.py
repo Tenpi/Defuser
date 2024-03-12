@@ -3,7 +3,7 @@ from __main__ import app, socketio
 import os
 import torch
 from .functions import next_index, is_nsfw, get_normalized_dimensions, is_image, get_number_from_filename, \
-get_seed, append_info, upscale, get_models_dir, get_outputs_dir, analyze_checkpoint, check_for_updates
+get_seed, get_seed_generator, append_info, upscale, get_models_dir, get_outputs_dir, analyze_checkpoint, check_for_updates
 from .invisiblewatermark import encode_watermark
 from .info import get_diffusion_models, get_vae_models, get_clip_model
 from diffusers import StableDiffusionPipeline, StableDiffusionImg2ImgPipeline, StableDiffusionInpaintPipeline, StableDiffusionControlNetImg2ImgPipeline, \
@@ -560,7 +560,7 @@ def generate(request_data, request_files):
                 num_inference_steps=steps,
                 guidance_scale=cfg,
                 num_images_per_prompt=1,
-                generator=torch.manual_seed(seed),
+                generator=get_seed_generator(seed, device),
                 clip_skip=clip_skip,
                 callback_on_step_end=step_progress,
                 cross_attention_kwargs=cross_attention_kwargs
@@ -599,7 +599,7 @@ def generate(request_data, request_files):
                 negative_prompt_embeds=negative_conditioning,
                 num_inference_steps=steps,
                 guidance_scale=cfg,
-                generator=torch.manual_seed(seed),
+                generator=get_seed_generator(seed, device),
                 clip_skip=clip_skip,
                 callback_on_step_end=step_progress,
                 cross_attention_kwargs=cross_attention_kwargs
@@ -643,7 +643,7 @@ def generate(request_data, request_files):
                 negative_prompt_embeds=negative_conditioning,
                 num_inference_steps=steps,
                 guidance_scale=cfg,
-                generator=torch.manual_seed(seed),
+                generator=get_seed_generator(seed, device),
                 clip_skip=clip_skip,
                 callback_on_step_end=step_progress,
                 cross_attention_kwargs=cross_attention_kwargs
@@ -682,7 +682,7 @@ def generate(request_data, request_files):
                 ip_adapter_image=ip_adapter_image,
                 num_inference_steps=steps,
                 guidance_scale=cfg,
-                generator=torch.manual_seed(seed),
+                generator=get_seed_generator(seed, device),
                 clip_skip=clip_skip,
                 callback_on_step_end=step_progress,
                 cross_attention_kwargs=cross_attention_kwargs,
@@ -727,7 +727,7 @@ def generate(request_data, request_files):
                 negative_prompt_embeds=negative_conditioning,
                 num_inference_steps=steps,
                 guidance_scale=cfg,
-                generator=torch.manual_seed(seed),
+                generator=get_seed_generator(seed, device),
                 clip_skip=clip_skip,
                 callback_on_step_end=step_progress,
                 cross_attention_kwargs=cross_attention_kwargs,
@@ -775,7 +775,7 @@ def generate(request_data, request_files):
                 negative_prompt_embeds=negative_conditioning,
                 num_inference_steps=steps,
                 guidance_scale=cfg,
-                generator=torch.manual_seed(seed),
+                generator=get_seed_generator(seed, device),
                 clip_skip=clip_skip,
                 callback_on_step_end=step_progress,
                 cross_attention_kwargs=cross_attention_kwargs,
@@ -820,7 +820,7 @@ def generate(request_data, request_files):
                 negative_prompt_embeds=negative_conditioning,
                 num_inference_steps=steps,
                 guidance_scale=cfg,
-                generator=torch.manual_seed(seed),
+                generator=get_seed_generator(seed, device),
                 callback=step_progress,
                 cross_attention_kwargs=cross_attention_kwargs,
                 controlnet_conditioning_scale=control_scale,
@@ -860,7 +860,7 @@ def generate(request_data, request_files):
                 num_inference_steps=steps,
                 num_frames=frames,
                 guidance_scale=cfg,
-                generator=torch.manual_seed(seed),
+                generator=get_seed_generator(seed, device),
                 callback_on_step_end=step_progress,
                 cross_attention_kwargs=cross_attention_kwargs
             ).frames[0]

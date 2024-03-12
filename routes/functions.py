@@ -229,6 +229,10 @@ def get_seed(seed, half=False):
         return int(random.randrange(range))
     return int(seed)
 
+def get_seed_generator(seed, device):
+    generator = torch.Generator(device=device)
+    return generator.manual_seed(seed)
+
 def append_info(image: str, info: dict):
     ext = pathlib.Path(image).suffix
     img = Image.open(image)
