@@ -420,6 +420,8 @@ def crop_anime_face_fallback(images, size=512):
     face_detector = cv2.CascadeClassifier(cascade_path)
 
     for i, img_path in enumerate(images):
+        if (".DS_Store" in img_path): return
+        img_path = os.path.normpath(img_path)
         img = cv2.imread(img_path)
         img_h, img_w, img_c = img.shape
         faces = face_detector.detectMultiScale(img)
@@ -437,6 +439,7 @@ def crop_anime_face(images, size=512):
         import animeface
         for i, img_path in enumerate(images):
             if (".DS_Store" in img_path): return
+            img_path = os.path.normpath(img_path)
             img = cv2.imread(img_path)
             img_h, img_w, img_c = img.shape
             faces = animeface.detect(Image.open(img_path))

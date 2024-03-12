@@ -87,4 +87,4 @@ def shade_sketch(input, output, direction="810", size=320, threshold=200, use_sm
 
         comp = 0.8 * img + 0.2 * shade
 
-        cv2.imwrite(output, comp)
+        cv2.imwrite(os.path.normpath(output), comp)

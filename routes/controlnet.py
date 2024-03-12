@@ -22,6 +22,7 @@ lineart_manga = None
 hed = None
 
 def white_to_alpha(img_path):
+    img_path = os.path.normpath(img_path)
     image = cv2.imread(img_path)
     image = cv2.cvtColor(image, cv2.COLOR_BGR2BGRA)
     (row, col, channel) = image.shape
@@ -38,6 +39,7 @@ def white_to_alpha(img_path):
     cv2.imwrite(img_path, image)
 
 def black_to_alpha(img_path):
+    img_path = os.path.normpath(img_path)
     image = cv2.imread(img_path)
     image = cv2.cvtColor(image, cv2.COLOR_BGR2BGRA)
     (row, col, channel) = image.shape

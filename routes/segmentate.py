@@ -520,7 +520,7 @@ def segmentate():
     img = cv2.cvtColor(img, cv2.COLOR_RGBA2BGRA)
     dir_path = os.path.join(get_outputs_dir(), "local/image")
     out_path = os.path.join(dir_path, f"image{next_index(dir_path)}.png")
-    cv2.imwrite(out_path, img)
+    cv2.imwrite(os.path.normpath(out_path), img)
     compressed = Image.open(out_path)
     compressed.save(out_path, quality=90, optimize=True)
     socketio.emit("image complete", {"image": f"/outputs/local/image/{os.path.basename(out_path)}"})
