@@ -2,7 +2,7 @@ import React, {useContext, useEffect, useState, useRef} from "react"
 import {useHistory} from "react-router-dom"
 import {EnableDragContext, MobileContext, SiteHueContext, SiteSaturationContext, SiteLightnessContext, 
 SocketContext, ModelNamesContext, TrainStartedContext, TrainProgressContext, TrainCompletedContext, TrainProgressTextContext,
-ThemeContext} from "../Context"
+ThemeContext, ThemeSelectorContext} from "../Context"
 import {ProgressBar, Dropdown, DropdownButton} from "react-bootstrap"
 import functions from "../structures/Functions"
 import $1 from "../assets/icons/1.png"
@@ -13,6 +13,7 @@ import axios from "axios"
 
 const TrainMerge: React.FunctionComponent = (props) => {
     const {theme, setTheme} = useContext(ThemeContext)
+    const {themeSelector, setThemeSelector} = useContext(ThemeSelectorContext)
     const {enableDrag, setEnableDrag} = useContext(EnableDragContext)
     const {mobile, setMobile} = useContext(MobileContext)
     const {siteHue, setSiteHue} = useContext(SiteHueContext)
@@ -34,7 +35,18 @@ const TrainMerge: React.FunctionComponent = (props) => {
     const history = useHistory()
 
     const getFilter = () => {
-        return `hue-rotate(${siteHue - 180}deg) saturate(${siteSaturation}%) brightness(${siteLightness + 50}%)`
+        let saturation = siteSaturation
+        let lightness = siteLightness
+        if (themeSelector === "original") {
+            if (theme === "light") saturation -= 60
+            if (theme === "light") lightness += 90
+        } else if (themeSelector === "accessibility") {
+            if (theme === "light") saturation -= 90
+            if (theme === "light") lightness += 200
+            if (theme === "dark") saturation -= 50
+            if (theme === "dark") lightness -= 30
+        }
+        return `hue-rotate(${siteHue - 180}deg) saturate(${saturation}%) brightness(${lightness + 50}%)`
     }
 
     useEffect(() => {

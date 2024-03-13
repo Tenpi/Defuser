@@ -2,7 +2,7 @@ import React, {useContext, useEffect, useState, useRef} from "react"
 import {useHistory} from "react-router-dom"
 import {HashLink as Link} from "react-router-hash-link"
 import favicon from "../assets/icons/favicon.png"
-import {EnableDragContext, MobileContext, SiteHueContext, SiteSaturationContext, SiteLightnessContext, ThemeContext, 
+import {EnableDragContext, MobileContext, SiteHueContext, SiteSaturationContext, SiteLightnessContext, ThemeContext, ThemeSelectorContext,
 ImageBrightnessContext, ImageContrastContext, ImageHueContext, ImageSaturationContext, IPAdapterContext, IPProcessorContext,
 IPWeightContext, IPImageContext, IPAdapterNamesContext, ModelNameContext, IPDrawImageContext, IPMaskImageContext, IPMaskDataContext} from "../Context"
 import functions from "../structures/Functions"
@@ -24,6 +24,7 @@ import path from "path"
 
 const IPAdapter: React.FunctionComponent = (props) => {
     const {theme, setTheme} = useContext(ThemeContext)
+    const {themeSelector, setThemeSelector} = useContext(ThemeSelectorContext)
     const {enableDrag, setEnableDrag} = useContext(EnableDragContext)
     const {mobile, setMobile} = useContext(MobileContext)
     const {siteHue, setSiteHue} = useContext(SiteHueContext)
@@ -50,7 +51,18 @@ const IPAdapter: React.FunctionComponent = (props) => {
     const history = useHistory()
 
     const getFilter = () => {
-        return `hue-rotate(${siteHue - 180}deg) saturate(${siteSaturation}%) brightness(${siteLightness + 50}%)`
+        let saturation = siteSaturation
+        let lightness = siteLightness
+        if (themeSelector === "original") {
+            if (theme === "light") saturation -= 60
+            if (theme === "light") lightness += 90
+        } else if (themeSelector === "accessibility") {
+            if (theme === "light") saturation -= 90
+            if (theme === "light") lightness += 200
+            if (theme === "dark") saturation -= 50
+            if (theme === "dark") lightness -= 30
+        }
+        return `hue-rotate(${siteHue - 180}deg) saturate(${saturation}%) brightness(${lightness + 50}%)`
     }
 
     useEffect(() => {

@@ -5,7 +5,7 @@ FolderLocationContext, SocketContext, TrainStartedContext, TrainProgressContext,
 TrainCompletedContext, TrainImagesContext, EpochsContext, SaveStepsContext, PreviewStepsContext, LearningRateContext, 
 GradientAccumulationStepsContext, ResolutionContext, LearningFunctionContext, ImageBrightnessContext, ImageContrastContext, 
 PreviewImageContext, TrainRenderImageContext, TrainNameContext, ReverseSortContext, ImageHueContext, ImageSaturationContext,
-ThemeContext} from "../Context"
+ThemeContext, ThemeSelectorContext} from "../Context"
 import {ProgressBar, Dropdown, DropdownButton} from "react-bootstrap"
 import xIcon from "../assets/icons/x.png"
 import xIconHover from "../assets/icons/x-hover.png"
@@ -21,6 +21,7 @@ let scrollLock = false
 
 const TrainUnconditional: React.FunctionComponent = (props) => {
     const {theme, setTheme} = useContext(ThemeContext)
+    const {themeSelector, setThemeSelector} = useContext(ThemeSelectorContext)
     const {enableDrag, setEnableDrag} = useContext(EnableDragContext)
     const {mobile, setMobile} = useContext(MobileContext)
     const {siteHue, setSiteHue} = useContext(SiteHueContext)
@@ -59,8 +60,15 @@ const TrainUnconditional: React.FunctionComponent = (props) => {
     const getFilter = () => {
         let saturation = siteSaturation
         let lightness = siteLightness
-        if (theme === "light") saturation -= 60
-        if (theme === "light") lightness += 90
+        if (themeSelector === "original") {
+            if (theme === "light") saturation -= 60
+            if (theme === "light") lightness += 90
+        } else if (themeSelector === "accessibility") {
+            if (theme === "light") saturation -= 90
+            if (theme === "light") lightness += 200
+            if (theme === "dark") saturation -= 50
+            if (theme === "dark") lightness -= 30
+        }
         return `hue-rotate(${siteHue - 180}deg) saturate(${saturation}%) brightness(${lightness + 50}%)`
     }
 

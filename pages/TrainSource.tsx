@@ -3,7 +3,7 @@ import {useHistory} from "react-router-dom"
 import {EnableDragContext, MobileContext, SiteHueContext, SiteSaturationContext, SiteLightnessContext, 
 TrainTabContext, FolderLocationContext, SocketContext, TrainStartedContext, TrainProgressContext,
 TrainProgressTextContext, TrainCompletedContext, TrainImagesContext, SauceNaoAPIKeyContext, ReverseSortContext,
-ThemeContext} from "../Context"
+ThemeContext, ThemeSelectorContext} from "../Context"
 import {ProgressBar} from "react-bootstrap"
 import functions from "../structures/Functions"
 import folder from "../assets/icons/folder.png"
@@ -15,6 +15,7 @@ let scrollLock = false
 
 const TrainSource: React.FunctionComponent = (props) => {
     const {theme, setTheme} = useContext(ThemeContext)
+    const {themeSelector, setThemeSelector} = useContext(ThemeSelectorContext)
     const {enableDrag, setEnableDrag} = useContext(EnableDragContext)
     const {mobile, setMobile} = useContext(MobileContext)
     const {siteHue, setSiteHue} = useContext(SiteHueContext)
@@ -39,8 +40,15 @@ const TrainSource: React.FunctionComponent = (props) => {
     const getFilter = () => {
         let saturation = siteSaturation
         let lightness = siteLightness
-        if (theme === "light") saturation -= 60
-        if (theme === "light") lightness += 90
+        if (themeSelector === "original") {
+            if (theme === "light") saturation -= 60
+            if (theme === "light") lightness += 90
+        } else if (themeSelector === "accessibility") {
+            if (theme === "light") saturation -= 90
+            if (theme === "light") lightness += 200
+            if (theme === "dark") saturation -= 50
+            if (theme === "dark") lightness -= 30
+        }
         return `hue-rotate(${siteHue - 180}deg) saturate(${saturation}%) brightness(${lightness + 50}%)`
     }
 

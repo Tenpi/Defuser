@@ -11,7 +11,7 @@ ControlInvertContext, StyleFidelityContext, ControlReferenceImageContext, Horizo
 ExpandImageContext, ExpandMaskContext, StartedContext, SocketContext, LoopModeContext, SavedPromptsContext, WatermarkContext, NSFWTabContext,
 InvisibleWatermarkContext, SauceNaoAPIKeyContext, RandomPromptModeContext, GeneratorContext, NovelAITokenContext, HolaraAICookieContext,
 SavedPromptsNovelAIContext, SavedPromptsHolaraAIContext, ModelDirContext, OutputDirContext, XAdaptModelContext, FreeUContext, IPAdapterContext,
-IPProcessorContext, IPImageContext, IPWeightContext, IPMaskImageContext, FramesContext, ThemeContext} from "../Context"
+IPProcessorContext, IPImageContext, IPWeightContext, IPMaskImageContext, FramesContext, ThemeContext, ThemeSelectorContext} from "../Context"
 import functions from "../structures/Functions"
 import checkbox from "../assets/icons/checkbox2.png"
 import checkboxChecked from "../assets/icons/checkbox2-checked.png"
@@ -25,6 +25,7 @@ import "./styles/generatebar.less"
 
 const GenerateBar: React.FunctionComponent = (props) => {
     const {theme, setTheme} = useContext(ThemeContext)
+    const {themeSelector, setThemeSelector} = useContext(ThemeSelectorContext)
     const {enableDrag, setEnableDrag} = useContext(EnableDragContext)
     const {mobile, setMobile} = useContext(MobileContext)
     const {siteHue, setSiteHue} = useContext(SiteHueContext)
@@ -102,8 +103,15 @@ const GenerateBar: React.FunctionComponent = (props) => {
     const getFilter = () => {
         let saturation = siteSaturation
         let lightness = siteLightness
-        if (theme === "light") saturation -= 60
-        if (theme === "light") lightness += 90
+        if (themeSelector === "original") {
+            if (theme === "light") saturation -= 60
+            if (theme === "light") lightness += 90
+        } else if (themeSelector === "accessibility") {
+            if (theme === "light") saturation -= 90
+            if (theme === "light") lightness += 200
+            if (theme === "dark") saturation -= 50
+            if (theme === "dark") lightness -= 30
+        }
         return `hue-rotate(${siteHue - 180}deg) saturate(${saturation}%) brightness(${lightness + 50}%)`
     }
 

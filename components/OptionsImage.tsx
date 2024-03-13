@@ -4,7 +4,7 @@ import {HashLink as Link} from "react-router-hash-link"
 import favicon from "../assets/icons/favicon.png"
 import {EnableDragContext, MobileContext, SiteHueContext, SiteSaturationContext, SiteLightnessContext, DrawImageContext, MaskImageContext,
 InterrogateTextContext, ImageInputContext, ExpandImageContext, MaskDataContext, ImageBrightnessContext, ImageContrastContext, ExpandDialogFlagContext, 
-HorizontalExpandContext, VerticalExpandContext, ExpandMaskContext, ImageHueContext, ImageSaturationContext} from "../Context"
+HorizontalExpandContext, VerticalExpandContext, ExpandMaskContext, ImageHueContext, ImageSaturationContext, ThemeContext, ThemeSelectorContext} from "../Context"
 import functions from "../structures/Functions"
 import imgPlaceHolder from "../assets/images/img-placeholder.png"
 import fileType from "magic-bytes.js"
@@ -17,6 +17,8 @@ import axios from "axios"
 import "./styles/optionsbar.less"
 
 const OptionsImage: React.FunctionComponent = (props) => {
+    const {theme, setTheme} = useContext(ThemeContext)
+    const {themeSelector, setThemeSelector} = useContext(ThemeSelectorContext)
     const {imageInput, setImageInput} = useContext(ImageInputContext)
     const {siteHue, setSiteHue} = useContext(SiteHueContext)
     const {siteSaturation, setSiteSaturation} = useContext(SiteSaturationContext)
@@ -40,7 +42,18 @@ const OptionsImage: React.FunctionComponent = (props) => {
     const ref = useRef(null) as any
 
     const getFilter = () => {
-        return `hue-rotate(${siteHue - 180}deg) saturate(${siteSaturation}%) brightness(${siteLightness + 50}%)`
+        let saturation = siteSaturation
+        let lightness = siteLightness
+        if (themeSelector === "original") {
+            if (theme === "light") saturation -= 60
+            if (theme === "light") lightness += 90
+        } else if (themeSelector === "accessibility") {
+            if (theme === "light") saturation -= 90
+            if (theme === "light") lightness += 200
+            if (theme === "dark") saturation -= 50
+            if (theme === "dark") lightness -= 30
+        }
+        return `hue-rotate(${siteHue - 180}deg) saturate(${saturation}%) brightness(${lightness + 50}%)`
     }
 
     useEffect(() => {

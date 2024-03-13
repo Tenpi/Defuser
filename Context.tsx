@@ -3,6 +3,7 @@ import React, {useState} from "react"
 export const EnableDragContext = React.createContext<any>(null)
 export const MobileContext = React.createContext<any>(null)
 export const ThemeContext = React.createContext<any>(null)
+export const ThemeSelectorContext = React.createContext<any>(null)
 export const SiteHueContext = React.createContext<any>(null)
 export const SiteSaturationContext = React.createContext<any>(null)
 export const SiteLightnessContext = React.createContext<any>(null)
@@ -143,7 +144,8 @@ export const IPMaskDataContext = React.createContext<any>(null)
 export const CheckForUpdatesContext = React.createContext<any>(null)
 
 const Context: React.FunctionComponent = (props: any) => {
-    const [theme, setTheme] = useState("light")
+    const [theme, setTheme] = useState("dark")
+    const [themeSelector, setThemeSelector] = useState("original")
     const [siteHue, setSiteHue] = useState(180)
     const [siteSaturation, setSiteSaturation] = useState(100)
     const [siteLightness, setSiteLightness] = useState(50)
@@ -261,6 +263,7 @@ const Context: React.FunctionComponent = (props: any) => {
 
     return (
         <>  
+            <ThemeSelectorContext.Provider value={{themeSelector, setThemeSelector}}>
             <FramesContext.Provider value={{frames, setFrames}}>
             <IPMaskDataContext.Provider value={{ipMaskData, setIPMaskData}}>
             <IPMaskImageContext.Provider value={{ipMaskImage, setIPMaskImage}}>
@@ -492,6 +495,7 @@ const Context: React.FunctionComponent = (props: any) => {
             </IPMaskImageContext.Provider>
             </IPMaskDataContext.Provider>
             </FramesContext.Provider>
+            </ThemeSelectorContext.Provider>
         </>
     )
 }

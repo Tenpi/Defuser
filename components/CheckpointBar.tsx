@@ -3,7 +3,7 @@ import {useHistory} from "react-router-dom"
 import {HashLink as Link} from "react-router-hash-link"
 import favicon from "../assets/icons/favicon.png"
 import {EnableDragContext, MobileContext, SiteHueContext, SiteSaturationContext, SiteLightnessContext, ModelNameContext, ModelNamesContext,
-VAENameContext, VAENamesContext, TabContext, GeneratorContext, ThemeContext} from "../Context"
+VAENameContext, VAENamesContext, TabContext, GeneratorContext, ThemeContext, ThemeSelectorContext} from "../Context"
 import functions from "../structures/Functions"
 import {Dropdown, DropdownButton} from "react-bootstrap"
 import checkpoint from "../assets/icons/checkpoint.png"
@@ -21,6 +21,7 @@ import axios from "axios"
 
 const CheckpointBar: React.FunctionComponent = (props) => {
     const {theme, getTheme} = useContext(ThemeContext)
+    const {themeSelector, getThemeSelector} = useContext(ThemeSelectorContext)
     const {enableDrag, setEnableDrag} = useContext(EnableDragContext)
     const {mobile, setMobile} = useContext(MobileContext)
     const {siteHue, setSiteHue} = useContext(SiteHueContext)
@@ -38,8 +39,15 @@ const CheckpointBar: React.FunctionComponent = (props) => {
     const getFilter = () => {
         let saturation = siteSaturation
         let lightness = siteLightness
-        if (theme === "light") saturation -= 60
-        if (theme === "light") lightness += 90
+        if (themeSelector === "original") {
+            if (theme === "light") saturation -= 60
+            if (theme === "light") lightness += 90
+        } else if (themeSelector === "accessibility") {
+            if (theme === "light") saturation -= 90
+            if (theme === "light") lightness += 200
+            if (theme === "dark") saturation -= 50
+            if (theme === "dark") lightness -= 30
+        }
         return `hue-rotate(${siteHue - 180}deg) saturate(${saturation}%) brightness(${lightness + 50}%)`
     }
 

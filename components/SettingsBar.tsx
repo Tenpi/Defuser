@@ -5,7 +5,7 @@ import favicon from "../assets/icons/favicon.png"
 import {EnableDragContext, MobileContext, SiteHueContext, SiteSaturationContext, SiteLightnessContext, NegativePromptContext, ProcessingContext,
 InterrogatorNameContext, DeletionContext, FormatContext, PrecisionContext, LoopModeContext, WatermarkContext, UpscalerContext, NSFWTabContext,
 InvisibleWatermarkContext, SauceNaoAPIKeyContext, RandomPromptModeContext, GeneratorContext, NovelAITokenContext, HolaraAICookieContext, 
-ModelDirContext, OutputDirContext, CheckForUpdatesContext} from "../Context"
+ModelDirContext, OutputDirContext, CheckForUpdatesContext, ThemeSelectorContext} from "../Context"
 import functions from "../structures/Functions"
 import {Dropdown, DropdownButton} from "react-bootstrap"
 import checkbox from "../assets/icons/checkbox2.png"
@@ -14,6 +14,7 @@ import axios from "axios"
 import "./styles/settingsbar.less"
 
 const SettingsBar: React.FunctionComponent = (props) => {
+    const {themeSelector, setThemeSelector} = useContext(ThemeSelectorContext)
     const {enableDrag, setEnableDrag} = useContext(EnableDragContext)
     const {mobile, setMobile} = useContext(MobileContext)
     const {siteHue, setSiteHue} = useContext(SiteHueContext)
@@ -108,9 +109,10 @@ const SettingsBar: React.FunctionComponent = (props) => {
         localStorage.setItem("modelDir", String(modelDir))
         localStorage.setItem("outputDir", String(outputDir))
         localStorage.setItem("checkForUpdates", String(checkForUpdates))
+        localStorage.setItem("themeSelector", String(themeSelector))
     }, [negativePrompt, interrogatorName, processing, format, deletion, precision, loopMode, 
         upscaler, nsfwTab, invisibleWatermark, watermark, saucenaoAPIKey, randomPromptMode,
-        generator, novelAIToken, holaraAICookie, modelDir, outputDir, checkForUpdates])
+        generator, novelAIToken, holaraAICookie, modelDir, outputDir, checkForUpdates, themeSelector])
 
     const resetNegativePrompt = () => {
         setNegativePrompt("")
@@ -132,6 +134,11 @@ const SettingsBar: React.FunctionComponent = (props) => {
         if (generator === "local") return "Local"
         if (generator === "novel ai") return "Novel AI"
         if (generator === "holara ai") return "Holara AI"
+    }
+
+    const getThemeSelector = () => {
+        if (themeSelector === "original") return "Original"
+        if (themeSelector === "accessibility") return "Accessibility"
     }
 
     const unloadModels = () => {
@@ -241,6 +248,13 @@ const SettingsBar: React.FunctionComponent = (props) => {
                 <DropdownButton title={deletion} drop="down" className="checkpoint-selector">
                     <Dropdown.Item active={deletion === "trash"} onClick={() => setDeletion("trash")}>trash</Dropdown.Item>
                     <Dropdown.Item active={deletion === "permanent"} onClick={() => setDeletion("permanent")}>permanent</Dropdown.Item>
+                </DropdownButton>
+            </div>
+            <div className="settings-bar-row">
+                <span className="settings-bar-text">Theme:</span>
+                <DropdownButton title={getThemeSelector()} drop="down" className="checkpoint-selector">
+                    <Dropdown.Item active={themeSelector === "original"} onClick={() => setThemeSelector("original")}>Original</Dropdown.Item>
+                    <Dropdown.Item active={themeSelector === "accessibility"} onClick={() => setThemeSelector("accessibility")}>Accessibility</Dropdown.Item>
                 </DropdownButton>
             </div>
             <div className="settings-bar-row">

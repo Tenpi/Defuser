@@ -5,7 +5,7 @@ import favicon from "../assets/icons/favicon.png"
 import {EnableDragContext, MobileContext, SiteHueContext, SiteSaturationContext, SiteLightnessContext, ControlProcessorContext, 
 ThemeContext, ImageInputContext, ControlImageContext, ControlScaleContext, ControlGuessModeContext, ControlStartContext, ControlEndContext, 
 ControlInvertContext, StyleFidelityContext, ControlReferenceImageContext, ImageBrightnessContext, ImageContrastContext,
-ExpandImageContext, UpscalerContext, ImageHueContext, ImageSaturationContext} from "../Context"
+ExpandImageContext, UpscalerContext, ImageHueContext, ImageSaturationContext, ThemeSelectorContext} from "../Context"
 import functions from "../structures/Functions"
 import Slider from "react-slider"
 import radioButtonOff from "../assets/icons/radiobutton-off.png"
@@ -21,6 +21,7 @@ import axios from "axios"
 
 const ControlNet: React.FunctionComponent = (props) => {
     const {theme, setTheme} = useContext(ThemeContext)
+    const {themeSelector, setThemeSelector} = useContext(ThemeSelectorContext)
     const {enableDrag, setEnableDrag} = useContext(EnableDragContext)
     const {mobile, setMobile} = useContext(MobileContext)
     const {siteHue, setSiteHue} = useContext(SiteHueContext)
@@ -46,13 +47,25 @@ const ControlNet: React.FunctionComponent = (props) => {
     const history = useHistory()
 
     const getFilter = () => {
-        return `hue-rotate(${siteHue - 180}deg) saturate(${siteSaturation}%) brightness(${siteLightness + 50}%)`
+        let saturation = siteSaturation
+        let lightness = siteLightness
+        if (themeSelector === "original") {
+            if (theme === "light") saturation -= 60
+            if (theme === "light") lightness += 90
+        } else if (themeSelector === "accessibility") {
+            if (theme === "light") saturation -= 80
+            if (theme === "light") lightness += 70
+            if (theme === "dark") saturation -= 50
+            if (theme === "dark") lightness -= 30
+        }
+        return `hue-rotate(${siteHue - 180}deg) saturate(${saturation}%) brightness(${lightness + 50}%)`
     }
 
     const getFilter2 = () => {
-        if (typeof window === "undefined") return
+        let key = "--text"
+        if (themeSelector === "accessibility") return ""
         const bodyStyles = window.getComputedStyle(document.body)
-        const color = bodyStyles.getPropertyValue("--text")
+        const color = bodyStyles.getPropertyValue(key)
         return functions.calculateFilter(color)
     }
 

@@ -1,13 +1,15 @@
 import React, {useContext, useEffect, useState, useRef} from "react"
 import {useHistory} from "react-router-dom"
 import {EnableDragContext, MobileContext, SiteHueContext, SiteSaturationContext, 
-SiteLightnessContext, SocketContext} from "../Context"
+SiteLightnessContext, SocketContext, ThemeContext, ThemeSelectorContext} from "../Context"
 import functions from "../structures/Functions"
 import imgPlaceHolder from "../assets/images/img-placeholder.png"
 import "./styles/traintag.less"
 import axios from "axios"
 
 const ConvertEmbedding: React.FunctionComponent = (props) => {
+    const {theme, setTheme} = useContext(ThemeContext)
+    const {themeSelector, setThemeSelector} = useContext(ThemeSelectorContext)
     const {enableDrag, setEnableDrag} = useContext(EnableDragContext)
     const {mobile, setMobile} = useContext(MobileContext)
     const {siteHue, setSiteHue} = useContext(SiteHueContext)
@@ -19,7 +21,18 @@ const ConvertEmbedding: React.FunctionComponent = (props) => {
     const history = useHistory()
 
     const getFilter = () => {
-        return `hue-rotate(${siteHue - 180}deg) saturate(${siteSaturation}%) brightness(${siteLightness + 50}%)`
+        let saturation = siteSaturation
+        let lightness = siteLightness
+        if (themeSelector === "original") {
+            if (theme === "light") saturation -= 60
+            if (theme === "light") lightness += 90
+        } else if (themeSelector === "accessibility") {
+            if (theme === "light") saturation -= 90
+            if (theme === "light") lightness += 200
+            if (theme === "dark") saturation -= 50
+            if (theme === "dark") lightness -= 30
+        }
+        return `hue-rotate(${siteHue - 180}deg) saturate(${saturation}%) brightness(${lightness + 50}%)`
     }
 
     useEffect(() => {
