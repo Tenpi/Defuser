@@ -7,6 +7,7 @@
     "start-fast": "cross-env PYTORCH_ENABLE_MPS_FALLBACK=1 python3 main.py",
     "start-unlim": "git pull && npm run clean && webpack && cross-env PYTORCH_MPS_HIGH_WATERMARK_RATIO=0.0 python3 main.py",
     "build": "npm run clean ./build ./tmp main.spec && webpack && python3 -m PyInstaller --onedir --distpath \"build\" --workpath \"tmp\" --runtime-hook \"pre.py\" --icon \"assets\\icons\\favicon.ico\" main.py && python3 post.py",
+    "build-fast": "python3 -m PyInstaller --onedir --distpath \"build\" --workpath \"tmp\" --runtime-hook \"pre.py\" --icon \"assets\\icons\\favicon.ico\" main.py && python3 post.py",
     "clean": "del-cli ./dist"
   },
   "repository": {

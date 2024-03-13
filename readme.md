@@ -48,6 +48,21 @@ There are precompiled binaries for MacOS arm64 and Windows x64
 that don't require compiling the project from source. However, updates 
 will be pushed out slower. https://github.com/Tenpi/Defuzers/releases 
 
+### MacOS
+
+To run on MacOS, you may need to remove the quarantine flags. 
+
+```
+/usr/bin/xattr -rd com.apple.quarantine _internal
+xattr -d com.apple.quarantine main
+xattr -d com.apple.quarantine dialog/dialog
+```
+
+### CUDA
+
+This is the torch compiled with CUDA support, replace the one in `_internal/torch` with this one.
+https://huggingface.co/defuzers/torch/blob/main/torch-cuda.zip
+
 ### Requirements
 
 Node.js: https://nodejs.org/en \
@@ -91,16 +106,6 @@ npm start
 
 By default, it will be available at http://localhost:8084. The 
 host and port can be changed in config.json.
-
-### MacOS
-
-To run on MacOS, you may need to remove the quarantine flags. 
-
-```
-/usr/bin/xattr -rd com.apple.quarantine _internal
-xattr -d com.apple.quarantine main
-xattr -d com.apple.quarantine dialog/dialog
-```
 
 ### Animeface
 
