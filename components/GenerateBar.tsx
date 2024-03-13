@@ -463,7 +463,8 @@ const GenerateBar: React.FunctionComponent = (props) => {
         return () => {
             socket.off("repeat generation", repeatGeneration)
         }
-    }, [socket, loopMode, prompt, negativePrompt, savedPrompts, savedPromptsNovelAI, savedPromptsHolaraAI, loras, hypernetworks, textualInversions, generator, modelName])
+    }, [socket, loopMode, prompt, negativePrompt, savedPrompts, size, sampler, cfg, modelName, vaeName, savedPromptsNovelAI, 
+        savedPromptsHolaraAI, loras, hypernetworks, textualInversions, generator, controlProcessor, styleFidelity])
 
     const getSizeDim = () => {
         if (generator === "novel ai") return "640"

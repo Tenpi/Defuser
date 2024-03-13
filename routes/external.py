@@ -136,7 +136,6 @@ def generate_novelai(data, request_files):
     invisible_watermark = data["invisible_watermark"] if "invisible_watermark" in data else True
     nsfw_enabled = data["nsfw_tab"] if "nsfw_tab" in data else False
     novelai_token = data["novelai_token"] if "novelai_token" in data else ""
-
     if "best quality" not in prompt or "amazing quality" not in prompt or "very aesthetic" not in prompt or "absurdres" not in prompt:
         prompt += ", best quality, amazing quality, very aesthetic, absurdres"
     negative_prompt = "lowres, bad anatomy, bad hands, text, error, missing fingers, extra digit, fewer digits, cropped, worst quality, low quality, normal quality, jpeg artifacts, signature, watermark, username, blurry"
