@@ -3,7 +3,7 @@ import {useHistory} from "react-router-dom"
 import {EnableDragContext, MobileContext, SiteHueContext, SiteSaturationContext, SiteLightnessContext, 
 ClassifyFolderLocationContext, InterrogatorNameContext, SocketContext, TrainStartedContext, TrainProgressContext,
 TrainProgressTextContext, TrainCompletedContext, ClassifyFoldersContext, EpochsContext, ResolutionContext,
-SaveStepsContext, LearningRateTEContext, GradientAccumulationStepsContext, LearningFunctionContext} from "../Context"
+SaveStepsContext, LearningRateTEContext, GradientAccumulationStepsContext, LearningFunctionContext, ThemeContext} from "../Context"
 import {ProgressBar, Dropdown, DropdownButton} from "react-bootstrap"
 import functions from "../structures/Functions"
 import folder from "../assets/icons/folder.png"
@@ -14,6 +14,7 @@ import axios from "axios"
 import path from "path"
 
 const TrainClassifier: React.FunctionComponent = (props) => {
+    const {theme, setTheme} = useContext(ThemeContext)
     const {enableDrag, setEnableDrag} = useContext(EnableDragContext)
     const {mobile, setMobile} = useContext(MobileContext)
     const {siteHue, setSiteHue} = useContext(SiteHueContext)
@@ -39,7 +40,11 @@ const TrainClassifier: React.FunctionComponent = (props) => {
     const history = useHistory()
 
     const getFilter = () => {
-        return `hue-rotate(${siteHue - 180}deg) saturate(${siteSaturation}%) brightness(${siteLightness + 50}%)`
+        let saturation = siteSaturation
+        let lightness = siteLightness
+        if (theme === "light") saturation -= 60
+        if (theme === "light") lightness += 90
+        return `hue-rotate(${siteHue - 180}deg) saturate(${saturation}%) brightness(${lightness + 50}%)`
     }
 
     useEffect(() => {

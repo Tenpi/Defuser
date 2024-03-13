@@ -5,7 +5,8 @@ TrainTabContext, FolderLocationContext, SocketContext, TrainStartedContext, Trai
 TrainProgressTextContext, TrainCompletedContext, TrainImagesContext, ModelNameContext, EpochsContext,
 SaveEpochsContext, PreviewEpochsContext, PreviewPromptContext, LearningRateContext, GradientAccumulationStepsContext,
 ResolutionContext, LearningFunctionContext, ImageBrightnessContext, ImageContrastContext, PreviewImageContext,
-TrainRenderImageContext, TrainNameContext, LearningRateTEContext, ReverseSortContext, ImageHueContext, ImageSaturationContext} from "../Context"
+TrainRenderImageContext, TrainNameContext, LearningRateTEContext, ReverseSortContext, ImageHueContext, ImageSaturationContext,
+ThemeContext} from "../Context"
 import {ProgressBar, Dropdown, DropdownButton} from "react-bootstrap"
 import xIcon from "../assets/icons/x.png"
 import xIconHover from "../assets/icons/x-hover.png"
@@ -21,6 +22,7 @@ let scrollLock = false
 
 const TrainHypernetwork: React.FunctionComponent = (props) => {
     const [ignored, forceUpdate] = useReducer(x => x + 1, 0)
+    const {theme, setTheme} = useContext(ThemeContext)
     const {enableDrag, setEnableDrag} = useContext(EnableDragContext)
     const {mobile, setMobile} = useContext(MobileContext)
     const {siteHue, setSiteHue} = useContext(SiteHueContext)
@@ -62,7 +64,11 @@ const TrainHypernetwork: React.FunctionComponent = (props) => {
     const history = useHistory()
 
     const getFilter = () => {
-        return `hue-rotate(${siteHue - 180}deg) saturate(${siteSaturation}%) brightness(${siteLightness + 50}%)`
+        let saturation = siteSaturation
+        let lightness = siteLightness
+        if (theme === "light") saturation -= 60
+        if (theme === "light") lightness += 90
+        return `hue-rotate(${siteHue - 180}deg) saturate(${saturation}%) brightness(${lightness + 50}%)`
     }
 
     useEffect(() => {

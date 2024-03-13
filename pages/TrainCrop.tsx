@@ -2,7 +2,7 @@ import React, {useContext, useEffect, useState, useRef} from "react"
 import {useHistory} from "react-router-dom"
 import {EnableDragContext, MobileContext, SiteHueContext, SiteSaturationContext, SiteLightnessContext, 
 TrainTabContext, FolderLocationContext, InterrogatorNameContext, SocketContext, TrainStartedContext, TrainProgressContext,
-TrainProgressTextContext, TrainCompletedContext, TrainImagesContext, ResolutionContext, ReverseSortContext} from "../Context"
+TrainProgressTextContext, TrainCompletedContext, TrainImagesContext, ResolutionContext, ReverseSortContext, ThemeContext} from "../Context"
 import {ProgressBar} from "react-bootstrap"
 import functions from "../structures/Functions"
 import folder from "../assets/icons/folder.png"
@@ -13,6 +13,7 @@ import axios from "axios"
 let scrollLock = false
 
 const TrainCrop: React.FunctionComponent = (props) => {
+    const {theme, setTheme} = useContext(ThemeContext)
     const {enableDrag, setEnableDrag} = useContext(EnableDragContext)
     const {mobile, setMobile} = useContext(MobileContext)
     const {siteHue, setSiteHue} = useContext(SiteHueContext)
@@ -35,7 +36,11 @@ const TrainCrop: React.FunctionComponent = (props) => {
     const history = useHistory()
 
     const getFilter = () => {
-        return `hue-rotate(${siteHue - 180}deg) saturate(${siteSaturation}%) brightness(${siteLightness + 50}%)`
+        let saturation = siteSaturation
+        let lightness = siteLightness
+        if (theme === "light") saturation -= 60
+        if (theme === "light") lightness += 90
+        return `hue-rotate(${siteHue - 180}deg) saturate(${saturation}%) brightness(${lightness + 50}%)`
     }
 
     useEffect(() => {

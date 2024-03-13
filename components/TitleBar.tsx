@@ -13,26 +13,27 @@ import "./styles/titlebar.less"
 
 const colorList = {
     "--selection": "rgba(255, 168, 219, 0.302)",
-    "--text": "#ff1d87",
+    "--text": "#ff5ba8",
     "--text-alt": "#ff52c0",
-    "--buttonBG": "#ff4d8e",
-    "--buttonBG2": "#e3398f",
-    "--buttonBGStop": "#ff6cd2",
-    "--background": "#fcaee5",
-    "--titlebarBG": "#ff75ba",
+    "--buttonBG": "#ff8ab5",
+    "--buttonBG2": "#ff84c2",
+    "--buttonBGStop": "#ffafe7",
+    "--background": "#ffdef7",
+    "--titlebarBG": "#ffaad5",
     "--titlebarText": "#ff3ba0",
-    "--sidebarBG": "#ff89be",
+    "--sidebarBG": "#ffddeb",
     "--footerBG": "#ff6ea8",
     "--sliderBG": "#ff72b6",
     "--sliderButton": "#ff2b92",
-    "--inputBG": "#ff5faf",
+    "--inputBG": "#ffa0d0",
     "--inputText": "#000000",
+    "--tabSelected": "#ffffff",
     "--progressText": "#000000",
     "--progressBG": "#ffffff",
     "--drop-color": "rgba(226, 26, 143, 0.9)",
-    "--controlnetBG": "#ff8bcb",
-    "--controlnetButton": "#ff48a7",
-    "--controlnetText": "#ff35a4"
+    "--controlnetText": "#ff35a4",
+    "--controlnetBG": "#ffc3e4",
+    "--controlnetButton": "#ff90ca"
 }
 
 const colorListDark = {
@@ -51,6 +52,7 @@ const colorListDark = {
     "--sliderButton": "#83004e",
     "--inputBG": "#3b031c",
     "--inputText": "#e2268c",
+    "--tabSelected": "#e2268c",
     "--progressText": "#ffffff",
     "--progressBG": "#000000",
     "--drop-color": "rgba(226, 26, 143, 0.9)",
@@ -173,11 +175,11 @@ const TitleBar: React.FunctionComponent<Props> = (props) => {
                 </div>
                 <div className="title-dropdown-row">
                     <span className="title-dropdown-text">Saturation</span>
-                    <Slider className="title-dropdown-slider" trackClassName="title-dropdown-slider-track" thumbClassName="title-dropdown-slider-thumb" onChange={(value) => setSiteSaturation(value)} min={50} max={100} step={1} value={siteSaturation}/>
+                    <Slider className="title-dropdown-slider" trackClassName="title-dropdown-slider-track" thumbClassName="title-dropdown-slider-thumb" onChange={(value) => setSiteSaturation(value)} min={1} max={100} step={1} value={siteSaturation}/>
                 </div>
                 <div className="title-dropdown-row">
                     <span className="title-dropdown-text">Lightness</span>
-                    <Slider className="title-dropdown-slider" trackClassName="title-dropdown-slider-track" thumbClassName="title-dropdown-slider-thumb" onChange={(value) => setSiteLightness(value)} min={45} max={55} step={1} value={siteLightness}/>
+                    <Slider className="title-dropdown-slider" trackClassName="title-dropdown-slider-track" thumbClassName="title-dropdown-slider-thumb" onChange={(value) => setSiteLightness(value)} min={25} max={55} step={1} value={siteLightness}/>
                 </div>
                 <div className="title-dropdown-row">
                     <span className="title-dropdown-text">Image Brightness</span>

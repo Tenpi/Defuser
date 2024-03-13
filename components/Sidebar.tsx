@@ -5,7 +5,7 @@ import favicon from "../assets/icons/favicon.png"
 import {EnableDragContext, MobileContext, SiteHueContext, SiteSaturationContext, SiteLightnessContext, ImagesContext, UpdateSavedContext,
 PromptContext, LorasContext, TextualInversionsContext, HypernetworksContext, ReverseSortContext, NSFWImagesContext, SidebarTypeContext,
 ImageInputImagesContext, TabContext, NegativePromptContext, NSFWTabContext, GeneratorContext, NovelAIImagesContext, NovelAINSFWImagesContext,
-NovelAIImageInputImagesContext, HolaraAIImagesContext, HolaraAINSFWImagesContext, HolaraAIImageInputImagesContext} from "../Context"
+NovelAIImageInputImagesContext, HolaraAIImagesContext, HolaraAINSFWImagesContext, HolaraAIImageInputImagesContext, ThemeContext} from "../Context"
 import functions from "../structures/Functions"
 import historyIcon from "../assets/icons/history.png"
 import nsfwIcon from "../assets/icons/nsfw.png"
@@ -27,6 +27,7 @@ let timer = null as any
 let clicking = false
 
 const SideBar: React.FunctionComponent = (props) => {
+    const {theme, setTheme} = useContext(ThemeContext)
     const [ignored, forceUpdate] = useReducer(x => x + 1, 0)
     const {enableDrag, setEnableDrag} = useContext(EnableDragContext)
     const {mobile, setMobile} = useContext(MobileContext)
@@ -93,7 +94,11 @@ const SideBar: React.FunctionComponent = (props) => {
     }, [updateSaved])
 
     const getFilter = () => {
-        return `hue-rotate(${siteHue - 180}deg) saturate(${siteSaturation}%) brightness(${siteLightness + 50}%)`
+        let saturation = siteSaturation
+        let lightness = siteLightness
+        if (theme === "light") saturation -= 60
+        if (theme === "light") lightness += 90
+        return `hue-rotate(${siteHue - 180}deg) saturate(${saturation}%) brightness(${lightness + 50}%)`
     }
 
     const getSaveKey = () => {

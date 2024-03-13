@@ -1,7 +1,8 @@
 import React, {useContext, useEffect, useState, useRef} from "react"
 import {useHistory} from "react-router-dom"
 import {EnableDragContext, MobileContext, SiteHueContext, SiteSaturationContext, SiteLightnessContext, 
-SocketContext, ModelNamesContext, TrainStartedContext, TrainProgressContext, TrainCompletedContext, TrainProgressTextContext} from "../Context"
+SocketContext, ModelNamesContext, TrainStartedContext, TrainProgressContext, TrainCompletedContext, TrainProgressTextContext,
+ThemeContext} from "../Context"
 import {ProgressBar, Dropdown, DropdownButton} from "react-bootstrap"
 import functions from "../structures/Functions"
 import $1 from "../assets/icons/1.png"
@@ -11,6 +12,7 @@ import "./styles/traintag.less"
 import axios from "axios"
 
 const TrainMerge: React.FunctionComponent = (props) => {
+    const {theme, setTheme} = useContext(ThemeContext)
     const {enableDrag, setEnableDrag} = useContext(EnableDragContext)
     const {mobile, setMobile} = useContext(MobileContext)
     const {siteHue, setSiteHue} = useContext(SiteHueContext)
