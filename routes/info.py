@@ -4,6 +4,7 @@ from .functions import get_number_from_filename, is_image, is_unwanted, is_dir, 
 get_models_dir, get_outputs_dir, update_models_dir, update_outputs_dir, subprocess_args
 from .invisiblewatermark import decode_watermark, encode_watermark
 import os
+import signal
 import platform
 import subprocess
 from send2trash import send2trash
@@ -16,6 +17,7 @@ import json
 
 dirname = os.path.dirname(__file__)
 if "_internal" in dirname: dirname = os.path.join(dirname, "../")
+if "Frameworks" in dirname: dirname = os.path.normpath(os.path.join(dirname, "../../Resources/dist"))
 
 @app.route("/diffusion-models")
 def get_diffusion_models():
@@ -463,3 +465,11 @@ def update_output_dir():
     output_dir = data["output_dir"]
     update_outputs_dir(output_dir)
     return "done"
+
+@app.get("/shutdown")
+def shutdown_server():
+    os.kill(os.getpid(), signal.SIGINT)
+
+@app.get("/ping")
+def ping():
+    return "pong"

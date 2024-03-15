@@ -21,6 +21,7 @@ import requests
 
 dirname = os.path.dirname(__file__)
 if "_internal" in dirname: dirname = os.path.join(dirname, "../")
+if "Frameworks" in dirname: dirname = os.path.normpath(os.path.join(dirname, "../../Resources/dist"))
 models_dir = "models"
 outputs_dir = "outputs"
 
@@ -363,6 +364,7 @@ def version_changed(v1, v2):
     return v2_val > v1_val, v2
 
 def check_for_updates():
+    global dirname
     package_path = os.path.normpath(os.path.join(dirname, "../package.json"))
     if not os.path.exists(package_path):
         package_path = os.path.normpath(os.path.join(dirname, "../config.json"))

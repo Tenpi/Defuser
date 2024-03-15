@@ -3,6 +3,7 @@ import json
 
 dirname = os.path.dirname(__file__)
 if "_internal" in dirname: dirname = os.path.join(dirname, "../")
+if "Frameworks" in dirname: dirname = os.path.normpath(os.path.join(dirname, "../Resources"))
 
 os.environ["PYTORCH_ENABLE_MPS_FALLBACK"] = "1"
 

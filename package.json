@@ -1,13 +1,15 @@
 {
   "name": "defuzers",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "Image generation UI for diffusers",
   "scripts": {
     "start": "git pull && npm run clean && webpack && cross-env PYTORCH_ENABLE_MPS_FALLBACK=1 python3 main.py",
     "start-fast": "cross-env PYTORCH_ENABLE_MPS_FALLBACK=1 python3 main.py",
-    "start-unlim": "git pull && npm run clean && webpack && cross-env PYTORCH_MPS_HIGH_WATERMARK_RATIO=0.0 python3 main.py",
     "build": "npm run clean ./build ./tmp main.spec && webpack && python3 -m PyInstaller --onedir --distpath \"build\" --workpath \"tmp\" --runtime-hook \"pre.py\" --icon \"assets\\icons\\favicon.ico\" main.py && python3 post.py",
     "build-fast": "python3 -m PyInstaller --onedir --distpath \"build\" --workpath \"tmp\" --runtime-hook \"pre.py\" --icon \"assets\\icons\\favicon.ico\" main.py && python3 post.py",
+    "bundle-mac": "npm run create-app && npm run create-dmg",
+    "create-app": "npm run clean ./app ./tmp Defuzers.spec && webpack && python3 -m PyInstaller --windowed --onedir --hidden-import '_posixshmem' --hidden-import '_lsprof' --distpath 'app' --workpath 'tmp' --icon 'assets/icons/Defuzers.icns' --osx-bundle-identifier 'com.moepi.defuzers' --name 'Defuzers' gui.py && python3 post.py --app",
+    "create-dmg": "dmgbuild -s dmg.py \"Defuzers\" app/Defuzers.dmg",
     "clean": "del-cli ./dist"
   },
   "repository": {

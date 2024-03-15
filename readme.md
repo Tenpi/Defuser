@@ -63,6 +63,14 @@ xattr -d com.apple.quarantine dialog/dialog
 This is the torch compiled with CUDA support, replace the one in `_internal/torch` with this one.
 https://huggingface.co/defuzers/torch/blob/main/torch-cuda.zip
 
+### Killing the server
+
+If the server is still running you can kill it with these commands.
+```
+sudo lsof -i :8084
+sudo kill -9 <pid>
+```
+
 ### Requirements
 
 Node.js: https://nodejs.org/en \

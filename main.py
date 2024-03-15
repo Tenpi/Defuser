@@ -5,9 +5,14 @@ from engineio.async_drivers import threading
 import os
 import json
 import logging
+import signal
+import requests
+
+signal.signal(signal.SIGINT, signal.SIG_DFL)
 
 dirname = os.path.dirname(__file__)
 if "_internal" in dirname: dirname = os.path.join(dirname, "../")
+if "Frameworks" in dirname: dirname = os.path.normpath(os.path.join(dirname, "../Resources"))
 
 app = flask.Flask(__name__, static_url_path="", static_folder="dist")
 app.secret_key = "klee"
@@ -28,22 +33,22 @@ import routes.misc
 
 @app.route("/assets/<path:filename>")
 def assets(filename):
-    file_path = os.path.join(dirname, "dist/assets", filename)
+    file_path = os.path.normpath(os.path.join(dirname, "dist/assets", filename))
     return flask.send_file(file_path)
 
 @app.route("/dist/<path:filename>")
 def dist(filename):
-    file_path = os.path.join(dirname, "dist", filename)
+    file_path = os.path.normpath(os.path.join(dirname, "dist", filename))
     return flask.send_file(file_path)
 
 @app.route("/outputs/<path:filename>")
 def outputs(filename):
-    file_path = os.path.join(get_outputs_dir(), filename)
+    file_path = os.path.normpath(os.path.join(get_outputs_dir(), filename))
     return flask.send_file(file_path)
 
 @app.route("/models/<path:filename>")
 def models(filename):
-    file_path = os.path.join(get_models_dir(), filename)
+    file_path = os.path.normpath(os.path.join(get_models_dir(), filename))
     return flask.send_file(file_path)
 
 @app.route("/retrieve")
@@ -58,7 +63,7 @@ def retrieve():
 
 @app.route("/")
 def index():
-    file_path = os.path.join(dirname, "dist", "index.html")
+    file_path = os.path.normpath(os.path.join(dirname, "dist", "index.html"))
     return flask.send_file(file_path)
 
 def load_config():
@@ -73,5 +78,8 @@ def load_config():
 
 if __name__ == "__main__":
     load_config()
-    print(f"* Running on http://{host}:{port}")
-    socketio.run(app, host=host, port=port)
+    try:
+        requests.get(f"http://{host}:{port}/ping")
+    except:
+        print(f"* Running on http://{host}:{port}")
+        socketio.run(app, host=host, port=port, allow_unsafe_werkzeug=True)

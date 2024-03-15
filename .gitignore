@@ -1,10 +1,13 @@
 node_modules
+__pycache__
 dist
 tmp
 build
+app
 venv
 .DS_Store
-server.spec
+main.spec
+Defuzers.spec
 routes/__pycache__
 models/interrogator/deepbooru/*
 models/interrogator/wdtagger/*

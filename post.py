@@ -3,12 +3,16 @@ import os
 import platform
 import json
 import zipfile
+import argparse
+import pathlib
 
 dirname = os.path.dirname(__file__)
 
 name = "defuzers"
+name_cap = "Defuzers"
 tmp_dir = "tmp"
 build_dir = "build"
+app_bundle_dir = "app"
 dist_dir = "dist"
 app_dir = "main"
 app = "main"
@@ -66,7 +70,7 @@ def zip_file(input_dir, output_zip):
     _ArchiveDirectory(input_dir)
     zip_out.close()
 
-if __name__ == "__main__":
+def build_zip():
     os.remove(os.path.join(dirname, "main.spec"))
     shutil.rmtree(os.path.join(dirname, tmp_dir))
     shutil.copytree(os.path.join(dirname, dist_dir), os.path.join(dirname, build_dir, name, dist_dir))
@@ -109,3 +113,66 @@ if __name__ == "__main__":
         json.dump(json_dict, cfg, indent=4)
 
     zip_file(os.path.join(dirname, build_dir, name), os.path.join(dirname, build_dir, f"{name}.zip"))
+
+def build_app():
+    os.remove(os.path.join(dirname, "Defuzers.spec"))
+    shutil.rmtree(os.path.join(dirname, tmp_dir))
+    internal_resources_raw = os.listdir(os.path.join(dirname, app_bundle_dir, f"{name_cap}.app/Contents/Resources"))
+    internal_resources = list(map(lambda x: os.path.join(dirname, app_bundle_dir, f"{name_cap}.app/Contents/Resources", x), internal_resources_raw))
+    internal_resources_dup = list(map(lambda x: os.path.join(dirname, app_bundle_dir, f"{name_cap}.app/Contents/Frameworks", x), internal_resources_raw))
+    for i, internal_resource in enumerate(internal_resources):
+        if not os.path.islink(internal_resource):
+            if ".icns" in internal_resource: continue
+            if os.path.isdir(internal_resource):
+                tmp = os.path.join(dirname, app_bundle_dir, f"{name_cap}.app/Contents/Frameworks/{pathlib.Path(internal_resource).stem}_tmp")
+                dir = os.path.join(dirname, app_bundle_dir, f"{name_cap}.app/Contents/Frameworks/{pathlib.Path(internal_resource).stem}")
+                os.makedirs(tmp, exist_ok=True)
+                shutil.copytree(internal_resource, tmp, symlinks=False, dirs_exist_ok=True)
+                if os.path.islink(internal_resources_dup[i]):
+                    os.remove(internal_resources_dup[i])
+                else:
+                    shutil.rmtree(internal_resources_dup[i])
+                os.rename(tmp, dir)
+            else:
+                os.remove(internal_resources_dup[i])
+                shutil.copy(internal_resource, os.path.join(dirname, app_bundle_dir, f"{name_cap}.app/Contents/Frameworks"))
+    shutil.rmtree(os.path.join(dirname, app_bundle_dir, f"{name_cap}.app/Contents/Resources"))
+    os.makedirs(os.path.join(dirname, app_bundle_dir, f"{name_cap}.app/Contents/Resources"), exist_ok=True)
+    shutil.copy(os.path.join(dirname, f"assets/icons/{name_cap}.icns"), os.path.join(dirname, app_bundle_dir, f"{name_cap}.app/Contents/Resources/{name_cap}.icns"))
+
+    copy_to_resources = ["dialog", "dist", "models", "outputs", "config.json"]
+    for item in copy_to_resources:
+        item_path = os.path.join(dirname, build_dir, name, item)
+        if os.path.isdir(item_path):
+            shutil.copytree(item_path, os.path.join(dirname, app_bundle_dir, f"{name_cap}.app/Contents/Resources/{item}"), symlinks=True, dirs_exist_ok=True)
+        else:
+            shutil.copy(item_path, os.path.join(dirname, app_bundle_dir, f"{name_cap}.app/Contents/Resources/{item}"))
+
+    shutil.copy(os.path.join(dirname, build_dir, name, app), os.path.join(dirname, app_bundle_dir, f"{name_cap}.app/Contents/MacOS/{app}"))
+    
+    os.rename(os.path.join(dirname, app_bundle_dir, f"{name_cap}.app/Contents/Frameworks"), os.path.join(dirname, app_bundle_dir, f"{name_cap}.app/Contents/Frameworks2"))
+    shutil.copytree(os.path.join(dirname, build_dir, name, "_internal"), os.path.join(dirname, app_bundle_dir, f"{name_cap}.app/Contents/Frameworks"), symlinks=True, dirs_exist_ok=True)
+    #os.remove(os.path.join(dirname, app_bundle_dir, f"{name_cap}.app/Contents/Frameworks/base_library.zip"))
+    #shutil.copyfile(os.path.join(dirname, build_dir, name, "_internal", "base_library.zip"), os.path.join(dirname, app_bundle_dir, f"{name_cap}.app/Contents/Frameworks/base_library.zip"), follow_symlinks=True)
+
+    internals = os.listdir(os.path.join(dirname, app_bundle_dir, f"{name_cap}.app/Contents/Frameworks2"))
+    internals = map(lambda x: os.path.join(dirname, app_bundle_dir, f"{name_cap}.app/Contents/Frameworks", x), internals)
+    for internal in internals:
+        if os.path.exists(internal):
+            if os.path.isdir(internal):
+                shutil.rmtree(internal)
+            else:
+                os.remove(internal)
+    shutil.copytree(os.path.join(dirname, app_bundle_dir, f"{name_cap}.app/Contents/Frameworks2"), os.path.join(dirname, app_bundle_dir, f"{name_cap}.app/Contents/Frameworks"), symlinks=True, dirs_exist_ok=True)
+    shutil.rmtree(os.path.join(dirname, app_bundle_dir, f"{name_cap}.app/Contents/Frameworks2"))
+    shutil.rmtree(os.path.join(dirname, app_bundle_dir, name_cap))
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(prog="Post Script")
+    parser.add_argument("-a", "--app", action="store_true")
+    args = parser.parse_args()
+
+    if args.app:
+        build_app()
+    else:
+        build_zip()
