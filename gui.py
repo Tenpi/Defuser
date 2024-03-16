@@ -16,7 +16,6 @@ import sys
 import os
 
 dirname = os.path.dirname(__file__)
-if "_internal" in dirname: dirname = os.path.join(dirname, "../")
 
 process = None
 
@@ -42,6 +41,7 @@ class ConsoleWindow(QMainWindow):
         center_y = (screen_geometry.height() - self.height()) // 2
         self.move(center_x, center_y)
         self.text_edit = QTextEdit(self)
+        self.text_edit.setStyleSheet("background-color: black; color: white;")
         self.setCentralWidget(self.text_edit)
         
     def write(self, text):
@@ -59,6 +59,8 @@ class ConsoleWindow(QMainWindow):
 def redirect_console(signals):
     global process
     main_path = os.path.join(dirname, "main.py")
+    if "_internal" in dirname: 
+        main_path = os.path.join(dirname, "../main.exe")
     if "Frameworks" in dirname:
         main_path = os.path.normpath(os.path.join(dirname, "../MacOS/main"))
     if main_path.endswith(".py"):

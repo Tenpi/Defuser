@@ -167,12 +167,36 @@ def build_app():
     shutil.rmtree(os.path.join(dirname, app_bundle_dir, f"{name_cap}.app/Contents/Frameworks2"))
     shutil.rmtree(os.path.join(dirname, app_bundle_dir, name_cap))
 
+def build_exe():
+    os.remove(os.path.join(dirname, "Defuzers.spec"))
+    shutil.rmtree(os.path.join(dirname, tmp_dir))
+
+    copy_to_resources = ["dialog", "dist", "models", "outputs", "config.json", "main.exe"]
+    for item in copy_to_resources:
+        item_path = os.path.join(dirname, build_dir, name, item)
+        if os.path.isdir(item_path):
+            shutil.copytree(item_path, os.path.join(dirname, app_bundle_dir, f"{name_cap}/{item}"), symlinks=True, dirs_exist_ok=True)
+        else:
+            shutil.copy(item_path, os.path.join(dirname, app_bundle_dir, f"{name_cap}/{item}"))
+
+    internals = os.listdir(os.path.join(dirname, build_dir, name, "_internal"))
+    internals = map(lambda x: os.path.join(dirname, build_dir, name, "_internal", x), internals)
+    for internal in internals:
+        base = os.path.basename(internal)
+        if os.path.isdir(internal):
+            shutil.copytree(internal, os.path.join(dirname, app_bundle_dir, f"{name_cap}/_internal/{base}"), symlinks=True, dirs_exist_ok=True)
+        else:
+            shutil.copy(internal, os.path.join(dirname, app_bundle_dir, f"{name_cap}/_internal/{base}"))
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(prog="Post Script")
     parser.add_argument("-a", "--app", action="store_true")
+    parser.add_argument("-e", "--exe", action="store_true")
     args = parser.parse_args()
 
     if args.app:
         build_app()
+    elif args.exe:
+        build_exe()
     else:
         build_zip()

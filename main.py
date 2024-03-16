@@ -6,7 +6,6 @@ import os
 import json
 import logging
 import signal
-import requests
 
 signal.signal(signal.SIGINT, signal.SIG_DFL)
 
@@ -79,7 +78,7 @@ def load_config():
 if __name__ == "__main__":
     load_config()
     try:
-        requests.get(f"http://{host}:{port}/ping")
-    except:
         print(f"* Running on http://{host}:{port}")
         socketio.run(app, host=host, port=port, allow_unsafe_werkzeug=True)
+    except:
+        pass
