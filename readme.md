@@ -53,9 +53,7 @@ will be pushed out slower. https://github.com/Tenpi/Defuzers/releases
 To run on MacOS, you may need to remove the quarantine flags. 
 
 ```
-/usr/bin/xattr -rd com.apple.quarantine _internal
-xattr -d com.apple.quarantine main
-xattr -d com.apple.quarantine dialog/dialog
+xattr -d com.apple.quarantine /Applications/Defuzers.app
 ```
 
 ### Windows
