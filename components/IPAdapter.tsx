@@ -196,7 +196,7 @@ const IPAdapter: React.FunctionComponent = (props) => {
 
     const updateIPAdapterModels = async (first?: boolean) => {
         let subfolder = "models"
-        if (modelName.includes("XL")) subfolder = "sdxl_models"
+        if (modelName?.includes("XL")) subfolder = "sdxl_models"
         const ipAdapterNames = await axios.get("/ip-adapter-models", {params: {subfolder}}).then((r) => r.data)
         setIPAdapterNames(ipAdapterNames)
         if (ipAdapter === "None") setIPAdapter(ipAdapterNames[0])

@@ -17,6 +17,7 @@ InstallDir "$INSTDIR"
 InstallDirRegKey HKLM "${INSTALL_DIR_REGKEY}" ""
 Icon "assets\icons\favicon.ico"
 UninstallIcon "assets\icons\favicon.ico"
+RequestExecutionLevel user
 
 !insertmacro MUI_PAGE_WELCOME
 !insertmacro MUI_PAGE_DIRECTORY
@@ -30,7 +31,7 @@ UninstallIcon "assets\icons\favicon.ico"
 !insertmacro MUI_LANGUAGE "English"
 
 Function .onInit
-    StrCpy $INSTDIR "$PROGRAMFILES\${APP_NAME}"
+    StrCpy $INSTDIR "$DOCUMENTS\${APP_NAME}"
 FunctionEnd
 
 Section "Install" SecInstall

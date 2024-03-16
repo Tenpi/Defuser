@@ -482,9 +482,9 @@ const GenerateBar: React.FunctionComponent = (props) => {
     const getSizeDim = () => {
         if (generator === "novel ai") return "640"
         if (generator === "holara ai") return "640"
-        if (modelName.includes("XL")) return "1024"
-        if (modelName.includes("SC")) return "1024"
-        if (modelName.includes("V2")) return "768"
+        if (modelName?.includes("XL")) return "1024"
+        if (modelName?.includes("SC")) return "1024"
+        if (modelName?.includes("V2")) return "768"
         return "512"
     }
 

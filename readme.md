@@ -58,6 +58,11 @@ xattr -d com.apple.quarantine main
 xattr -d com.apple.quarantine dialog/dialog
 ```
 
+### Windows
+
+Do not install it in `C:/Program Files` because the application needs 
+write access to the installation location.
+
 ### CUDA
 
 This is the torch compiled with CUDA support, replace the one in `_internal/torch` with this one.
