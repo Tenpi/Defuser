@@ -80,7 +80,7 @@ sudo lsof -i :8084
 sudo kill -9 <pid>
 ```
 
-### Requirements
+### Source Code Requirements
 
 Node.js: https://nodejs.org/en \
 Python: https://www.python.org/downloads/ \
