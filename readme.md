@@ -48,6 +48,12 @@ There are precompiled binaries for MacOS arm64 and Windows x64
 that don't require compiling the project from source. However, updates 
 will be pushed out slower. https://github.com/Tenpi/Defuzers/releases 
 
+### Model Files
+
+The model files required for the default functionality are available here. You 
+will need to have about 20GB of free disk space. \
+https://huggingface.co/defuzers/models
+
 ### MacOS
 
 To run on MacOS, you may need to remove the quarantine flags. 
