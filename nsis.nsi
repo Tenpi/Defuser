@@ -38,7 +38,7 @@ Section "Install" SecInstall
     SetOutPath "$INSTDIR"
     File /r "build\defuzers\*"
     CreateShortCut "$DESKTOP\${APP_NAME}.lnk" "$INSTDIR\${APP_EXE}"
-    WriteRegStr HKLM "${UNINSTALL_REGKEY}" "" "$INSTDIR\uninstaller.exe"
+    WriteRegStr HKLM "${UNINSTALL_REGKEY}" "UninstallString" "$INSTDIR\uninstaller.exe"
     WriteUninstaller "$INSTDIR\uninstaller.exe"
 SectionEnd
 

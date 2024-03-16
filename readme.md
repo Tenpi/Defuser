@@ -65,7 +65,8 @@ xattr -d com.apple.quarantine /Applications/Defuzers.app
 ### Windows
 
 Do not install it in `C:/Program Files` because the application needs 
-write access to the installation location.
+write access to the installation location. Run the installer as admin to write 
+registry keys that will add it to Add/Remove Programs.
 
 ### CUDA
 
