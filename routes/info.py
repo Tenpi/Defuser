@@ -226,6 +226,7 @@ def delete_file():
     data = flask.request.json
     path = data["path"]
     deletion = data["deletion"]
+    path = path.replace("outputs/", get_outputs_dir())
     if deletion == "trash":
         send2trash(path)
     else:
