@@ -237,7 +237,7 @@ const IPAdapter: React.FunctionComponent = (props) => {
 
     return (
         <div className="controlnet" style={{alignItems: "flex-start"}}>
-            <div className="controlnet-container" style={{marginLeft: "25px", width: "95%"}}>
+            <div className="controlnet-container">
                 <div className="controlnet-title">IP Adapter</div>
                 <div className="controlnet-buttons-container" style={{justifyContent: "flex-start"}}>
                     <div className="controlnet-button-container" onClick={() => setIPProcessor("off")}>

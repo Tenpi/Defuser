@@ -17,15 +17,13 @@ import pytoshop
 from pytoshop import layers
 from pytoshop.enums import BlendMode
 from .segmentate import get_raw_mask
-from .functions import get_models_dir, next_index
+from .functions import get_models_dir, next_index, get_device
 import pathlib
 import shutil
 
 dirname = os.path.dirname(__file__)
 if "_internal" in dirname: dirname = os.path.join(dirname, "../")
 if "Frameworks" in dirname: dirname = os.path.normpath(os.path.join(dirname, "../../Resources/dist"))
-
-device = "mps" if torch.backends.mps.is_available() else "cuda" if torch.cuda.is_available() else "cpu"
 
 def assign_tile(row, tile_width, tile_height):
     tile_x = row["x_l"] // tile_width
@@ -538,11 +536,11 @@ def divide_folder(psd_path, mode):
   return psd_path
 
 def get_mask_generator(pred_iou_thresh, stability_score_thresh, min_mask_region_area):
-    global device
     sam_checkpoint = os.path.join(get_models_dir(), "misc/sam.pth")
     model_type = "default"
 
     sam = sam_model_registry[model_type](checkpoint=sam_checkpoint)
+    device = get_device()
     if device == "mps": device = "cpu"
     sam.to(device=device)
 

@@ -1,7 +1,7 @@
 from __main__ import app, socketio
 import os
 import torch
-from .functions import next_index, is_nsfw, get_normalized_dimensions, get_seed, get_seed_generator, append_info, upscale, get_models_dir, get_outputs_dir
+from .functions import next_index, is_nsfw, get_device, get_seed, get_seed_generator, append_info, upscale, get_models_dir, get_outputs_dir
 from .invisiblewatermark import encode_watermark
 from .info import get_diffusion_models, get_vae_models
 from diffusers import StableCascadePriorPipeline, StableCascadeDecoderPipeline, DDPMWuerstchenScheduler
@@ -12,8 +12,6 @@ from itertools import chain
 import pathlib
 import asyncio
 import gc
-
-device = "mps" if torch.backends.mps.is_available() else "cuda" if torch.cuda.is_available() else "cpu"
 
 gen_thread = None
 prior = None
@@ -28,8 +26,7 @@ def get_cascade_generators(model_name: str = "", cpu: bool = False):
     global prior_name
     global decoder
     global dtype
-    global device
-    processor = "cpu" if cpu else device
+    processor = "cpu" if cpu else get_device()
     update_model = False
     if not model_name:
         model_name = get_diffusion_models()[0]
@@ -84,7 +81,6 @@ def update_precision_cascade(value):
     return "done"
 
 def generate_cascade(data, request_files, clear_step_frames=None, generate_step_animation=None):
-    global device
     global infinite
     global upscaling
     mode = "text"
@@ -181,7 +177,7 @@ def generate_cascade(data, request_files, clear_step_frames=None, generate_step_
             guidance_scale=cfg,
             num_inference_steps=steps,
             num_images_per_prompt=1,
-            generator=get_seed_generator(seed, device),
+            generator=get_seed_generator(seed, get_device()),
             callback_on_step_end=step_progress_prior
         )
         image = decoder(
@@ -191,7 +187,7 @@ def generate_cascade(data, request_files, clear_step_frames=None, generate_step_
             guidance_scale=0.0,
             num_inference_steps=10,
             num_images_per_prompt=1,
-            generator=get_seed_generator(seed, device),
+            generator=get_seed_generator(seed, get_device()),
             callback_on_step_end=step_progress
         ).images[0]
         dir_path = os.path.join(get_outputs_dir(), f"local/{folder}")

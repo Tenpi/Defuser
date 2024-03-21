@@ -12,6 +12,7 @@ from transformers import CLIPTextModel, CLIPTextModelWithProjection, CLIPTokeniz
 from diffusers.image_processor import VaeImageProcessor
 from diffusers.loaders import FromSingleFileMixin, LoraLoaderMixin, TextualInversionLoaderMixin
 from diffusers.models import AutoencoderKL, ControlNetModel
+from .functions import get_device
 
 from diffusers.models.attention_processor import (
     AttnProcessor2_0,
@@ -59,8 +60,7 @@ if is_invisible_watermark_available():
 logger = logging.get_logger(__name__)
 EXAMPLE_DOC_STRING = ""
 
-device = "mps" if torch.backends.mps.is_available() else "cuda" if torch.cuda.is_available() else "cpu"
-device = torch.device(device)
+device = torch.device(get_device())
 
 def conv_nd(dims, *args, **kwargs):
     """

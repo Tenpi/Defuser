@@ -7,11 +7,10 @@ from torchvision import transforms
 from collections import namedtuple
 import numpy as np
 import array
-from .functions import get_models_dir, get_normalized_dimensions
+from .functions import get_models_dir, get_device
 
 topk = 4
 Norm = nn.BatchNorm2d
-device = "mps" if torch.backends.mps.is_available() else "cuda" if torch.cuda.is_available() else "cpu"
 
 colorize_model = None
 
@@ -474,10 +473,10 @@ def get_topk(color_info, k):
 def colorize_sketch(sketch, style, output):
     global colorize_model
     if not colorize_model:
-        checkpoint = torch.load(os.path.join(get_models_dir(), "misc/colorize.pth"), map_location=device)
+        checkpoint = torch.load(os.path.join(get_models_dir(), "misc/colorize.pth"), map_location=get_device())
         colorize_model = DeepUNetPaintGenerator()
         colorize_model.load_state_dict(checkpoint["model_state"])
-        colorize_model = colorize_model.to(device)
+        colorize_model = colorize_model.to(get_device())
     for param in colorize_model.parameters():
         param.requires_grad = False
 
@@ -497,7 +496,7 @@ def colorize_sketch(sketch, style, output):
 
     sketch = transform(sketch)
     sketch = scale(sketch)
-    sketch = sketch.unsqueeze(0).to(device)
+    sketch = sketch.unsqueeze(0).to(get_device())
 
     to_pil = transforms.ToPILImage()
 
@@ -511,7 +510,7 @@ def colorize_sketch(sketch, style, output):
         }
 
     color_tensor = make_colorgram_tensor(result)
-    color_tensor = color_tensor.unsqueeze(0).to(device)
+    color_tensor = color_tensor.unsqueeze(0).to(get_device())
 
     result, _ = colorize_model(sketch, color_tensor)
     result = result.squeeze(0)

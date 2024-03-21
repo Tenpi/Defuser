@@ -3,8 +3,7 @@ import torch
 import torch.nn.functional as F
 import torch.nn as nn
 import torch.nn.init as init
-
-device = "mps" if torch.backends.mps.is_available() else "cuda" if torch.cuda.is_available() else "cpu"
+from .functions import get_device
 
 class HypernetworkModule(torch.nn.Module):
     activation_dict = {
@@ -359,7 +358,7 @@ class HyperAttnProcessor(nn.Module):
 
         return hidden_states
 
-def load_hypernet(path, multiplier=None, device=device):
+def load_hypernet(path, multiplier=None, device=get_device()):
         hyper_model = torch.load(path, map_location=device)
         hypernetwork = Hypernetwork()
         hypernetwork.load_state_dict(hyper_model)

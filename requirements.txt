@@ -31,6 +31,7 @@ Send2Trash==1.8.0
 setuptools==69.1.1
 scikit_image==0.22.0
 tensorflow==2.13.0
+timm==0.9.16
 torch==2.2.1
 torchvision==0.17.1
 tqdm==4.66.2

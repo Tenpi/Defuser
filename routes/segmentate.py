@@ -1,6 +1,6 @@
 import flask               
 from __main__ import app, socketio
-from .functions import next_index, get_models_dir, get_outputs_dir
+from .functions import next_index, get_models_dir, get_outputs_dir, get_device
 import torch
 import os
 import cv2
@@ -10,8 +10,6 @@ import numpy as np
 import torch.nn as nn
 import torch.nn.functional as F
 from PIL import Image
-
-device = "mps" if torch.backends.mps.is_available() else "cuda" if torch.cuda.is_available() else "cpu"
 
 segmentate_model = None
 
@@ -497,9 +495,9 @@ def get_mask(model, input_img, use_amp=True, s=640):
 def get_raw_mask(img):
     global segmentate_model
     if not segmentate_model:
-        segmentate_model = AnimeSegmentation.try_load("isnet_is", os.path.join(get_models_dir(), "segmentator/anime-segmentation.ckpt"), device, img_size=1024)
+        segmentate_model = AnimeSegmentation.try_load("isnet_is", os.path.join(get_models_dir(), "segmentator/anime-segmentation.ckpt"), get_device(), img_size=1024)
         segmentate_model.eval()
-        segmentate_model.to(device)
+        segmentate_model.to(get_device())
     return get_mask(segmentate_model, img, use_amp=False, s=1024)
 
 @app.route("/segmentate", methods=["POST"])
@@ -510,9 +508,9 @@ def segmentate():
     socketio.emit("image starting")
 
     if not segmentate_model:
-        segmentate_model = AnimeSegmentation.try_load("isnet_is", os.path.join(get_models_dir(), "segmentator/anime-segmentation.ckpt"), device, img_size=1024)
+        segmentate_model = AnimeSegmentation.try_load("isnet_is", os.path.join(get_models_dir(), "segmentator/anime-segmentation.ckpt"), get_device(), img_size=1024)
         segmentate_model.eval()
-        segmentate_model.to(device)
+        segmentate_model.to(get_device())
     img = np.array(Image.open(file)) 
     
     mask = get_mask(segmentate_model, img, use_amp=False, s=1024)

@@ -3,11 +3,9 @@ import torch.nn as nn
 from PIL import Image
 from torchvision import transforms
 from torchvision.utils import save_image
-from .functions import get_models_dir
+from .functions import get_models_dir, get_device
 import torch
 import os
-
-device = "mps" if torch.backends.mps.is_available() else "cuda" if torch.cuda.is_available() else "cpu"
 
 class SketchSimplificationModel():
     def __init__(self):
@@ -59,9 +57,9 @@ class SketchSimplificationModel():
             nn.Conv2d(24, 1, (3, 3), (1, 1), (1, 1)),
             nn.Sigmoid(),
         )
-        state_dict = torch.load(os.path.join(get_models_dir(), "misc/simplify.pth"), map_location=device)
+        state_dict = torch.load(os.path.join(get_models_dir(), "misc/simplify.pth"), map_location=get_device())
         self.model.load_state_dict(state_dict)
-        self.model.to(device)
+        self.model.to(get_device())
         self.model.eval()
         self.immean = 0.9664114577640158
         self.imstd = 0.0858381272736797
@@ -75,6 +73,6 @@ class SketchSimplificationModel():
         if pw != 0 or ph != 0:
             data = torch.nn.ReplicationPad2d((0, pw, 0, ph))(data).data
 
-        data = data.to(device)
+        data = data.to(get_device())
         pred = self.model.forward(data)
         save_image(pred[0], output)

@@ -1,11 +1,12 @@
 import flask                                      
-from flask_socketio import SocketIO, emit
-from routes.functions import get_models_dir, get_outputs_dir
+from flask_socketio import SocketIO
+from routes.functions import get_models_dir, get_outputs_dir, update_directml
 from engineio.async_drivers import threading
 import os
 import json
 import logging
 import signal
+import argparse
 
 signal.signal(signal.SIGINT, signal.SIG_DFL)
 
@@ -76,6 +77,10 @@ def load_config():
         port = data["port"]
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser(prog="Defuzers")
+    parser.add_argument("-d", "--directml", action="store_true")
+    args = parser.parse_args()
+    update_directml(args.directml)
     load_config()
     try:
         print(f"* Running on http://{host}:{port}")

@@ -1,7 +1,7 @@
 from __main__ import app, socketio
 import os
 import torch
-from .functions import next_index, is_nsfw, get_normalized_dimensions, get_seed, get_seed_generator, append_info, upscale, get_models_dir, get_outputs_dir
+from .functions import next_index, is_nsfw, get_normalized_dimensions, get_seed, get_seed_generator, append_info, upscale, get_models_dir, get_outputs_dir, get_device
 from .invisiblewatermark import encode_watermark
 from .info import get_diffusion_models, get_vae_models
 from diffusers import StableDiffusionPipeline, StableDiffusionXLPipeline, StableDiffusionXLImg2ImgPipeline, StableDiffusionXLInpaintPipeline, \
@@ -18,8 +18,6 @@ from itertools import chain
 import pathlib
 import asyncio
 import gc
-
-device = "mps" if torch.backends.mps.is_available() else "cuda" if torch.cuda.is_available() else "cpu"
 
 gen_thread = None
 generator = None
@@ -58,8 +56,7 @@ def get_generator_xl(model_name: str = "", vae: str = "", mode: str = "text", cl
     global safety_checker
     global x_adapter
     global dtype
-    global device
-    processor = "cpu" if cpu else device
+    processor = "cpu" if cpu else get_device()
     update_model = False
     if not model_name:
         model_name = get_diffusion_models()[0]
@@ -235,7 +232,7 @@ def get_generator_xl(model_name: str = "", vae: str = "", mode: str = "text", cl
             generator.vae = AutoencoderKL.from_single_file(vae_model)
         generator.vae = generator.vae.to(device=processor, dtype=dtype)
         vae_name = vae
-    generator = generator.to(device=device, dtype=dtype)
+    generator = generator.to(device=processor, dtype=dtype)
     generator.safety_checker = None
     return generator
 
@@ -286,7 +283,6 @@ def update_precision_xl(value):
     return "done"
 
 def generate_xl(data, request_files, get_controlnet=None, clear_step_frames=None, generate_step_animation=None):
-    global device
     global infinite
     global upscaling
     global generator_sd1
@@ -429,7 +425,7 @@ def generate_xl(data, request_files, get_controlnet=None, clear_step_frames=None
         hypernet_path = os.path.join(get_models_dir(), hypernetwork["model"].replace("models/", ""))
         has_hypernet = True
         try:
-            hypernet = load_hypernet(hypernet_path, hypernet_scale, device)
+            hypernet = load_hypernet(hypernet_path, hypernet_scale, get_device())
             if use_x_adapter:
                 add_hypernet(generator.unet_sd1_5, hypernet)
             else:
@@ -447,7 +443,7 @@ def generate_xl(data, request_files, get_controlnet=None, clear_step_frames=None
         for lora in loras:
             lora_scale = float(lora["weight"])
             lora_path = os.path.join(get_models_dir(), lora["model"].replace("models/", ""))
-            load_adapter_lora(generator, lora_path, lora_scale, device)
+            load_adapter_lora(generator, lora_path, lora_scale, get_device())
     else:
         has_lora = False
         generator.unfuse_lora()
@@ -552,7 +548,7 @@ def generate_xl(data, request_files, get_controlnet=None, clear_step_frames=None
                     num_inference_steps=steps,
                     guidance_scale=cfg,
                     num_images_per_prompt=1,
-                    generator=get_seed_generator(seed, device),
+                    generator=get_seed_generator(seed, get_device()),
                     callback=step_progress,
                     cross_attention_kwargs=cross_attention_kwargs,
                     prompt_embeds_sd1_5=conditioning_sd1, 
@@ -575,7 +571,7 @@ def generate_xl(data, request_files, get_controlnet=None, clear_step_frames=None
                     num_inference_steps=steps,
                     guidance_scale=cfg,
                     num_images_per_prompt=1,
-                    generator=get_seed_generator(seed, device),
+                    generator=get_seed_generator(seed, get_device()),
                     clip_skip=clip_skip,
                     callback_on_step_end=step_progress,
                     cross_attention_kwargs=cross_attention_kwargs
@@ -617,7 +613,7 @@ def generate_xl(data, request_files, get_controlnet=None, clear_step_frames=None
                 negative_pooled_prompt_embeds=negative_pooled,
                 num_inference_steps=steps,
                 guidance_scale=cfg,
-                generator=get_seed_generator(seed, device),
+                generator=get_seed_generator(seed, get_device()),
                 clip_skip=clip_skip,
                 callback_on_step_end=step_progress,
                 cross_attention_kwargs=cross_attention_kwargs
@@ -664,7 +660,7 @@ def generate_xl(data, request_files, get_controlnet=None, clear_step_frames=None
                 negative_pooled_prompt_embeds=negative_pooled,
                 num_inference_steps=steps,
                 guidance_scale=cfg,
-                generator=get_seed_generator(seed, device),
+                generator=get_seed_generator(seed, get_device()),
                 clip_skip=clip_skip,
                 callback_on_step_end=step_progress,
                 cross_attention_kwargs=cross_attention_kwargs
@@ -706,7 +702,7 @@ def generate_xl(data, request_files, get_controlnet=None, clear_step_frames=None
                     negative_pooled_prompt_embeds=negative_pooled,
                     num_inference_steps=steps,
                     guidance_scale=cfg,
-                    generator=get_seed_generator(seed, device),
+                    generator=get_seed_generator(seed, get_device()),
                     callback=step_progress,
                     cross_attention_kwargs=cross_attention_kwargs,
                     controlnet_conditioning_scale=control_scale,
@@ -731,7 +727,7 @@ def generate_xl(data, request_files, get_controlnet=None, clear_step_frames=None
                     ip_adapter_image=ip_adapter_image,
                     num_inference_steps=steps,
                     guidance_scale=cfg,
-                    generator=get_seed_generator(seed, device),
+                    generator=get_seed_generator(seed, get_device()),
                     clip_skip=clip_skip,
                     callback_on_step_end=step_progress,
                     cross_attention_kwargs=cross_attention_kwargs,
@@ -779,7 +775,7 @@ def generate_xl(data, request_files, get_controlnet=None, clear_step_frames=None
                     negative_pooled_prompt_embeds=negative_pooled,
                     num_inference_steps=steps,
                     guidance_scale=cfg,
-                    generator=get_seed_generator(seed, device),
+                    generator=get_seed_generator(seed, get_device()),
                     callback=step_progress,
                     cross_attention_kwargs=cross_attention_kwargs,
                     controlnet_conditioning_scale=control_scale,
@@ -806,7 +802,7 @@ def generate_xl(data, request_files, get_controlnet=None, clear_step_frames=None
                     negative_pooled_prompt_embeds=negative_pooled,
                     num_inference_steps=steps,
                     guidance_scale=cfg,
-                    generator=get_seed_generator(seed, device),
+                    generator=get_seed_generator(seed, get_device()),
                     clip_skip=clip_skip,
                     callback_on_step_end=step_progress,
                     cross_attention_kwargs=cross_attention_kwargs,
@@ -857,7 +853,7 @@ def generate_xl(data, request_files, get_controlnet=None, clear_step_frames=None
                 negative_pooled_prompt_embeds=negative_pooled,
                 num_inference_steps=steps,
                 guidance_scale=cfg,
-                generator=get_seed_generator(seed, device),
+                generator=get_seed_generator(seed, get_device()),
                 clip_skip=clip_skip,
                 callback_on_step_end=step_progress,
                 cross_attention_kwargs=cross_attention_kwargs,
@@ -904,7 +900,7 @@ def generate_xl(data, request_files, get_controlnet=None, clear_step_frames=None
                 negative_pooled_prompt_embeds=negative_pooled,
                 num_inference_steps=steps,
                 guidance_scale=cfg,
-                generator=get_seed_generator(seed, device),
+                generator=get_seed_generator(seed, get_device()),
                 callback=step_progress,
                 cross_attention_kwargs=cross_attention_kwargs,
                 style_fidelity=style_fidelity,

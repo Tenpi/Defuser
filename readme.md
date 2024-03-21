@@ -72,6 +72,10 @@ write access to the installation location.
 This is the torch compiled with CUDA support, replace the one in `_internal/torch` with this one.
 https://huggingface.co/defuzers/torch/blob/main/torch-cuda.zip
 
+### DirectML
+
+Install the additional dependency torch-directml and run with the arg --directml.
+
 ### Source Code Requirements
 
 Node.js: https://nodejs.org/en \

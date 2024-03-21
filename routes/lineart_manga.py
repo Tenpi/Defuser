@@ -2,12 +2,10 @@ import os
 import torch
 import torch.nn as nn
 from torch.utils.data.dataset import Dataset
-from .functions import pil_to_cv2, cv2_to_pil, get_models_dir
+from .functions import pil_to_cv2, cv2_to_pil, get_models_dir, get_device
 import numpy as np
 import cv2
 import PIL
-
-device = "mps" if torch.backends.mps.is_available() else "cuda" if torch.cuda.is_available() else "cpu"
 
 class _bn_relu_conv(nn.Module):
     def __init__(self, in_filters, nb_filters, fw, fh, subsample=1):
@@ -180,9 +178,9 @@ class res_skip(nn.Module):
 class LineartMangaDetector():
     def __init__(self):
         self.model = res_skip()
-        state_dict = torch.load(os.path.join(get_models_dir(), "controlnet/annotator/lineart_manga.pt"), map_location=device)
+        state_dict = torch.load(os.path.join(get_models_dir(), "controlnet/annotator/lineart_manga.pt"), map_location=get_device())
         self.model.load_state_dict(state_dict)
-        self.model.to(device)
+        self.model.to(get_device())
         self.model.eval()
 
     def __call__(self, image):
@@ -193,7 +191,7 @@ class LineartMangaDetector():
             cols = int(np.ceil(img.shape[1]/16))*16
             patch = np.ones((1, 1, rows, cols), dtype="float32")
             patch[0, 0, 0:img.shape[0], 0:img.shape[1]] = img
-            tensor = torch.from_numpy(patch).to(device)
+            tensor = torch.from_numpy(patch).to(get_device())
             y = self.model(tensor)
             yc = y.cpu().detach().numpy()[0, 0, :, :]
             yc[yc > 255] = 255

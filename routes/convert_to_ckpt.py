@@ -3,6 +3,7 @@ import re
 import torch
 import pathlib
 from safetensors.torch import load_file, save_file
+from .functions import get_device
 
 unet_conversion_map = [
     # (stable-diffusion, HF Diffusers)
@@ -250,28 +251,27 @@ def convert_text_enc_state_dict(text_enc_dict):
     return text_enc_dict
 
 def convert_to_ckpt(model_path, checkpoint_path, half=True, safetensors=False, metadata={}):
-    device = "mps" if torch.backends.mps.is_available() else "cuda" if torch.cuda.is_available() else "cpu"
     unet_path = osp.join(model_path, "unet", "diffusion_pytorch_model.safetensors")
     vae_path = osp.join(model_path, "vae", "diffusion_pytorch_model.safetensors")
     text_enc_path = osp.join(model_path, "text_encoder", "model.safetensors")
 
     if osp.exists(unet_path):
-        unet_state_dict = load_file(unet_path, device=device)
+        unet_state_dict = load_file(unet_path, device=get_device())
     else:
         unet_path = osp.join(model_path, "unet", "diffusion_pytorch_model.bin")
-        unet_state_dict = torch.load(unet_path, map_location=device)
+        unet_state_dict = torch.load(unet_path, map_location=get_device())
 
     if osp.exists(vae_path):
-        vae_state_dict = load_file(vae_path, device=device)
+        vae_state_dict = load_file(vae_path, device=get_device())
     else:
         vae_path = osp.join(model_path, "vae", "diffusion_pytorch_model.bin")
-        vae_state_dict = torch.load(vae_path, map_location=device)
+        vae_state_dict = torch.load(vae_path, map_location=get_device())
 
     if osp.exists(text_enc_path):
-        text_enc_dict = load_file(text_enc_path, device=device)
+        text_enc_dict = load_file(text_enc_path, device=get_device())
     else:
         text_enc_path = osp.join(model_path, "text_encoder", "pytorch_model.bin")
-        text_enc_dict = torch.load(text_enc_path, map_location=device)
+        text_enc_dict = torch.load(text_enc_path, map_location=get_device())
 
     # Convert the UNet model
     unet_state_dict = convert_unet_state_dict(unet_state_dict)

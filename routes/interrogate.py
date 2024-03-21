@@ -1,20 +1,19 @@
 import flask               
 from __main__ import app, socketio
-import tensorflow as tf
-from tensorflow.keras.models import load_model
 from transformers import AutoProcessor, BlipForConditionalGeneration
 from .deepbooru import DeepDanbooruModel
-from .functions import get_models_dir
+from .functions import get_models_dir, get_device
 import pandas as pd
 import torch
+import torch.nn.functional as F
 import os
 import numpy as np
 from PIL import Image
 import threading
 import inspect
 import ctypes
-
-device = "mps" if torch.backends.mps.is_available() else "cuda" if torch.cuda.is_available() else "cpu"
+import json
+import timm
 
 gen_thread = None
 global_result = ""
@@ -22,6 +21,56 @@ deepbooru_model = None
 wdtagger_model = None
 blip_model = None
 blip_processor = None
+
+def load_model_config(config_path):
+    with open(config_path, "r") as f:
+        config = json.load(f)
+    if "pretrained_cfg" not in config:
+        pretrained_cfg = config
+        config = {}
+        config["architecture"] = pretrained_cfg.pop("architecture")
+        config["num_features"] = pretrained_cfg.pop("num_features", None)
+        if "labels" in pretrained_cfg:
+            pretrained_cfg["label_names"] = pretrained_cfg.pop("labels")
+        config["pretrained_cfg"] = pretrained_cfg
+    pretrained_cfg = config["pretrained_cfg"]
+    if "num_classes" in config:
+        pretrained_cfg["num_classes"] = config["num_classes"]
+
+    if "label_names" in config:
+        pretrained_cfg["label_names"] = config.pop("label_names")
+    if "label_descriptions" in config:
+        pretrained_cfg["label_descriptions"] = config.pop("label_descriptions")
+    model_args = config.get("model_args", {})
+    model_name = config["architecture"]
+    kwargs = {}
+    if model_args:
+        for k, v in model_args.items():
+            kwargs.setdefault(k, v)
+    return pretrained_cfg, model_name, kwargs
+
+def get_tags(probs, general_threshold = 0.35, character_threshold = 0.75):
+    df = pd.read_csv(os.path.join(get_models_dir(), "interrogator/wdtagger/selected_tags.csv"), usecols=["name", "category"])
+    labels = {"names": df["name"].tolist(), "rating": list(np.where(df["category"] == 9)[0]), 
+              "general": list(np.where(df["category"] == 0)[0]), "character": list(np.where(df["category"] == 4)[0])}
+    probs = list(zip(labels["names"], probs.numpy()))
+    general_labels = [probs[i] for i in labels["general"]]
+    general_labels = dict([x for x in general_labels if x[1] > general_threshold])
+    general_labels = dict(sorted(general_labels.items(), key=lambda item: item[1], reverse=True))
+    character_labels = [probs[i] for i in labels["character"]]
+    character_labels = dict([x for x in character_labels if x[1] > character_threshold])
+    character_labels = dict(sorted(character_labels.items(), key=lambda item: item[1], reverse=True))
+    combined = [x for x in character_labels]
+    combined.extend([x for x in general_labels])
+    caption = ", ".join(combined).replace("_", " ")
+    return caption
+
+def pad_square(image):
+    w, h = image.size
+    px = max(image.size)
+    canvas = Image.new("RGB", (px, px), (255, 255, 255))
+    canvas.paste(image, ((px - w) // 2, (px - h) // 2))
+    return canvas
 
 def _async_raise(tid, exctype):
     '''Raises an exception in the threads with id tid'''
@@ -53,13 +102,14 @@ def load_interrogate_model(model_name):
     return
     if model_name == "wdtagger":
         if not wdtagger_model:
-            wdtagger_model = load_model(os.path.join(get_models_dir(), "interrogator/wdtagger/wdtagger"))
+            pretrained_cfg, model_name, kwargs = load_model_config(os.path.join(get_models_dir(), "interrogator/wdtagger/config.json"))
+            wdtagger_model = timm.create_model(model_name, pretrained_cfg=pretrained_cfg, checkpoint_path=os.path.join(get_models_dir(), "interrogator/wdtagger/model.safetensors"), **kwargs).eval()
     elif model_name == "deepbooru":
         if not deepbooru_model:
             deepbooru_model = DeepDanbooruModel()
         deepbooru_model.load_state_dict(torch.load(os.path.join(get_models_dir(), "interrogator/deepbooru/deepbooru.pt"), map_location="cpu"))
         deepbooru_model.eval()
-        deepbooru_model.to(device)
+        deepbooru_model.to(get_device())
 
 def unload_interrogate_models():
     global deepbooru_model
@@ -76,7 +126,7 @@ def process_deepbooru_image(img, dim = 512):
     img = np.array(img)
     img = img.astype(np.float32)
     img = np.expand_dims(img, 0) / 255
-    return torch.from_numpy(img).to(device)
+    return torch.from_numpy(img).to(get_device())
 
 def predict_deepbooru(image):
     global deepbooru_model
@@ -84,7 +134,7 @@ def predict_deepbooru(image):
         deepbooru_model = DeepDanbooruModel()
     deepbooru_model.load_state_dict(torch.load(os.path.join(get_models_dir(), "interrogator/deepbooru/deepbooru.pt"), map_location="cpu"))
     deepbooru_model.eval()
-    deepbooru_model.to(device)
+    deepbooru_model.to(get_device())
     tags = []
     with torch.no_grad():
         probs = deepbooru_model(image)[0]
@@ -93,22 +143,25 @@ def predict_deepbooru(image):
             tags.append(deepbooru_model.tags[i])
     return ", ".join(tags)
 
-def process_wdtagger_image(img, dim = 448):
-    img = img.resize((dim, dim), resample=Image.BICUBIC)
-    img = np.array(img)
-    img = img.astype(np.float32)
-    img = np.expand_dims(img, 0) / 255
-    return tf.convert_to_tensor(img)
-
-def predict_wdtagger(image, thresh = 0.3228):
+def predict_wdtagger(image):
     global wdtagger_model
     if not wdtagger_model:
-        wdtagger_model = load_model(os.path.join(get_models_dir(), "interrogator/wdtagger/wdtagger"))
-    label_names = pd.read_csv(os.path.join(get_models_dir(), "interrogator/wdtagger/selected_tags.csv"))
-    probs = wdtagger_model.predict(image * 255)
-    label_names["probs"] = probs[0]
-    found_tags = label_names[label_names["probs"] > thresh]
-    return ", ".join(found_tags["name"])
+        pretrained_cfg, model_name, kwargs = load_model_config(os.path.join(get_models_dir(), "interrogator/wdtagger/config.json"))
+        wdtagger_model = timm.create_model(model_name, pretrained_cfg=pretrained_cfg, checkpoint_path=os.path.join(get_models_dir(), "interrogator/wdtagger/model.safetensors"), **kwargs).eval()
+
+    transform = timm.data.create_transform(**timm.data.resolve_data_config(wdtagger_model.pretrained_cfg, model=wdtagger_model))
+    image = pad_square(image)
+    input = transform(image).unsqueeze(0)
+    input = input[:, [2, 1, 0]]
+    wdtagger_model = wdtagger_model.to(get_device())
+    input = input.to(get_device())
+
+    with torch.no_grad():
+        outputs = wdtagger_model.forward(input)
+        outputs = F.sigmoid(outputs)
+        outputs = outputs.squeeze(0).to("cpu")
+
+    return get_tags(outputs)
 
 def predict_blip(image):
     global blip_model
@@ -132,7 +185,6 @@ def interrogate(file, model_name):
 
     result = ""
     if model_name == "wdtagger":
-        image = process_wdtagger_image(image)
         result = predict_wdtagger(image)
     elif model_name == "deepbooru":
         image = process_deepbooru_image(image)

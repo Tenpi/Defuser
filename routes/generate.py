@@ -2,7 +2,7 @@ import flask
 from __main__ import app, socketio
 import os
 import torch
-from .functions import next_index, is_nsfw, get_normalized_dimensions, is_image, get_number_from_filename, \
+from .functions import next_index, is_nsfw, get_normalized_dimensions, is_image, get_number_from_filename, get_device, \
 get_seed, get_seed_generator, append_info, upscale, get_models_dir, get_outputs_dir, analyze_checkpoint, check_for_updates
 from .invisiblewatermark import encode_watermark
 from .info import get_diffusion_models, get_vae_models, get_clip_model
@@ -28,8 +28,6 @@ import ctypes
 import threading
 import asyncio
 import gc
-
-device = "mps" if torch.backends.mps.is_available() else "cuda" if torch.cuda.is_available() else "cpu"
 
 update_dismissed = False
 gen_thread = None
@@ -91,8 +89,7 @@ def get_generator(model_name: str = "", vae: str = "", mode: str = "text", clip_
     global vae_name
     global safety_checker
     global dtype
-    global device
-    processor = "cpu" if cpu else device
+    processor = "cpu" if cpu else get_device()
     update_model = False
     if not model_name:
         model_name = get_diffusion_models()[0]
@@ -210,7 +207,7 @@ def get_generator(model_name: str = "", vae: str = "", mode: str = "text", clip_
             generator.vae = AutoencoderKL.from_single_file(vae_model)
         generator.vae = generator.vae.to(device=processor, dtype=dtype)
         vae_name = vae
-    generator = generator.to(device=device, dtype=dtype)
+    generator = generator.to(device=processor, dtype=dtype)
     generator.safety_checker = None
     return generator
 
@@ -324,7 +321,6 @@ async def generate_step_animation():
 
 def generate(request_data, request_files):
     global gen_thread
-    global device
     global infinite
     global upscaling
     gen_thread = threading.get_ident()
@@ -373,7 +369,7 @@ def generate(request_data, request_files):
     ip_weight = float(data["ip_weight"]) if "ip_weight" in data else 0.5
     frames = int(data["frames"]) if "frames" in data else 8
 
-    xl, cascade = analyze_checkpoint(model_name, device)
+    xl, cascade = analyze_checkpoint(model_name, get_device())
     if xl:
         return generate_xl(data, request_files, get_controlnet, clear_step_frames, generate_step_animation)
     elif cascade:
@@ -462,7 +458,7 @@ def generate(request_data, request_files):
         hypernet_path = os.path.join(get_models_dir(), hypernetwork["model"].replace("models/", ""))
         has_hypernet = True
         try:
-            hypernet = load_hypernet(hypernet_path, hypernet_scale, device)
+            hypernet = load_hypernet(hypernet_path, hypernet_scale, get_device())
             add_hypernet(generator.unet, hypernet)
         except ValueError:
             continue
@@ -563,7 +559,7 @@ def generate(request_data, request_files):
                 num_inference_steps=steps,
                 guidance_scale=cfg,
                 num_images_per_prompt=1,
-                generator=get_seed_generator(seed, device),
+                generator=get_seed_generator(seed, get_device()),
                 clip_skip=clip_skip,
                 callback_on_step_end=step_progress,
                 cross_attention_kwargs=cross_attention_kwargs
@@ -602,7 +598,7 @@ def generate(request_data, request_files):
                 negative_prompt_embeds=negative_conditioning,
                 num_inference_steps=steps,
                 guidance_scale=cfg,
-                generator=get_seed_generator(seed, device),
+                generator=get_seed_generator(seed, get_device()),
                 clip_skip=clip_skip,
                 callback_on_step_end=step_progress,
                 cross_attention_kwargs=cross_attention_kwargs
@@ -646,7 +642,7 @@ def generate(request_data, request_files):
                 negative_prompt_embeds=negative_conditioning,
                 num_inference_steps=steps,
                 guidance_scale=cfg,
-                generator=get_seed_generator(seed, device),
+                generator=get_seed_generator(seed, get_device()),
                 clip_skip=clip_skip,
                 callback_on_step_end=step_progress,
                 cross_attention_kwargs=cross_attention_kwargs
@@ -685,7 +681,7 @@ def generate(request_data, request_files):
                 ip_adapter_image=ip_adapter_image,
                 num_inference_steps=steps,
                 guidance_scale=cfg,
-                generator=get_seed_generator(seed, device),
+                generator=get_seed_generator(seed, get_device()),
                 clip_skip=clip_skip,
                 callback_on_step_end=step_progress,
                 cross_attention_kwargs=cross_attention_kwargs,
@@ -730,7 +726,7 @@ def generate(request_data, request_files):
                 negative_prompt_embeds=negative_conditioning,
                 num_inference_steps=steps,
                 guidance_scale=cfg,
-                generator=get_seed_generator(seed, device),
+                generator=get_seed_generator(seed, get_device()),
                 clip_skip=clip_skip,
                 callback_on_step_end=step_progress,
                 cross_attention_kwargs=cross_attention_kwargs,
@@ -778,7 +774,7 @@ def generate(request_data, request_files):
                 negative_prompt_embeds=negative_conditioning,
                 num_inference_steps=steps,
                 guidance_scale=cfg,
-                generator=get_seed_generator(seed, device),
+                generator=get_seed_generator(seed, get_device()),
                 clip_skip=clip_skip,
                 callback_on_step_end=step_progress,
                 cross_attention_kwargs=cross_attention_kwargs,
@@ -823,7 +819,7 @@ def generate(request_data, request_files):
                 negative_prompt_embeds=negative_conditioning,
                 num_inference_steps=steps,
                 guidance_scale=cfg,
-                generator=get_seed_generator(seed, device),
+                generator=get_seed_generator(seed, get_device()),
                 callback=step_progress,
                 cross_attention_kwargs=cross_attention_kwargs,
                 controlnet_conditioning_scale=control_scale,
@@ -863,7 +859,7 @@ def generate(request_data, request_files):
                 num_inference_steps=steps,
                 num_frames=frames,
                 guidance_scale=cfg,
-                generator=get_seed_generator(seed, device),
+                generator=get_seed_generator(seed, get_device()),
                 callback_on_step_end=step_progress,
                 cross_attention_kwargs=cross_attention_kwargs
             ).frames[0]

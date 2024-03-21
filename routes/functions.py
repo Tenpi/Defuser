@@ -24,6 +24,7 @@ if "_internal" in dirname: dirname = os.path.join(dirname, "../")
 if "Frameworks" in dirname: dirname = os.path.normpath(os.path.join(dirname, "../../Resources/dist"))
 models_dir = "models"
 outputs_dir = "outputs"
+direct_ml = False
 
 def get_number_from_filename(filename):
     num = re.search(r"\d+", filename)
@@ -378,3 +379,22 @@ def check_for_updates():
     new_package = json.loads(data)
     new_version = new_package["version"]
     return version_changed(current_version, new_version)
+
+def get_device():
+    global dirname
+    global direct_ml
+    device = "mps" if torch.backends.mps.is_available() else "cuda" if torch.cuda.is_available() else "cpu"
+    if os.path.exists(os.path.join(dirname, "_internal")):
+        folders = os.listdir(os.path.join(dirname, "_internal"))
+        for folder in folders:
+            if "directml" in folder:
+                direct_ml = True
+    if direct_ml:
+        import torch_directml
+        device = torch_directml.device()
+    return device
+
+def update_directml(value):
+    global direct_ml
+    if value:
+        direct_ml = True

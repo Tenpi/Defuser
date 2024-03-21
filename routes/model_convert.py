@@ -5,16 +5,7 @@ import pathlib
 import struct
 import json
 import os
-
-device = "mps" if torch.backends.mps.is_available() else "cuda" if torch.cuda.is_available() else "cpu"
-
-def get_safetensors_metadata(filename):
-    with open(os.path.normpath(filename), "rb") as f:
-        safe_bytes = f.read()
-    metadata_size = struct.unpack("<Q", safe_bytes[0:8])[0]
-    metadata_as_bytes = safe_bytes[8:8+metadata_size]
-    metadata_as_dict = json.loads(metadata_as_bytes.decode(errors="ignore"))
-    return metadata_as_dict.get("__metadata__", {})
+from .functions import get_device, get_safetensors_metadata
 
 def stringify_metadata(metadata):
     metadata_str = {}
@@ -234,10 +225,10 @@ def inference(input_path):
     model = None
     metadata = None
     if ext == ".safetensors":
-        model = safetensors.torch.load_file(input_path, device=device)
+        model = safetensors.torch.load_file(input_path, device=get_device())
         metadata = get_safetensors_metadata(input_path)
     else:
-        model = torch.load(input_path, map_location=device)
+        model = torch.load(input_path, map_location=get_device())
         metadata = get_torch_metadata(model)
     print(model)
     print(model.keys())
@@ -249,10 +240,10 @@ def model_convert(input_path, output_path):
     model = None
     metadata = None
     if ext == ".safetensors":
-        model = safetensors.torch.load_file(input_path, device=device)
+        model = safetensors.torch.load_file(input_path, device=get_device())
         metadata = get_safetensors_metadata(input_path)
     else:
-        model = torch.load(input_path, map_location=device)
+        model = torch.load(input_path, map_location=get_device())
         metadata = get_torch_metadata(model)
 
     if is_textual_inversion(model):
