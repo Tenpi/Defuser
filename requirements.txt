@@ -30,7 +30,7 @@ segment_anything==1.0
 Send2Trash==1.8.0
 setuptools==69.1.1
 scikit_image==0.22.0
-tensorflow==2.13.0
+tensorflow==2.16.1
 timm==0.9.16
 torch==2.2.1
 torchvision==0.17.1

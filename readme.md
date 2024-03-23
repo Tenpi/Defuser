@@ -83,7 +83,7 @@ Python: https://www.python.org/downloads/ \
 Git: https://git-scm.com/downloads \
 Git LFS: https://git-lfs.com
 
-(Tested on Python 3.11, Node 20.11)
+(Tested on Python 3.11.8, Node 20.11.1)
 
 ### Installation
 
