@@ -18,6 +18,7 @@ from .generate_xl import generate_xl, unload_models_xl, update_upscaling_xl, upd
 from .generate_cascade import generate_cascade, unload_models_cascade, update_upscaling_cascade, update_infinite_cascade, update_precision_cascade
 from .controlnet import unload_control_models
 from .interrogate import unload_interrogate_models
+from .layerdiffuse import TransparentVAEDecoder, TransparentUnetPatcher
 from compel import Compel, ReturnedEmbeddingsType, DiffusersTextualInversionManager
 from PIL import Image
 import pathlib
@@ -27,6 +28,7 @@ import inspect
 import ctypes
 import threading
 import asyncio
+import safetensors
 import gc
 
 update_dismissed = False
@@ -36,6 +38,8 @@ generator_name = None
 generator_mode = "text"
 generator_clip_skip = 2
 vae_name = None
+original_vae = None
+original_unet = None
 infinite = False
 upscaling = True
 safety_checker = None
@@ -211,6 +215,57 @@ def get_generator(model_name: str = "", vae: str = "", mode: str = "text", clip_
     generator.safety_checker = None
     return generator
 
+def transparent_patch(generator, weight=1.0):
+    global original_unet
+    global original_vae
+    original_unet = generator.unet
+    original_vae = generator.vae
+    vae_decoder_path = os.path.join(get_models_dir(), "layerdiffuse/layer_sd15_vae_transparent_decoder.safetensors")
+    vae_encoder_path = os.path.join(get_models_dir(), "layerdiffuse/layer_sd15_vae_transparent_encoder.safetensors")
+    lora_path = os.path.join(get_models_dir(), "layerdiffuse/layer_sd15_transparent_attn.safetensors")
+
+    vae_decoder = safetensors.torch.load_file(vae_decoder_path, device=get_device())
+    vae_encoder = safetensors.torch.load_file(vae_encoder_path, device=get_device())
+    lora_model = safetensors.torch.load_file(lora_path, device=get_device())
+
+    class VaeProcessingOutput:
+        extra_result_images = []
+
+    class DecoderOutput:
+        def __init__(self, sample):
+            self.sample = sample
+
+    vae_processor = VaeProcessingOutput()
+
+    transparent_decoder = TransparentVAEDecoder(vae_decoder)
+    decoder_wrapper = transparent_decoder.decode_wrapper(vae_processor)
+    old_decode = generator.vae.decode
+
+    def decode(z: torch.FloatTensor, return_dict: bool = True, generator=None):
+        output = decoder_wrapper(old_decode, z).permute(0, 3, 1, 2)
+        if not return_dict:
+            return (output,)
+        return DecoderOutput(output)
+
+    generator.vae.decode = decode
+
+    unet_patcher = TransparentUnetPatcher(generator.unet, get_device())
+    unet_patcher.load_frozen_patcher(lora_model, weight)
+    unet = unet_patcher.patch_model(device_to=get_device())
+    generator.unet = unet
+
+    return vae_processor
+
+def unpatch(generator):
+    global original_unet
+    global original_vae
+    if original_unet:
+        generator.unet = original_unet
+        original_unet = None
+    if original_vae:
+        generator.vae = original_vae
+        original_vae = None
+
 @socketio.on("check update")
 def check_update():
     global update_dismissed
@@ -368,6 +423,7 @@ def generate(request_data, request_files):
     ip_processor = data["ip_processor"] if "ip_processor" in data else "off"
     ip_weight = float(data["ip_weight"]) if "ip_weight" in data else 0.5
     frames = int(data["frames"]) if "frames" in data else 8
+    transparent = data["transparent"] if "transparent" in data else False
 
     xl, cascade = analyze_checkpoint(model_name, get_device())
     if xl:
@@ -495,6 +551,12 @@ def generate(request_data, request_files):
     generator.unet.fuse_qkv_projections()
     if ip_processor == "off" and not has_hypernet:
         generator.enable_attention_slicing()
+
+    vae_processor = None
+    if transparent:
+        vae_processor = transparent_patch(generator)
+    else:
+        unpatch(generator)
     
     conditioning = None
     negative_conditioning = None
@@ -568,6 +630,8 @@ def generate(request_data, request_files):
             pathlib.Path(dir_path).mkdir(parents=True, exist_ok=True)
             out_path = os.path.join(dir_path, f"image{next_index(dir_path)}.{format}")
             image.save(out_path)
+            if transparent and vae_processor:
+                Image.fromarray(vae_processor.extra_result_images[-1]).convert("RGBA").save(out_path)
             asyncio.run(generate_step_animation())
             if upscaling:
                 socketio.emit("image upscaling")
@@ -607,6 +671,8 @@ def generate(request_data, request_files):
             pathlib.Path(dir_path).mkdir(parents=True, exist_ok=True)
             out_path = os.path.join(dir_path, f"image{next_index(dir_path)}.{format}")
             image.save(out_path)
+            if transparent and vae_processor:
+                Image.fromarray(vae_processor.extra_result_images[-1]).convert("RGBA").save(out_path)
             asyncio.run(generate_step_animation())
             if upscaling:
                 socketio.emit("image upscaling")
@@ -651,6 +717,8 @@ def generate(request_data, request_files):
             pathlib.Path(dir_path).mkdir(parents=True, exist_ok=True)
             out_path = os.path.join(dir_path, f"image{next_index(dir_path)}.{format}")
             image.save(out_path)
+            if transparent and vae_processor:
+                Image.fromarray(vae_processor.extra_result_images[-1]).convert("RGBA").save(out_path)
             asyncio.run(generate_step_animation())
             if upscaling:
                 socketio.emit("image upscaling")
@@ -694,6 +762,8 @@ def generate(request_data, request_files):
             pathlib.Path(dir_path).mkdir(parents=True, exist_ok=True)
             out_path = os.path.join(dir_path, f"image{next_index(dir_path)}.{format}")
             image.save(out_path)
+            if transparent and vae_processor:
+                Image.fromarray(vae_processor.extra_result_images[-1]).convert("RGBA").save(out_path)
             asyncio.run(generate_step_animation())
             if upscaling:
                 socketio.emit("image upscaling")
@@ -740,6 +810,8 @@ def generate(request_data, request_files):
             pathlib.Path(dir_path).mkdir(parents=True, exist_ok=True)
             out_path = os.path.join(dir_path, f"image{next_index(dir_path)}.{format}")
             image.save(out_path)
+            if transparent and vae_processor:
+                Image.fromarray(vae_processor.extra_result_images[-1]).convert("RGBA").save(out_path)
             asyncio.run(generate_step_animation())
             if upscaling:
                 socketio.emit("image upscaling")
@@ -788,6 +860,8 @@ def generate(request_data, request_files):
             pathlib.Path(dir_path).mkdir(parents=True, exist_ok=True)
             out_path = os.path.join(dir_path, f"image{next_index(dir_path)}.{format}")
             image.save(out_path)
+            if transparent and vae_processor:
+                Image.fromarray(vae_processor.extra_result_images[-1]).convert("RGBA").save(out_path)
             asyncio.run(generate_step_animation())
             if upscaling:
                 socketio.emit("image upscaling")
@@ -832,6 +906,8 @@ def generate(request_data, request_files):
             pathlib.Path(dir_path).mkdir(parents=True, exist_ok=True)
             out_path = os.path.join(dir_path, f"image{next_index(dir_path)}.{format}")
             image.save(out_path)
+            if transparent and vae_processor:
+                Image.fromarray(vae_processor.extra_result_images[-1]).convert("RGBA").save(out_path)
             asyncio.run(generate_step_animation())
             if upscaling:
                 socketio.emit("image upscaling")

@@ -12,10 +12,12 @@ from diffusers.image_processor import IPAdapterMaskProcessor
 from .stable_diffusion_xl_reference import StableDiffusionXLReferencePipeline
 from .hypernet import load_hypernet, add_hypernet, clear_hypernets
 from .x_adapter import load_adapter_lora, unload_adapter_loras, Adapter_XL, UNet2DConditionAdapterModel, StableDiffusionXLAdapterPipeline, StableDiffusionXLAdapterControlnetPipeline, StableDiffusionXLAdapterControlnetI2IPipeline
+from .layerdiffuse import TransparentUnetPatcher, TransparentVAEDecoder
 from compel import Compel, ReturnedEmbeddingsType, DiffusersTextualInversionManager
 from PIL import Image
 from itertools import chain
 import pathlib
+import safetensors
 import asyncio
 import gc
 
@@ -27,6 +29,8 @@ generator_sd1_name = None
 generator_mode = "text"
 generator_clip_skip = 2
 vae_name = None
+original_vae = None
+original_unet = None
 infinite = False
 upscaling = True
 safety_checker = None
@@ -236,6 +240,57 @@ def get_generator_xl(model_name: str = "", vae: str = "", mode: str = "text", cl
     generator.safety_checker = None
     return generator
 
+def transparent_patch(generator, weight=1.0):
+    global original_unet
+    global original_vae
+    original_unet = generator.unet
+    original_vae = generator.vae
+    vae_decoder_path = os.path.join(get_models_dir(), "layerdiffuse/layer_xl_vae_transparent_decoder.safetensors")
+    vae_encoder_path = os.path.join(get_models_dir(), "layerdiffuse/layer_xl_vae_transparent_encoder.safetensors")
+    lora_path = os.path.join(get_models_dir(), "layerdiffuse/layer_xl_transparent_attn.safetensors")
+
+    vae_decoder = safetensors.torch.load_file(vae_decoder_path, device=get_device())
+    vae_encoder = safetensors.torch.load_file(vae_encoder_path, device=get_device())
+    lora_model = safetensors.torch.load_file(lora_path, device=get_device())
+
+    class VaeProcessingOutput:
+        extra_result_images = []
+
+    class DecoderOutput:
+        def __init__(self, sample):
+            self.sample = sample
+
+    vae_processor = VaeProcessingOutput()
+
+    transparent_decoder = TransparentVAEDecoder(vae_decoder)
+    decoder_wrapper = transparent_decoder.decode_wrapper(vae_processor)
+    old_decode = generator.vae.decode
+
+    def decode(z: torch.FloatTensor, return_dict: bool = True, generator=None):
+        output = decoder_wrapper(old_decode, z).permute(0, 3, 1, 2)
+        if not return_dict:
+            return (output,)
+        return DecoderOutput(output)
+
+    generator.vae.decode = decode
+
+    unet_patcher = TransparentUnetPatcher(generator.unet, get_device())
+    unet_patcher.load_frozen_patcher(lora_model, weight)
+    unet = unet_patcher.patch_model(device_to=get_device())
+    generator.unet = unet
+
+    return vae_processor
+
+def unpatch(generator):
+    global original_unet
+    global original_vae
+    if original_unet:
+        generator.unet = original_unet
+        original_unet = None
+    if original_vae:
+        generator.vae = original_vae
+        original_vae = None
+
 def load_diffusion_model_xl(model_name, vae_name, clip_skip, processing, generator_type):
     global generator
     #if generator_type == "local":
@@ -325,6 +380,7 @@ def generate_xl(data, request_files, get_controlnet=None, clear_step_frames=None
     ip_processor = data["ip_processor"] if "ip_processor" in data else "off"
     ip_weight = float(data["ip_weight"]) if "ip_weight" in data else 0.5
     x_adapt_model = data["x_adapt_model"] if "x_adapt_model" in data else "None"
+    transparent = data["transparent"] if "transparent" in data else False
 
     input_image = None
     input_mask = None
@@ -473,6 +529,12 @@ def generate_xl(data, request_files, get_controlnet=None, clear_step_frames=None
     generator.vae.enable_tiling()
     if ip_processor == "off" and not has_hypernet:
         generator.enable_attention_slicing()
+
+    vae_processor = None
+    if transparent:
+        vae_processor = transparent_patch(generator)
+    else:
+        unpatch(generator)
     
     conditioning = None
     negative_conditioning = None
@@ -580,6 +642,8 @@ def generate_xl(data, request_files, get_controlnet=None, clear_step_frames=None
             pathlib.Path(dir_path).mkdir(parents=True, exist_ok=True)
             out_path = os.path.join(dir_path, f"image{next_index(dir_path)}.{format}")
             image.save(out_path)
+            if transparent and vae_processor:
+                Image.fromarray(vae_processor.extra_result_images[-1]).convert("RGBA").save(out_path)
             if generate_step_animation is not None:
                 asyncio.run(generate_step_animation())
             if upscaling:
@@ -622,6 +686,8 @@ def generate_xl(data, request_files, get_controlnet=None, clear_step_frames=None
             pathlib.Path(dir_path).mkdir(parents=True, exist_ok=True)
             out_path = os.path.join(dir_path, f"image{next_index(dir_path)}.{format}")
             image.save(out_path)
+            if transparent and vae_processor:
+                Image.fromarray(vae_processor.extra_result_images[-1]).convert("RGBA").save(out_path)
             if generate_step_animation is not None:
                 asyncio.run(generate_step_animation())
             if upscaling:
@@ -669,6 +735,8 @@ def generate_xl(data, request_files, get_controlnet=None, clear_step_frames=None
             pathlib.Path(dir_path).mkdir(parents=True, exist_ok=True)
             out_path = os.path.join(dir_path, f"image{next_index(dir_path)}.{format}")
             image.save(out_path)
+            if transparent and vae_processor:
+                Image.fromarray(vae_processor.extra_result_images[-1]).convert("RGBA").save(out_path)
             if generate_step_animation is not None:
                 asyncio.run(generate_step_animation())
             if upscaling:
@@ -740,6 +808,8 @@ def generate_xl(data, request_files, get_controlnet=None, clear_step_frames=None
             pathlib.Path(dir_path).mkdir(parents=True, exist_ok=True)
             out_path = os.path.join(dir_path, f"image{next_index(dir_path)}.{format}")
             image.save(out_path)
+            if transparent and vae_processor:
+                Image.fromarray(vae_processor.extra_result_images[-1]).convert("RGBA").save(out_path)
             if generate_step_animation is not None:
                 asyncio.run(generate_step_animation())
             if upscaling:
@@ -816,6 +886,8 @@ def generate_xl(data, request_files, get_controlnet=None, clear_step_frames=None
             pathlib.Path(dir_path).mkdir(parents=True, exist_ok=True)
             out_path = os.path.join(dir_path, f"image{next_index(dir_path)}.{format}")
             image.save(out_path)
+            if transparent and vae_processor:
+                Image.fromarray(vae_processor.extra_result_images[-1]).convert("RGBA").save(out_path)
             if generate_step_animation is not None:
                 asyncio.run(generate_step_animation())
             if upscaling:
@@ -867,6 +939,8 @@ def generate_xl(data, request_files, get_controlnet=None, clear_step_frames=None
             pathlib.Path(dir_path).mkdir(parents=True, exist_ok=True)
             out_path = os.path.join(dir_path, f"image{next_index(dir_path)}.{format}")
             image.save(out_path)
+            if transparent and vae_processor:
+                Image.fromarray(vae_processor.extra_result_images[-1]).convert("RGBA").save(out_path)
             if generate_step_animation is not None:
                 asyncio.run(generate_step_animation())
             if upscaling:
@@ -911,6 +985,8 @@ def generate_xl(data, request_files, get_controlnet=None, clear_step_frames=None
             pathlib.Path(dir_path).mkdir(parents=True, exist_ok=True)
             out_path = os.path.join(dir_path, f"image{next_index(dir_path)}.{format}")
             image.save(out_path)
+            if transparent and vae_processor:
+                Image.fromarray(vae_processor.extra_result_images[-1]).convert("RGBA").save(out_path)
             if generate_step_animation is not None:
                 asyncio.run(generate_step_animation())
             if upscaling:

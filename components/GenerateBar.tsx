@@ -17,6 +17,7 @@ import checkbox from "../assets/icons/checkbox2.png"
 import checkboxChecked from "../assets/icons/checkbox2-checked.png"
 import loop from "../assets/icons/loop.png"
 import upscale from "../assets/icons/upscale.png"
+import transparent from "../assets/icons/transparent.png"
 import appendToPromptIcon from "../assets/icons/append-to-prompt.png"
 import diceIcon from "../assets/icons/dice.png"
 import bookmarkIcon from "../assets/icons/bookmark.png"
@@ -51,6 +52,7 @@ const GenerateBar: React.FunctionComponent = (props) => {
     const {ipMaskImage, setIPMaskImage} = useContext(IPMaskImageContext)
     const [infinite, setInfinite] = useState(false)
     const [upscaling, setUpscaling] = useState(true)
+    const [transparency, setTransparency] = useState(false)
     const [start, setStart] = useState(false)
     const {amount, setAmount} = useContext(AmountContext)
     const {renderImage, setRenderImage} = useContext(RenderImageContext)
@@ -128,6 +130,8 @@ const GenerateBar: React.FunctionComponent = (props) => {
         if (savedInfinite) setInfinite(savedInfinite === "true")
         const savedUpscaling = localStorage.getItem("upscaling")
         if (savedUpscaling) setUpscaling(savedUpscaling === "true")
+        const savedTransparency = localStorage.getItem("transparency")
+        if (savedTransparency) setTransparency(savedTransparency === "true")
         const savedFormat = localStorage.getItem("format")
         if (savedFormat) setFormat(savedFormat)
         const savedDeletion = localStorage.getItem("deletion")
@@ -169,7 +173,8 @@ const GenerateBar: React.FunctionComponent = (props) => {
         if (negativePrompt) localStorage.setItem("negativePrompt", String(negativePrompt))
         localStorage.setItem("infinite", String(infinite))
         localStorage.setItem("upscaling", String(upscaling))
-    }, [prompt, negativePrompt, infinite, upscaling])
+        localStorage.setItem("transparency", String(transparency))
+    }, [prompt, negativePrompt, infinite, upscaling, transparency])
 
     const searchDirectory = (files: any[], name: string) => {
         for (let i = 0; i < files.length; i++) {
@@ -347,10 +352,11 @@ const GenerateBar: React.FunctionComponent = (props) => {
         const ip_adapter = ipAdapter
         const ip_processor = ipProcessor
         const ip_weight = ipWeight
+        const transparent = transparency
         const json = {prompt, negative_prompt, steps, cfg, frames, width, height, denoise, seed, sampler, amount, model_name, vae_name, 
         clip_skip, processing, format, textual_inversions, hypernetworks, loras, control_processor, control_scale, guess_mode,
         control_start, control_end, style_fidelity, control_reference_image, upscaler, nsfw_tab, watermark, invisible_watermark,
-        generator, novelai_token, holara_cookie, x_adapt_model, freeu, ip_adapter, ip_processor, ip_weight}
+        generator, novelai_token, holara_cookie, x_adapt_model, freeu, ip_adapter, ip_processor, ip_weight, transparent}
         if (expandImage) json.denoise = 1.0
         const form = new FormData()
         form.append("data", JSON.stringify(json))
@@ -477,7 +483,7 @@ const GenerateBar: React.FunctionComponent = (props) => {
             socket.off("repeat generation", repeatGeneration)
         }
     }, [socket, loopMode, prompt, negativePrompt, savedPrompts, size, sampler, cfg, modelName, vaeName, savedPromptsNovelAI, 
-        savedPromptsHolaraAI, loras, hypernetworks, textualInversions, generator, controlProcessor, styleFidelity])
+        savedPromptsHolaraAI, loras, hypernetworks, textualInversions, generator, controlProcessor, styleFidelity, transparency])
 
     const getSizeDim = () => {
         if (generator === "novel ai") return "640"
@@ -510,6 +516,10 @@ const GenerateBar: React.FunctionComponent = (props) => {
                     <div className="generate-bar-loop-container" onClick={() => setInfinite((prev) => !prev)}>
                         <img className="generate-bar-checkbox" src={infinite ? checkboxChecked : checkbox} style={{filter: getFilter()}}/>
                         <img className="generate-bar-icon" src={loop} style={{filter: getFilter()}}/>
+                    </div>
+                    <div className="generate-bar-loop-container" onClick={() => setTransparency((prev) => !prev)}>
+                        <img className="generate-bar-checkbox" src={transparency ? checkboxChecked : checkbox} style={{filter: getFilter()}}/>
+                        <img className="generate-bar-icon" src={transparent} style={{filter: getFilter()}}/>
                     </div>
                     <div className="generate-bar-loop-container" onClick={() => setUpscaling((prev) => !prev)}>
                         <img className="generate-bar-checkbox" src={upscaling ? checkboxChecked : checkbox} style={{filter: getFilter()}}/>

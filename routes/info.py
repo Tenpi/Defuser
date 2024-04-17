@@ -253,7 +253,9 @@ def exif_data(image: str):
 
 @app.route("/get-exif", methods=["POST"])
 def get_exif():
-    return exif_data(flask.request.files["image"])
+    image = flask.request.files["image"]
+    image = os.path.join(get_outputs_dir(), image)
+    return exif_data(image)
 
 @app.route("/apply-watermark", methods=["POST"])
 def apply_watermark():
@@ -280,14 +282,15 @@ def get_prompt(image: str):
 def similar_images():
     data = flask.request.json
     image = data["image"]
-    image = os.path.join(dirname, f"../{image}")
+    image = os.path.join(get_outputs_dir(), image.replace("outputs/", ""))
     prompt = get_prompt(image)
     all_images = get_outputs("text") + get_outputs("text nsfw") 
     all_images += get_novelai_outputs("text") + get_novelai_outputs("text nsfw")
     all_images += get_holara_outputs("text") + get_holara_outputs("text nsfw")
     images = []
     for img in all_images:
-        prompt_check = get_prompt(img)
+        img_path = os.path.join(get_outputs_dir(), img.replace("outputs/", ""))
+        prompt_check = get_prompt(img_path)
         if prompt == prompt_check:
             images.append(img)
     return images
