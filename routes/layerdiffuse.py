@@ -217,8 +217,6 @@ def checkerboard(shape):
 class TransparentVAEDecoder:
     def __init__(self, sd, mod_number=1, fp16=False):
         device = get_device()
-        if device == "mps":
-            device = "cpu"
         self.load_device = device
         self.offload_device = device
         self.dtype = torch.float16 if fp16 else torch.float32
@@ -272,7 +270,11 @@ class TransparentVAEDecoder:
             result += [eps]
 
         result = torch.stack(result, dim=0)
-        median = torch.median(result, dim=0).values
+        if self.load_device == torch.device("mps"):
+            median = torch.median(result.cpu(), dim=0).values
+            median = median.to(device=self.load_device, dtype=self.dtype)
+        else:
+            median = torch.median(result, dim=0).values
         return median
 
     def decode_wrapper(self, p):
@@ -388,8 +390,6 @@ class TransparentVAEDecoder:
 class TransparentVAEEncoder:
     def __init__(self, sd, fp16=False):
         device = get_device()
-        if device == "mps":
-            device = "cpu"
         self.load_device = device
         self.offload_device = device
         self.dtype = torch.float16 if fp16 else torch.float32

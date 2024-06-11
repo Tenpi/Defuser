@@ -90,7 +90,7 @@ def is_nsfw(prompt):
     bad_words = ["bnNmdw==", "Y3Vt", "c2V4", "cGVuaXM=", "dmFnaW5h", "cHVzc3k=", 
     "b3JhbA==", "ZmVsbGF0aW8=", "Ymxvd2pvYg==", "c2VtZW4=", "YW5hbA==", "dmFnaW5hbA==", 
     "ZWphY3VsYXRpb24=", "Y29jaw==", "Z2FuZyBiYW5n", "b3JnYXNt", "cGVuZXRyYXRpb24=", "aW50ZXJjb3Vyc2U=", 
-    "cmFwZQ==", "bWFzdHVyYmF0aW9u", "Y29wdWxhdGlvbg==", "Zm9ybmljYXRpb24="]
+    "cmFwZQ==", "bWFzdHVyYmF0aW9u", "Y29wdWxhdGlvbg==", "Zm9ybmljYXRpb24=", "bmlwcGxl"]
     for raw in bad_words:
         bad = base64.b64decode(raw).decode("utf-8")
         if bad in str(prompt).lower():

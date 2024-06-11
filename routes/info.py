@@ -40,13 +40,13 @@ def get_clip_model():
 def crawl_model_folder(model_type: str, folder: str):
     files = os.listdir(os.path.join(get_models_dir(), model_type, folder))
     model_map = []
-    dirs = list(filter(lambda file: not is_unwanted(file) and is_dir(os.path.join(get_models_dir(), model_type, file)), files))
+    dirs = list(filter(lambda file: not is_unwanted(file) and is_dir(os.path.join(get_models_dir(), model_type, folder, file)), files))
     for dir in dirs:
         stem = pathlib.Path(dir).stem
         dir_files = crawl_model_folder(model_type, os.path.join(folder, dir))
         model_map.append({"name": stem, "files": dir_files, "directory": True})
-    models = list(filter(lambda file: not is_unwanted(file) and is_file(os.path.join(get_models_dir(), model_type, file)) and not is_image(file), files))
-    images = list(filter(lambda file: not is_unwanted(file) and is_file(os.path.join(get_models_dir(), model_type, file)) and is_image(file), files))
+    models = list(filter(lambda file: not is_unwanted(file) and is_file(os.path.join(get_models_dir(), model_type, folder, file)) and not is_image(file), files))
+    images = list(filter(lambda file: not is_unwanted(file) and is_file(os.path.join(get_models_dir(), model_type, folder, file)) and is_image(file), files))
     for i in range(len(models)):
         stem = pathlib.Path(models[i]).stem
         model = os.path.join(f"models/{model_type}", folder, models[i])
