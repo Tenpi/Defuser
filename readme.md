@@ -1,6 +1,6 @@
 # Defuzers
 
-![Image](https://github.com/Tenpi/Defuser/blob/main/assets/images/readme.png?raw=true)
+<img src="assets/images/readme.png">
 
 Defuzers is an UI for diffusers (an image generation library). The inferencing and training of diffusion 
 models is supported. It aims to be simple and fast to use.
@@ -89,7 +89,7 @@ Git LFS: https://git-lfs.com
 
 Clone the repository.
 ```sh
-git clone https://github.com/Tenpi/Defuzers.git
+git clone https://github.com/Moebits/Defuzers.git
 cd defuzers
 ```
 
@@ -149,7 +149,7 @@ X-Adapter lets you use lora models trained on SD1.5 in SDXL. In the dropdown sel
 
 ### Patch Controls
 
-<img height="300" src="https://github.com/Tenpi/Defuser/blob/main/assets/images/patch.png?raw=true"/>
+<img height="300" src="assets/images/patch.png"/>
 
 These are the drawing controls when using patch:
 - Wheel: brush size
