@@ -46,7 +46,7 @@ models is supported. It aims to be simple and fast to use.
 
 There are precompiled binaries for MacOS arm64 and Windows x64 
 that don't require compiling the project from source. However, updates 
-will be pushed out slower. https://github.com/Tenpi/Defuzers/releases 
+will be pushed out slower. https://github.com/Moebits/Defuzers/releases 
 
 ### Model Files
 
@@ -76,7 +76,7 @@ https://huggingface.co/defuzers/torch/blob/main/torch-cuda.zip
 
 Install the additional dependency torch-directml and run with the arg --directml.
 
-### Source Code Requirements
+### Source Requirements
 
 Node.js: https://nodejs.org/en \
 Python: https://www.python.org/downloads/ \
@@ -195,11 +195,10 @@ Shortcut: Any image with name like 1234567.png will be assumed to be from pixiv 
 - AI Detector - Detect if an anime-styled image is AI.
 - Train Classifier - Train an image classification model.
 
-### Important
+### Notes
 
-By using this UI you agree not to generate harmful or offensive content, plagiarize specific artworks or artists, impersonate 
-specific indidividuals, or otherwise any other malicious use. This is intended only for personal/offline usage. Note that models 
-other than cc0 mitsua diffusion are prone to generating potential copyright infringing material.
+By using this UI you agree not to generate harmful or offensive content, plagiarize specific artists or impersonate 
+indidividuals, or otherwise any other malicious use. This is intended only for personal/offline usage. 
 
 ### Related/Credits
 
