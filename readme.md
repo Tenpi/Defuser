@@ -41,41 +41,13 @@ Img Diffuse is an image generation UI (using diffusers) that aims to be simple a
 - Stable Diffusion XL ("XL" in checkpoint name)
 - Stable Cascade ("SC" in checkpoint name)
 
-### Precompiled Binaries
-
-There are precompiled binaries for MacOS arm64 and Windows x64 
-that don't require compiling the project from source. However, updates 
-will be pushed out slower. https://github.com/Moebits/Img Diffuse/releases 
-
 ### Model Files
 
 The model files required for the default functionality are available here. You 
 will need to have about 20GB of free disk space. \
 https://huggingface.co/img-diffuse/models
 
-### MacOS
-
-To run on MacOS, you may need to remove the quarantine flags. 
-
-```
-xattr -d com.apple.quarantine /Applications/Img\ Diffuse.app
-```
-
-### Windows
-
-Do not install it in `C:/Program Files` because the application needs 
-write access to the installation location.
-
-### CUDA
-
-This is the torch compiled with CUDA support, replace the one in `_internal/torch` with this one.
-https://huggingface.co/img-diffuse/torch/blob/main/torch-cuda.zip
-
-### DirectML
-
-Install the additional dependency torch-directml and run with the arg --directml.
-
-### Source Requirements
+### Requirements
 
 Node.js: https://nodejs.org/en \
 Python: https://www.python.org/downloads/ \
@@ -106,6 +78,8 @@ git clone https://huggingface.co/img-diffuse/models
 Install the code dependencies.
 ```sh
 npm install
+python3 -m venv venv
+source venv/bin/activate
 pip3 install -r requirements.txt
 ```
 
