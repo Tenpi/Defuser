@@ -1,6 +1,6 @@
 # Img Diffuse
 
-<img src="assets/images/readme.png">
+<img src="assets/images/readme2.png">
 
 Img Diffuse is an image generation UI (using diffusers) that aims to be simple and fast to use.
 
