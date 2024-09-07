@@ -8,8 +8,8 @@ import pathlib
 
 dirname = os.path.dirname(__file__)
 
-name = "defuzers"
-name_cap = "Defuzers"
+name = "img-diffuse"
+name_cap = "Img Diffuse"
 tmp_dir = "tmp"
 build_dir = "build"
 app_bundle_dir = "app"
@@ -115,7 +115,7 @@ def build_zip():
     zip_file(os.path.join(dirname, build_dir, name), os.path.join(dirname, build_dir, f"{name}.zip"))
 
 def build_app():
-    os.remove(os.path.join(dirname, "Defuzers.spec"))
+    os.remove(os.path.join(dirname, "Img Diffuse.spec"))
     shutil.rmtree(os.path.join(dirname, tmp_dir))
     internal_resources_raw = os.listdir(os.path.join(dirname, app_bundle_dir, f"{name_cap}.app/Contents/Resources"))
     internal_resources = list(map(lambda x: os.path.join(dirname, app_bundle_dir, f"{name_cap}.app/Contents/Resources", x), internal_resources_raw))
@@ -168,7 +168,7 @@ def build_app():
     shutil.rmtree(os.path.join(dirname, app_bundle_dir, name_cap))
 
 def build_exe():
-    os.remove(os.path.join(dirname, "Defuzers.spec"))
+    os.remove(os.path.join(dirname, "Img Diffuse.spec"))
     shutil.rmtree(os.path.join(dirname, tmp_dir))
 
     copy_to_resources = ["dialog", "dist", "models", "outputs", "config.json", "main.exe"]

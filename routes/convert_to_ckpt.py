@@ -250,6 +250,35 @@ def convert_text_enc_state_dict_v20(text_enc_dict):
 def convert_text_enc_state_dict(text_enc_dict):
     return text_enc_dict
 
+def convert_vae(model_path, checkpoint_path, half=True, safetensors=False, metadata={}):
+    vae_path = osp.join(model_path, "vae", "diffusion_pytorch_model.safetensors")
+
+    if osp.exists(vae_path):
+        vae_state_dict = load_file(vae_path, device=get_device())
+    else:
+        vae_path = osp.join(model_path, "vae", "diffusion_pytorch_model.bin")
+        vae_state_dict = torch.load(vae_path, map_location=get_device())
+
+    # Convert the VAE model
+    vae_state_dict = convert_vae_state_dict(vae_state_dict)
+    vae_state_dict = {"first_stage_model." + k: v for k, v in vae_state_dict.items()}
+
+    # Put together new checkpoint
+    state_dict = {**vae_state_dict}
+    if half:
+        state_dict = {k: v.half() for k, v in state_dict.items()}
+
+    if pathlib.Path(checkpoint_path).suffix == ".safetensors":
+        safetensors = True
+        
+    if safetensors:
+        save_file(state_dict, checkpoint_path, metadata=metadata)
+    else:
+        state_dict = {"state_dict": state_dict}
+        for k, v in metadata.items():
+            state_dict[k] = v
+        torch.save(state_dict, checkpoint_path)
+
 def convert_to_ckpt(model_path, checkpoint_path, half=True, safetensors=False, metadata={}):
     unet_path = osp.join(model_path, "unet", "diffusion_pytorch_model.safetensors")
     vae_path = osp.join(model_path, "vae", "diffusion_pytorch_model.safetensors")
@@ -259,6 +288,8 @@ def convert_to_ckpt(model_path, checkpoint_path, half=True, safetensors=False, m
         unet_state_dict = load_file(unet_path, device=get_device())
     else:
         unet_path = osp.join(model_path, "unet", "diffusion_pytorch_model.bin")
+        if not osp.exists(unet_path):
+            return convert_vae(model_path, checkpoint_path, half, safetensors, metadata)
         unet_state_dict = torch.load(unet_path, map_location=get_device())
 
     if osp.exists(vae_path):

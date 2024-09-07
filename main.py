@@ -77,7 +77,7 @@ def load_config():
         port = data["port"]
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(prog="Defuzers")
+    parser = argparse.ArgumentParser(prog="Img Diffuse")
     parser.add_argument("-d", "--directml", action="store_true")
     args = parser.parse_args()
     update_directml(args.directml)

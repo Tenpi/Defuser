@@ -22,7 +22,7 @@ const MainPage: React.FunctionComponent = (props) => {
     const {tab, setTab} = useContext(TabContext)
 
     useEffect(() => {
-        document.title = "Defuzers"
+        document.title = "Img Diffuse"
     }, [])
 
     useEffect(() => {

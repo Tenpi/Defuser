@@ -390,6 +390,16 @@ def save_images():
         location = os.path.join(get_outputs_dir(), "novel ai/saved.json")
     if generator_type == "holara ai":
         location = os.path.join(get_outputs_dir(), "holara ai/saved.json")
+    
+    if not saved:
+        with open(os.path.normpath(location), "r") as f:
+            try:
+                existing_data = json.load(f)
+                if len(existing_data) > 1:
+                    return
+            except:
+                pass
+    
     with open(os.path.normpath(location), "w") as f:
         json.dump(saved, f, indent=4)
     return "done"

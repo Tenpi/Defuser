@@ -1,9 +1,8 @@
-# Defuzers
+# Img Diffuse
 
 <img src="assets/images/readme.png">
 
-Defuzers is an UI for diffusers (an image generation library). The inferencing and training of diffusion 
-models is supported. It aims to be simple and fast to use.
+Img Diffuse is an image generation UI (using diffusers) that aims to be simple and fast to use.
 
 ### Features
 - Generate images from text input.
@@ -46,20 +45,20 @@ models is supported. It aims to be simple and fast to use.
 
 There are precompiled binaries for MacOS arm64 and Windows x64 
 that don't require compiling the project from source. However, updates 
-will be pushed out slower. https://github.com/Moebits/Defuzers/releases 
+will be pushed out slower. https://github.com/Moebits/Img Diffuse/releases 
 
 ### Model Files
 
 The model files required for the default functionality are available here. You 
 will need to have about 20GB of free disk space. \
-https://huggingface.co/defuzers/models
+https://huggingface.co/img-diffuse/models
 
 ### MacOS
 
 To run on MacOS, you may need to remove the quarantine flags. 
 
 ```
-xattr -d com.apple.quarantine /Applications/Defuzers.app
+xattr -d com.apple.quarantine /Applications/Img\ Diffuse.app
 ```
 
 ### Windows
@@ -70,7 +69,7 @@ write access to the installation location.
 ### CUDA
 
 This is the torch compiled with CUDA support, replace the one in `_internal/torch` with this one.
-https://huggingface.co/defuzers/torch/blob/main/torch-cuda.zip
+https://huggingface.co/img-diffuse/torch/blob/main/torch-cuda.zip
 
 ### DirectML
 
@@ -89,11 +88,11 @@ Git LFS: https://git-lfs.com
 
 Clone the repository.
 ```sh
-git clone https://github.com/Moebits/Defuzers.git
-cd defuzers
+git clone https://github.com/Moebits/Img-Diffuse.git
+cd img-diffuse
 ```
 
-Download the models from https://huggingface.co/defuzers/models
+Download the models from https://huggingface.co/img-diffuse/models
 and place them in the correct folder in "models". This script 
 should download all of them. 
 
@@ -101,7 +100,7 @@ should download all of them.
 you aren't going to use them.
 ```sh
 git lfs install
-git clone https://huggingface.co/defuzers/models
+git clone https://huggingface.co/img-diffuse/models
 ```
 
 Install the code dependencies.

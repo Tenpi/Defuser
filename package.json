@@ -1,22 +1,22 @@
 {
-  "name": "defuzers",
+  "name": "img-diffuse",
   "version": "0.0.5",
   "description": "Image generation UI for diffusers",
   "scripts": {
-    "start": "git pull && npm run clean && webpack && cross-env PYTORCH_ENABLE_MPS_FALLBACK=1 python3 main.py",
-    "start-fast": "cross-env PYTORCH_ENABLE_MPS_FALLBACK=1 python3 main.py",
-    "build": "npm run clean ./build ./tmp main.spec && webpack && python3 -m PyInstaller --onedir --distpath \"build\" --workpath \"tmp\" --runtime-hook \"pre.py\" --icon \"assets\\icons\\favicon.ico\" main.py && python3 post.py",
-    "build-fast": "python3 -m PyInstaller --onedir --distpath \"build\" --workpath \"tmp\" --runtime-hook \"pre.py\" --icon \"assets\\icons\\favicon.ico\" main.py && python3 post.py",
+    "start": "git pull && npm run clean && webpack && cross-env PYTORCH_ENABLE_MPS_FALLBACK=1 venv/bin/python3 main.py",
+    "start-fast": "cross-env PYTORCH_ENABLE_MPS_FALLBACK=1 venv/bin/python3 main.py",
+    "build": "npm run clean ./build ./tmp main.spec && webpack && venv/bin/python3 -m PyInstaller --onedir --distpath \"build\" --workpath \"tmp\" --runtime-hook \"pre.py\" --icon \"assets\\icons\\favicon.ico\" main.py && venv/bin/python3 post.py",
+    "build-fast": "venv/bin/python3 -m PyInstaller --onedir --distpath \"build\" --workpath \"tmp\" --runtime-hook \"pre.py\" --icon \"assets\\icons\\favicon.ico\" main.py && venv/bin/python3 post.py",
     "bundle-mac": "npm run create-app && npm run create-dmg",
-    "create-app": "npm run clean ./app ./tmp Defuzers.spec && python3 -m PyInstaller --windowed --onedir --hidden-import '_posixshmem' --hidden-import '_lsprof' --distpath 'app' --workpath 'tmp' --icon 'assets/icons/Defuzers.icns' --osx-bundle-identifier 'com.moepi.defuzers' --name 'Defuzers' gui.py && python3 post.py --app",
-    "create-dmg": "dmgbuild -s dmg.py \"Defuzers\" app/Defuzers.dmg",
+    "create-app": "npm run clean ./app ./tmp 'Img Diffuse.spec' && venv/bin/python3 -m PyInstaller --windowed --onedir --hidden-import '_posixshmem' --hidden-import '_lsprof' --distpath 'app' --workpath 'tmp' --icon 'assets/icons/Img Diffuse.icns' --osx-bundle-identifier 'com.moebits.img-diffuse' --name 'Img Diffuse' gui.py && venv/bin/python3 post.py --app",
+    "create-dmg": "dmgbuild -s dmg.py \"Img Diffuse\" \"app/Img Diffuse.dmg\"",
     "bundle-win": "npm run create-nsis",
     "create-nsis": "makensis nsis.nsi",
     "clean": "del-cli ./dist"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/Moebits/Defuzers"
+    "url": "https://github.com/Moebits/Img-Diffuse"
   },
   "author": "Moebits",
   "license": "GPLv3",

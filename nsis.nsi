@@ -1,5 +1,5 @@
 !include MUI2.nsh
-!define APP_NAME "Defuzers"
+!define APP_NAME "Img Diffuse"
 !define APP_EXE "main.exe"
 !define INSTALL_DIR_REGKEY "Software\Microsoft\Windows\CurrentVersion\App Paths\${APP_NAME}"
 !define UNINSTALL_REGKEY "Software\Microsoft\Windows\CurrentVersion\Uninstall\${APP_NAME}"
@@ -36,7 +36,7 @@ FunctionEnd
 
 Section "Install" SecInstall
     SetOutPath "$INSTDIR"
-    File /r "build\defuzers\*"
+    File /r "build\img-diffuse\*"
     CreateShortCut "$DESKTOP\${APP_NAME}.lnk" "$INSTDIR\${APP_EXE}"
     WriteRegStr HKLM "${UNINSTALL_REGKEY}" "UninstallString" "$INSTDIR\uninstaller.exe"
     WriteUninstaller "$INSTDIR\uninstaller.exe"
