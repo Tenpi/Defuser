@@ -7,7 +7,7 @@ app
 venv
 .DS_Store
 main.spec
-Defuzers.spec
+Img Diffuse.spec
 routes/__pycache__
 models/interrogator/deepbooru/*
 models/interrogator/wdtagger/*

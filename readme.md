@@ -2,38 +2,25 @@
 
 <img src="assets/images/readme.png">
 
-Img Diffuse is an image generation UI (using diffusers) that aims to be simple and fast to use.
+Img Diffuse is an image generation web interface that aims to be simple to use. We primarily use 
+diffusers but integrate some other python libraries.
 
 ### Features
 - Generate images from text input.
-- Generate images from img input.
+- Generate images from image input.
 - Expand and/or patch images.
-- ControlNet processing (canny, depth, lineart, lineart anime, softedge, scribble, reference).
+- ControlNet (canny, depth, lineart, lineart anime, softedge, scribble, reference).
 - Segmentate (remove background) from images.
 - Extract lineart from images.
-- Load checkpoints, vae, textual inversions, hypernetworks, and lora.
-- Train textual inversions, hypernetworks, lora, dreambooth, dreamartist, and new checkpoints.
-- Merge two or three checkpoints together.
+- Load checkpoints, textual inversions, hypernetworks, and lora.
+- Train textual inversions, hypernetworks, lora, and dreambooth.
 - Interrogate images with WDTagger, DeepBooru, or BLIP.
-- Auto tag and source images with interrogator and saucenao.
-- Embed all train image sources into model files.
-- Save generation parameters as image metadata that can be recalled.
 - Upscale generated images using waifu2x, Real-ESRGAN, or Real-CUGAN.
-- Watermark tool to apply visual watermarks to generated images.
-- Apply invisible watermarks to generated images.
-- Save images and prompts and view all images that were generated with a certain prompt.
-- Change weight of keywords in the prompt.
-- Generate random prompts or pick a random saved prompt.
-- Past image history viewer (including on the sidebar).
 - Generate a gif with AnimateDiff.
-- Detect AI images.
-- Train image classifiers.
 - Simplify and clean a rough sketch.
 - Shade a sketch from different lighting directions.
 - Colorize a sketch using reference image.
 - Divide an image into PSD layers.
-- Cross adapt SD1.5 lora to use in SDXL.
-- Change the generation source (local, Novel AI, Holara AI)
 
 ### Supported Architectures
 - Stable Diffusion 1
@@ -148,11 +135,6 @@ Invert the controlnet processor to extract the lineart of the image (optionally 
 
 Click the transparency icon in the input image to run the segmentator which will attempt to separate the character from the background.
 
-### Watermark Tool
-
-There is a tool for adding a watermark to the images, its recommended to use it to make it clear that the image is AI. There is 
-also an invisible watermark that isn't visible but can be decoded from the image.
-
 ### Image Sources
 
 You should generate sources for the images in order to embed them into the metadata of the trained model. The rate limit of 
@@ -171,7 +153,7 @@ Shortcut: Any image with name like 1234567.png will be assumed to be from pixiv 
 ### Notes
 
 By using this UI you agree not to generate harmful or offensive content, plagiarize specific artists or impersonate 
-indidividuals, or otherwise any other malicious use. This is intended only for personal/offline usage. 
+indidividuals, or otherwise any other malicious use. This is intended only for personal/offline usage.
 
 ### Related/Credits
 

@@ -34,7 +34,7 @@ class ConsoleWindow(QMainWindow):
         self.current_text_length = 0
         
     def initUI(self):
-        self.setWindowTitle("Defuzers")
+        self.setWindowTitle("Img Diffuse")
         self.resize(700, 400)
         screen_geometry = QApplication.primaryScreen().geometry()
         center_x = (screen_geometry.width() - self.width()) // 2

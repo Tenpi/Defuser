@@ -21,6 +21,8 @@ from torchvision.transforms import (
     Normalize,
     RandomHorizontalFlip,
     RandomResizedCrop,
+    ColorJitter,
+    RandomRotation,
     Resize,
     ToTensor,
 )
@@ -29,7 +31,7 @@ from tqdm.auto import tqdm
 import transformers
 from transformers import ResNetConfig, ResNetForImageClassification, ConvNextConfig, ConvNextImageProcessor, ConvNextForImageClassification, \
 ConvNextV2Config, ConvNextV2ForImageClassification, ViTConfig, ViTImageProcessor, ViTForImageClassification, Swinv2Config, Swinv2ForImageClassification, \
-Swin2SRImageProcessor, BeitConfig, BeitImageProcessor, BeitForImageClassification, get_scheduler
+Swin2SRImageProcessor, BeitConfig, BeitImageProcessor, BeitForImageClassification, AutoConfig, AutoImageProcessor, get_scheduler
 from transformers.utils.versions import require_version
 
 from PIL import Image, ImageFile
@@ -105,64 +107,90 @@ def main(args):
     id2label = {str(i): label for i, label in enumerate(labels)}
     label2id = {label: str(i) for i, label in enumerate(labels)}
 
-    config = None
-    image_processor = None
-    model = None
-
     if args.architecture == "resnet":
-        config = ResNetConfig(
+        model_name = "microsoft/resnet-50"
+        config = AutoConfig.from_pretrained(
+            model_name,
             num_labels=len(labels),
             id2label=id2label,
             label2id=label2id,
-            image_size=int(args.resolution)
         )
-        image_processor = ConvNextImageProcessor(size={"width": int(args.resolution), "height": int(args.resolution)})
-        model = ResNetForImageClassification(config)
+        image_processor = AutoImageProcessor.from_pretrained(model_name)
+        model = ResNetForImageClassification.from_pretrained(
+            model_name,
+            config=config,
+            ignore_mismatched_sizes=args.ignore_mismatched_sizes,
+        )
     elif args.architecture == "convnext":
-        config = ConvNextConfig(
+        model_name = "facebook/convnext-base-224-22k"
+        config = AutoConfig.from_pretrained(
+            model_name,
             num_labels=len(labels),
             id2label=id2label,
             label2id=label2id,
-            image_size=int(args.resolution)
         )
-        image_processor = ConvNextImageProcessor(size={"width": int(args.resolution), "height": int(args.resolution)})
-        model = ConvNextForImageClassification(config)
+        image_processor = AutoImageProcessor.from_pretrained(model_name)
+        model = ConvNextForImageClassification.from_pretrained(
+            model_name,
+            config=config,
+            ignore_mismatched_sizes=args.ignore_mismatched_sizes,
+        )
     elif args.architecture == "convnextv2":
-        config = ConvNextV2Config(
+        model_name = "facebook/convnextv2-base-22k-224"
+        config = AutoConfig.from_pretrained(
+            model_name,
             num_labels=len(labels),
             id2label=id2label,
             label2id=label2id,
-            image_size=int(args.resolution)
         )
-        image_processor = ConvNextImageProcessor(size={"width": int(args.resolution), "height": int(args.resolution)})
-        model = ConvNextV2ForImageClassification(config)
+        image_processor = AutoImageProcessor.from_pretrained(model_name)
+        model = ConvNextV2ForImageClassification.from_pretrained(
+            model_name,
+            config=config,
+            ignore_mismatched_sizes=args.ignore_mismatched_sizes,
+        )
     elif args.architecture == "vit":
-        config = ViTConfig(
+        model_name = "google/vit-base-patch16-224-in21k"
+        config = AutoConfig.from_pretrained(
+            model_name,
             num_labels=len(labels),
             id2label=id2label,
             label2id=label2id,
-            image_size=int(args.resolution)
         )
-        image_processor = ViTImageProcessor(size={"width": int(args.resolution), "height": int(args.resolution)})
-        model = ViTForImageClassification(config)
+        image_processor = AutoImageProcessor.from_pretrained(model_name)
+        model = ViTForImageClassification.from_pretrained(
+            model_name,
+            config=config,
+            ignore_mismatched_sizes=args.ignore_mismatched_sizes,
+        )
     elif args.architecture == "swinv2":
-        config = Swinv2Config(
+        model_name = "microsoft/swinv2-base-patch4-window8-256"
+        config = AutoConfig.from_pretrained(
+            model_name,
             num_labels=len(labels),
             id2label=id2label,
             label2id=label2id,
-            image_size=int(args.resolution)
         )
-        image_processor = Swin2SRImageProcessor(size={"width": int(args.resolution), "height": int(args.resolution)})
-        model = Swinv2ForImageClassification(config)
+        image_processor = AutoImageProcessor.from_pretrained(model_name)
+        model = Swinv2ForImageClassification.from_pretrained(
+            model_name,
+            config=config,
+            ignore_mismatched_sizes=args.ignore_mismatched_sizes,
+        )
     elif args.architecture == "beit":
-        config = BeitConfig(
+        model_name = "microsoft/beit-base-patch16-224-pt22k-ft22k"
+        config = AutoConfig.from_pretrained(
+            model_name,
             num_labels=len(labels),
             id2label=id2label,
             label2id=label2id,
-            image_size=int(args.resolution)
         )
-        image_processor = BeitImageProcessor(size={"width": int(args.resolution), "height": int(args.resolution)})
-        model = BeitForImageClassification(config)
+        image_processor = AutoImageProcessor.from_pretrained(model_name)
+        model = BeitForImageClassification.from_pretrained(
+            model_name,
+            config=config,
+            ignore_mismatched_sizes=args.ignore_mismatched_sizes,
+        )
 
     if "shortest_edge" in image_processor.size:
         size = image_processor.size["shortest_edge"]
@@ -174,8 +202,10 @@ def main(args):
         else Lambda(lambda x: x)
     )
     train_transforms = Compose([
-            Resize(size),
-            CenterCrop(size),
+            RandomResizedCrop(size),
+            RandomHorizontalFlip(),
+            ColorJitter(brightness=0.4, contrast=0.4, saturation=0.4),
+            RandomRotation(15),
             ToTensor(),
             normalize,
         ])
@@ -214,7 +244,7 @@ def main(args):
         return {"pixel_values": pixel_values, "labels": labels}
 
     train_dataloader = DataLoader(
-        train_dataset, shuffle=False, collate_fn=collate_fn, batch_size=args.per_device_train_batch_size
+        train_dataset, shuffle=True, collate_fn=collate_fn, batch_size=args.per_device_train_batch_size
     )
     eval_dataloader = DataLoader(eval_dataset, collate_fn=collate_fn, batch_size=args.per_device_eval_batch_size)
 
@@ -415,26 +445,26 @@ def get_args(train_dir, output_dir, num_train_epochs, learning_rate, gradient_ac
     args.validation_dir = None
     args.max_train_samples = None
     args.max_eval_samples = None
-    args.train_val_split = 0.0
+    args.train_val_split = 0.1
     args.model_name_or_path = ""
-    args.per_device_train_batch_size = 1
-    args.per_device_eval_batch_size = 1
+    args.per_device_train_batch_size = 16
+    args.per_device_eval_batch_size = 16
     args.learning_rate = learning_rate
-    args.weight_decay = 0.0
+    args.weight_decay = 0.01
     args.num_train_epochs = num_train_epochs
     args.max_train_steps = None
     args.gradient_accumulation_steps = gradient_accumulation_steps
     args.lr_scheduler_type = lr_scheduler_type
-    args.num_warmup_steps = 0
+    args.num_warmup_steps = 500
     args.output_dir = output_dir
-    args.seed = None
+    args.seed = 42
     args.checkpointing_steps = save_steps
     args.resume_from_checkpoint = "latest"
-    args.ignore_mismatched_sizes = True
     args.image_column_name = "image"
     args.label_column_name = "label"
     args.resolution = resolution
     args.architecture = architecture
+    args.with_tracking = False
 
     if args.output_dir is not None:
         os.makedirs(args.output_dir, exist_ok=True)
