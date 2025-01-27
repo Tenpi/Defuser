@@ -109,7 +109,7 @@ X-Adapter lets you use lora models trained on SD1.5 in SDXL. In the dropdown sel
 
 ### Patch Controls
 
-<img height="300" src="assets/images/patch2.png"/>
+<img height="300" src="assets/images/patch.png"/>
 
 These are the drawing controls when using patch:
 - Wheel: brush size
