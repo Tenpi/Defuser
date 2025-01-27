@@ -1,6 +1,6 @@
 # Img Diffuse
 
-<img src="assets/images/readme.png">
+<img src="assets/images/readme2.png">
 
 Img Diffuse is an image generation web interface that aims to be simple to use. We primarily use 
 diffusers but integrate some other python libraries.
@@ -109,7 +109,7 @@ X-Adapter lets you use lora models trained on SD1.5 in SDXL. In the dropdown sel
 
 ### Patch Controls
 
-<img height="300" src="assets/images/patch.png"/>
+<img height="300" src="assets/images/patch2.png"/>
 
 These are the drawing controls when using patch:
 - Wheel: brush size
